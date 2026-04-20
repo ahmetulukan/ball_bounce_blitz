@@ -29,44 +29,62 @@ class _HudWidgetState extends State<HudWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final game = widget.game;
     return SafeArea(
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.all(12),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _buildBox('SCORE: ${game.score}', Colors.black54),
-            _buildBox('WAVE ${game.wave}', Colors.deepPurple.withAlpha(200)),
-            Row(
-              children: List.generate(3, (i) => Padding(
-                padding: const EdgeInsets.only(left: 2),
-                child: Icon(
-                  Icons.favorite,
-                  color: i < game.lives ? Colors.red : Colors.grey,
-                  size: 22,
-                ),
-              )),
+            // Score & Wave
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange, width: 1),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'SCORE: ${widget.game.score}',
+                    style: const TextStyle(
+                      color: Colors.orange,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '🌊 Wave ${widget.game.wave}',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Lives
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.red, width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: List.generate(3, (i) {
+                  return Text(
+                    i < widget.game.lives ? '❤️' : '🖤',
+                    style: const TextStyle(fontSize: 18),
+                  );
+                }),
+              ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildBox(String text, Color bg) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        text,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.bold,
         ),
       ),
     );

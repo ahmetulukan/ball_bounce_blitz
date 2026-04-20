@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'game/ball_bounce_game.dart';
 import 'game/ui/game_over_screen.dart';
 import 'game/ui/hud_widget.dart';
+import 'game/ui/main_menu_screen.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +23,9 @@ class BallBounceApp extends StatelessWidget {
         overlayBuilderMap: {
           'GameOver': (context, game) => GameOverScreen(game: game),
           'Hud': (context, game) => HudWidget(game: game),
+          'MainMenu': (context, game) => MainMenuScreen(game: game),
         },
-        initialActiveOverlays: const ['Hud'],
+        initialActiveOverlays: const ['MainMenu'],
       ),
     );
   }

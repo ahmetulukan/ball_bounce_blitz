@@ -74,6 +74,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
     if (other is Enemy) {
       other.destroy();
+      gameRef.playSound('hit');
       if (isFireball) {
         speed = (speed + 20).clamp(baseSpeed, baseSpeed * 1.5);
         velocity = velocity.normalized() * speed;
@@ -82,6 +83,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
     if (other is PowerUp) {
       gameRef.collectPowerUp(other.type);
+      gameRef.playSound('powerup');
       other.removeFromParent();
     }
   }

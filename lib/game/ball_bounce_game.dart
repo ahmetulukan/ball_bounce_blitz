@@ -1,5 +1,6 @@
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
+import 'package:flame_audio/flame_audio.dart';
 import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
@@ -23,6 +24,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    await FlameAudio.audioPool.init();
     spawnSystem = SpawnSystem();
     spawnSystem.setGame(this);
     paddle = Paddle();
@@ -33,6 +35,26 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     add(spawnSystem);
   }
 
+  void playSound(String name) {
+    try {
+      FlameAudio.audioPool.play('$name.mp3', volume: 0.5);
+    } catch (_) {}
+  }
+
+  void startGame() {
+    score = 0;
+    lives = 3;
+    wave = 1;
+    hitCount = 0;
+    activeEnemies = 0;
+    isGameOver = false;
+    children.whereType<Enemy>().toList().forEach(remove);
+    children.whereType<PowerUp>().toList().forEach(remove);
+    children.whereType<ExplosionEffect>().toList().forEach(remove);
+    spawnSystem.reset();
+    ball.reset();
+  }
+
   void resetGame() {
     score = 0;
     lives = 3;
@@ -40,7 +62,6 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     hitCount = 0;
     activeEnemies = 0;
     isGameOver = false;
-
     children.whereType<Enemy>().toList().forEach(remove);
     children.whereType<PowerUp>().toList().forEach(remove);
     children.whereType<ExplosionEffect>().toList().forEach(remove);
@@ -52,6 +73,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     score += enemy.points;
     hitCount++;
     activeEnemies--;
+    playSound('hit');
 
     // Particle explosion
     add(ExplosionEffect(
@@ -64,6 +86,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
       wave++;
       hitCount = 0;
       spawnSystem.increaseDifficulty();
+      playSound('wave');
     }
   }
 
@@ -100,6 +123,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   void loseLife() {
     if (ball.isShielded) return;
     lives--;
+    playSound('lose');
     if (lives <= 0) {
       gameOver();
     }
@@ -107,6 +131,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   void gameOver() {
     isGameOver = true;
+    playSound('gameover');
     overlays.add('GameOver');
   }
 }
