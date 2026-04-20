@@ -16,6 +16,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   final EnemyColorType color;
   double speed;
   final int points;
+  bool _isDestroyed = false;
 
   Enemy({
     required this.type,
@@ -36,16 +37,20 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
+    if (_isDestroyed) return;
     position.y += speed * dt;
 
-    if (position.y > 420) {
+    if (position.y > 430) {
       gameRef.loseLife();
       removeFromParent();
     }
   }
 
-  static Enemy spawn(EnemyType type, EnemyColorType color, double x) {
-    return Enemy(type: type, color: color);
+  void destroy() {
+    if (_isDestroyed) return;
+    _isDestroyed = true;
+    gameRef.onEnemyDestroyed(this);
+    removeFromParent();
   }
 
   static Color getColor(EnemyColorType color) {

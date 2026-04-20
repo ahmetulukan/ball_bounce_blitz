@@ -1,18 +1,27 @@
 import 'dart:ui';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import '../ball_bounce_game.dart';
 
 enum PowerUpType { fireball, explosive, shield, speedUp, extraLife }
 
-class PowerUp extends PositionComponent {
+class PowerUp extends PositionComponent with CollisionCallbacks {
   static const double powerUpSize = 25;
   static const double speed = 150;
 
   final PowerUpType type;
+  late BallBounceGame gameRef;
 
   PowerUp({required this.type}) : super(
     size: Vector2(powerUpSize, powerUpSize),
     anchor: Anchor.center,
   );
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    add(RectangleHitbox()..collisionType = CollisionType.active);
+  }
 
   @override
   void update(double dt) {
@@ -48,15 +57,15 @@ class PowerUp extends PositionComponent {
   static String getIcon(PowerUpType type) {
     switch (type) {
       case PowerUpType.fireball:
-        return '🔥';
+        return 'F';
       case PowerUpType.explosive:
-        return '💣';
+        return 'E';
       case PowerUpType.shield:
-        return '🛡️';
+        return 'S';
       case PowerUpType.speedUp:
-        return '⚡';
+        return 'U';
       case PowerUpType.extraLife:
-        return '➕';
+        return '+';
     }
   }
 }

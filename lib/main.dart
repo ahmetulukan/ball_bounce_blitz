@@ -2,6 +2,7 @@ import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'game/ball_bounce_game.dart';
 import 'game/ui/game_over_screen.dart';
+import 'game/ui/hud_widget.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -20,7 +21,9 @@ class BallBounceApp extends StatelessWidget {
         gameFactory: () => BallBounceGame(),
         overlayBuilderMap: {
           'GameOver': (context, game) => GameOverScreen(game: game),
+          'Hud': (context, game) => HudWidget(game: game),
         },
+        initialActiveOverlays: const ['Hud'],
       ),
     );
   }
