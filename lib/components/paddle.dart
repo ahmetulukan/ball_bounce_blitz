@@ -3,10 +3,12 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../../game/game.dart';
 
-class Paddle extends PositionComponent with HasGameRef<BallBounceBlitzGame>, DragCallbacks {
-  static const double width = 80;
-  static const double height = 15;
-  double _dragX = 0;
+class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame>, DragCallbacks {
+  static const double baseWidth = 80;
+  static const double paddleHeight = 15;
+  double currentWidth = baseWidth;
+  bool shielded = false;
+  int shrinkLevel = 0;
 
   Paddle() : super(anchor: Anchor.bottomCenter);
 
@@ -14,20 +16,31 @@ class Paddle extends PositionComponent with HasGameRef<BallBounceBlitzGame>, Dra
   Future<void> onLoad() async {
     final gameSize = gameRef.size;
     position = Vector2(gameSize.x / 2, gameSize.y - 40);
-    size = Vector2(width, height);
+    size = Vector2(currentWidth, paddleHeight);
+  }
+
+  void shrink() {
+    shrinkLevel = (shrinkLevel + 1).clamp(0, 3);
+    currentWidth = (baseWidth * (1 - shrinkLevel * 0.15)).clamp(40.0, baseWidth);
+    size = Vector2(currentWidth, paddleHeight);
   }
 
   @override
   void onDragUpdate(DragUpdateEvent event) {
-    _dragX = event.localPosition.x;
     position.x += event.localDelta.x;
-    position.x = position.x.clamp(width / 2, gameRef.size.x - width / 2);
+    position.x = position.x.clamp(currentWidth / 2, gameRef.size.x - currentWidth / 2);
   }
 
   @override
   void render(Canvas canvas) {
+    final rect = Rect.fromLTWH(0, 0, currentWidth, paddleHeight);
+    if (shielded) {
+      final glow = Paint()..color = const Color(0x4000BCD4);
+      canvas.drawRRect(RRect.fromRectAndRadius(rect.inflate(4), const Radius.circular(10)), glow);
+    }
     final paint = Paint()..color = const Color(0xFF00BCD4);
-    final rect = Rect.fromLTWH(0, 0, width, height);
     canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), paint);
+    final hi = Paint()..color = Colors.white.withAlpha(77);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, currentWidth, 4), const Radius.circular(4)), hi);
   }
 }

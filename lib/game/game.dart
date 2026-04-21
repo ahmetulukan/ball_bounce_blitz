@@ -1,15 +1,21 @@
 import 'package:flame/game.dart';
 import 'package:flame/events.dart';
+import 'package:flame/flame.dart';
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'scene/game_scene.dart';
-import '../screens/home_screen.dart';
 
 class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetection {
   GameScene? _scene;
   bool _gameStarted = false;
+  int lastScore = 0;
+  int _highScore = 0;
+  static const String _highScoreKey = 'ball_bounce_high_score';
 
   @override
   Future<void> onLoad() async {
-    await images.load('paddle.png');
+    await Flame.device.fullScreen();
+    await Flame.device.setLandscape();
   }
 
   @override
@@ -26,9 +32,39 @@ class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetect
     add(_scene!);
   }
 
-  void showGameOverScreen(int score) {
+  void showGameOverScreen(int score, int highScore) {
+    lastScore = score;
     overlays.add('GameOver');
   }
+
+  void restart() {
+    overlays.remove('GameOver');
+    _scene?.removeFromParent();
+    _scene = null;
+    _gameStarted = false;
+    lastScore = 0;
+    startGame();
+  }
+
+  Future<int> loadHighScore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _highScore = prefs.getInt(_highScoreKey) ?? 0;
+    } catch (_) {
+      _highScore = 0;
+    }
+    return _highScore;
+  }
+
+  Future<void> saveHighScore(int score) async {
+    _highScore = score;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_highScoreKey, score);
+    } catch (_) {}
+  }
+
+  int get highScore => _highScore;
 
   @override
   void onTapDown(TapDownEvent event) {
