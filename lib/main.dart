@@ -6,6 +6,7 @@ import 'game/ui/game_over_screen.dart';
 import 'game/ui/hud_widget.dart';
 import 'game/ui/main_menu_screen.dart';
 import 'game/ui/pause_screen.dart';
+import 'game/ui/wave_announcement.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -27,6 +28,10 @@ class BallBounceApp extends StatelessWidget {
           'Hud': (context, game) => HudWidget(game: game),
           'MainMenu': (context, game) => MainMenuScreen(game: game),
           'Pause': (context, game) => PauseScreen(game: game),
+          'WaveAnnouncement': (context, game) => WaveAnnouncement(
+            wave: game.wave,
+            onComplete: () => game.overlays.remove('WaveAnnouncement'),
+          ),
         },
         initialActiveOverlays: const ['MainMenu'],
       ),

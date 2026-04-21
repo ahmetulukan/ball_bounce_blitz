@@ -71,6 +71,8 @@ class GameOverScreen extends StatelessWidget {
                     _statRow('🏆 Best', '${game.highScore}'),
                     const SizedBox(height: 8),
                     _statRow('🌊 Wave', '${game.wave}'),
+                    const SizedBox(height: 8),
+                    _statRow('🔥 Combo Bonus', 'x${game.comboSystem.multiplier.toStringAsFixed(1)}'),
                   ],
                 ),
               ),

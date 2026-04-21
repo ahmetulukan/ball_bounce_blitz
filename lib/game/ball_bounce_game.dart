@@ -8,12 +8,14 @@ import 'components/power_up.dart';
 import 'components/particles/explosion_particle.dart';
 import 'components/background_stars.dart';
 import 'systems/spawn_system.dart';
+import 'systems/combo_system.dart';
 
 class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late Paddle paddle;
   late Ball ball;
   late SpawnSystem spawnSystem;
   late BackgroundStars backgroundStars;
+  late ComboSystem comboSystem;
 
   int score = 0;
   int lives = 3;
@@ -24,6 +26,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   bool isGameOver = false;
   bool isPaused = false;
+  bool showWaveAnnouncement = false;
 
   @override
   Future<void> onLoad() async {
@@ -31,6 +34,8 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     await FlameAudio.audioPool.init();
     spawnSystem = SpawnSystem();
     spawnSystem.setGame(this);
+    comboSystem = ComboSystem();
+    comboSystem.setGame(this);
     backgroundStars = BackgroundStars();
     paddle = Paddle();
     ball = Ball(paddle: paddle, gameRef: this);
@@ -39,6 +44,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     add(paddle);
     add(ball);
     add(spawnSystem);
+    add(comboSystem);
   }
 
   void playSound(String name) {
@@ -70,7 +76,11 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     children.whereType<PowerUp>().toList().forEach(remove);
     children.whereType<ExplosionEffect>().toList().forEach(remove);
     spawnSystem.reset();
+    comboSystem.reset();
     ball.reset();
+    
+    // Show wave announcement on start
+    _showWaveAnnouncement();
   }
 
   void resetGame() {
@@ -88,7 +98,14 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     children.whereType<PowerUp>().toList().forEach(remove);
     children.whereType<ExplosionEffect>().toList().forEach(remove);
     spawnSystem.reset();
+    comboSystem.reset();
     ball.reset();
+  }
+
+  void _showWaveAnnouncement() {
+    showWaveAnnouncement = true;
+    overlays.add('WaveAnnouncement');
+    playSound('wave');
   }
 
   void onEnemyDestroyed(Enemy enemy) {
@@ -108,7 +125,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
       wave++;
       hitCount = 0;
       spawnSystem.increaseDifficulty();
-      playSound('wave');
+      _showWaveAnnouncement();
     }
   }
 
@@ -145,6 +162,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   void loseLife() {
     if (ball.isShielded) return;
     lives--;
+    comboSystem.reset();
     playSound('lose');
     if (lives <= 0) {
       gameOver();
