@@ -7,6 +7,7 @@ import 'components/enemy.dart';
 import 'components/power_up.dart';
 import 'components/particles/explosion_particle.dart';
 import 'components/background_stars.dart';
+import 'components/screen_shake.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
@@ -17,6 +18,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late SpawnSystem spawnSystem;
   late BackgroundStars backgroundStars;
   late ComboSystem comboSystem;
+  late ScreenShake screenShake;
   late GameStateService _gameState;
 
   int score = 0;
@@ -42,6 +44,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     spawnSystem.setGame(this);
     comboSystem = ComboSystem();
     comboSystem.setGame(this);
+    screenShake = ScreenShake();
     backgroundStars = BackgroundStars();
     paddle = Paddle();
     ball = Ball(paddle: paddle, gameRef: this);
@@ -51,6 +54,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     add(ball);
     add(spawnSystem);
     add(comboSystem);
+    add(screenShake);
   }
 
   void playSound(String name) {
@@ -122,6 +126,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
       color: Enemy.getColor(enemy.color),
       count: 8,
     ));
+    screenShake.shake(intensity: 4, duration: 0.15);
 
     if (hitCount >= 10) {
       wave++;
@@ -137,6 +142,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   void triggerExplosion(Vector2 position) {
     add(ExplosionEffect(position: position.clone(), count: 20));
+    screenShake.shake(intensity: 10, duration: 0.4);
 
     final enemies = children.whereType<Enemy>().toList();
     for (final enemy in enemies) {
@@ -189,4 +195,6 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     if (isPaused || isGameOver) return;
     super.update(dt);
   }
+
+  Vector2 get shakeOffset => screenShake.offset;
 }

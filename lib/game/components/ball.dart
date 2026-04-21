@@ -7,6 +7,7 @@ import 'paddle.dart';
 import 'enemy.dart';
 import 'power_up.dart';
 import 'particles/explosion_particle.dart';
+import 'particles/ball_trail.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -21,6 +22,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
   bool isShielded = false;
   double _shieldAngle = 0;
   double _bounceScale = 1.0; // for bounce animation
+  double _trailTimer = 0;
 
   Ball({required this.paddle, required this.gameRef}) : super(
     radius: ballRadius,
@@ -56,6 +58,13 @@ class Ball extends CircleComponent with CollisionCallbacks {
       _shieldAngle += dt * 4;
     }
 
+    // Ball trail
+    _trailTimer += dt;
+    if (_trailTimer >= 0.03) {
+      _trailTimer = 0;
+      _spawnTrail();
+    }
+
     if (position.x - ballRadius <= 0) {
       position.x = ballRadius;
       velocity.x = velocity.x.abs();
@@ -76,6 +85,22 @@ class Ball extends CircleComponent with CollisionCallbacks {
       gameRef.loseLife();
       reset();
     }
+  }
+
+  void _spawnTrail() {
+    final trailColor = isFireball
+        ? const Color(0xFFFF5722)
+        : isShielded
+            ? const Color(0xFF03A9F4)
+            : const Color(0xFFFFFFFF);
+    final trail = TrailParticle(
+      position: position.clone(),
+      velocity: Vector2.zero(),
+      color: trailColor,
+      life: 0.25,
+      radius: isFireball ? 5 : 3,
+    );
+    gameRef.add(trail);
   }
 
   void _applyBounceEffect() {
