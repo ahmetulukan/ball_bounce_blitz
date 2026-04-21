@@ -63,6 +63,35 @@ class Enemy extends PositionComponent with CollisionCallbacks {
         return const Color(0xFF8E24AA);
     }
   }
+
+  @override
+  void render(Canvas canvas) {
+    final paint = Paint()..color = getColor(color);
+    
+    switch (type) {
+      case EnemyType.square:
+        canvas.drawRect(
+          Rect.fromCenter(
+            center: Offset.zero,
+            width: enemySize,
+            height: enemySize,
+          ),
+          paint,
+        );
+        break;
+      case EnemyType.circle:
+        canvas.drawCircle(Offset.zero, enemySize / 2, paint);
+        break;
+      case EnemyType.triangle:
+        final path = Path();
+        path.moveTo(0, -enemySize / 2);
+        path.lineTo(enemySize / 2, enemySize / 2);
+        path.lineTo(-enemySize / 2, enemySize / 2);
+        path.close();
+        canvas.drawPath(path, paint);
+        break;
+    }
+  }
 }
 
 class EnemyFactory {

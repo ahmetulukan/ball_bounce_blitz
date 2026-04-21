@@ -6,20 +6,24 @@ import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/power_up.dart';
 import 'components/particles/explosion_particle.dart';
+import 'components/background_stars.dart';
 import 'systems/spawn_system.dart';
 
 class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late Paddle paddle;
   late Ball ball;
   late SpawnSystem spawnSystem;
+  late BackgroundStars backgroundStars;
 
   int score = 0;
   int lives = 3;
   int wave = 1;
   int hitCount = 0;
   int activeEnemies = 0;
+  int highScore = 0;
 
   bool isGameOver = false;
+  bool isPaused = false;
 
   @override
   Future<void> onLoad() async {
@@ -27,9 +31,11 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     await FlameAudio.audioPool.init();
     spawnSystem = SpawnSystem();
     spawnSystem.setGame(this);
+    backgroundStars = BackgroundStars();
     paddle = Paddle();
     ball = Ball(paddle: paddle, gameRef: this);
 
+    add(backgroundStars);
     add(paddle);
     add(ball);
     add(spawnSystem);
@@ -41,6 +47,17 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     } catch (_) {}
   }
 
+  void togglePause() {
+    if (isGameOver || isPaused) return;
+    isPaused = true;
+    overlays.add('Pause');
+  }
+
+  void resumeGame() {
+    isPaused = false;
+    overlays.remove('Pause');
+  }
+
   void startGame() {
     score = 0;
     lives = 3;
@@ -48,6 +65,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     hitCount = 0;
     activeEnemies = 0;
     isGameOver = false;
+    isPaused = false;
     children.whereType<Enemy>().toList().forEach(remove);
     children.whereType<PowerUp>().toList().forEach(remove);
     children.whereType<ExplosionEffect>().toList().forEach(remove);
@@ -56,12 +74,16 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   }
 
   void resetGame() {
+    if (score > highScore) {
+      highScore = score;
+    }
     score = 0;
     lives = 3;
     wave = 1;
     hitCount = 0;
     activeEnemies = 0;
     isGameOver = false;
+    isPaused = false;
     children.whereType<Enemy>().toList().forEach(remove);
     children.whereType<PowerUp>().toList().forEach(remove);
     children.whereType<ExplosionEffect>().toList().forEach(remove);
@@ -108,7 +130,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   @override
   void onPanUpdate(DragUpdateInfo info) {
-    if (isGameOver) return;
+    if (isGameOver || isPaused) return;
     paddle.move(info.delta.global.x);
   }
 
@@ -131,7 +153,16 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   void gameOver() {
     isGameOver = true;
+    if (score > highScore) {
+      highScore = score;
+    }
     playSound('gameover');
     overlays.add('GameOver');
+  }
+
+  @override
+  void update(double dt) {
+    if (isPaused || isGameOver) return;
+    super.update(dt);
   }
 }

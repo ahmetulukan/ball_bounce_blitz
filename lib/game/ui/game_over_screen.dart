@@ -8,6 +8,8 @@ class GameOverScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isNewHighScore = game.score >= game.highScore && game.score > 0;
+    
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -36,6 +38,25 @@ class GameOverScreen extends StatelessWidget {
                   letterSpacing: 2,
                 ),
               ),
+              if (isNewHighScore) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    color: Colors.amber.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: Colors.amber, width: 1),
+                  ),
+                  child: const Text(
+                    '🎉 NEW HIGH SCORE!',
+                    style: TextStyle(
+                      color: Colors.amber,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(height: 24),
               Container(
                 padding: const EdgeInsets.all(16),
@@ -47,9 +68,9 @@ class GameOverScreen extends StatelessWidget {
                   children: [
                     _statRow('🏆 Score', '${game.score}'),
                     const SizedBox(height: 8),
-                    _statRow('🌊 Wave', '${game.wave}'),
+                    _statRow('🏆 Best', '${game.highScore}'),
                     const SizedBox(height: 8),
-                    _statRow('❤️ Lives', '${game.lives}'),
+                    _statRow('🌊 Wave', '${game.wave}'),
                   ],
                 ),
               ),
