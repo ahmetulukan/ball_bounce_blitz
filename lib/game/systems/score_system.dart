@@ -4,7 +4,6 @@ import '../ball_bounce_game.dart';
 class ScoreSystem extends Component {
   late BallBounceGame gameRef;
   int highScore = 0;
-  bool _initialized = false;
 
   void setGame(BallBounceGame game) {
     gameRef = game;
@@ -13,7 +12,6 @@ class ScoreSystem extends Component {
 
   Future<void> _loadHighScore() async {
     // High score persistence handled in game state
-    _initialized = true;
   }
 
   void onGameOver(int finalScore) {

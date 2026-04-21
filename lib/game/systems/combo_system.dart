@@ -7,7 +7,11 @@ class ComboSystem extends Component {
   int comboCount = 0;
   double comboTimer = 0;
   static const double comboTimeout = 2.0;
-  
+
+  void setGame(BallBounceGame game) {
+    gameRef = game;
+  }
+
   int get currentCombo => comboCount;
   double get multiplier => _calculateMultiplier();
 

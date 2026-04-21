@@ -9,6 +9,7 @@ import 'components/particles/explosion_particle.dart';
 import 'components/background_stars.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
+import 'services/game_state_service.dart';
 
 class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late Paddle paddle;
@@ -16,6 +17,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late SpawnSystem spawnSystem;
   late BackgroundStars backgroundStars;
   late ComboSystem comboSystem;
+  late GameStateService _gameState;
 
   int score = 0;
   int lives = 3;
@@ -31,7 +33,11 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
-    await FlameAudio.audioPool.init();
+
+    _gameState = GameStateService();
+    await _gameState.init();
+    highScore = _gameState.getHighScore();
+
     spawnSystem = SpawnSystem();
     spawnSystem.setGame(this);
     comboSystem = ComboSystem();
@@ -49,7 +55,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   void playSound(String name) {
     try {
-      FlameAudio.audioPool.play('$name.mp3', volume: 0.5);
+      FlameAudio.play('$name.mp3', volume: 0.5);
     } catch (_) {}
   }
 
@@ -79,14 +85,11 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     comboSystem.reset();
     ball.reset();
     
-    // Show wave announcement on start
     _showWaveAnnouncement();
   }
 
   void resetGame() {
-    if (score > highScore) {
-      highScore = score;
-    }
+    _saveHighScoreIfNeeded();
     score = 0;
     lives = 3;
     wave = 1;
@@ -114,7 +117,6 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     activeEnemies--;
     playSound('hit');
 
-    // Particle explosion
     add(ExplosionEffect(
       position: enemy.position.clone(),
       color: Enemy.getColor(enemy.color),
@@ -136,7 +138,6 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   void triggerExplosion(Vector2 position) {
     add(ExplosionEffect(position: position.clone(), count: 20));
 
-    // Destroy nearby enemies
     final enemies = children.whereType<Enemy>().toList();
     for (final enemy in enemies) {
       if ((enemy.position - position).length < 80) {
@@ -171,11 +172,16 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   void gameOver() {
     isGameOver = true;
-    if (score > highScore) {
-      highScore = score;
-    }
+    _saveHighScoreIfNeeded();
     playSound('gameover');
     overlays.add('GameOver');
+  }
+
+  void _saveHighScoreIfNeeded() {
+    if (score > highScore) {
+      highScore = score;
+      _gameState.saveHighScore(score);
+    }
   }
 
   @override

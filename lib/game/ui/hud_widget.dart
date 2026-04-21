@@ -133,7 +133,7 @@ class _HudWidgetState extends State<HudWidget> {
                   border: Border.all(color: Colors.deepOrange, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.deepOrange.withOpacity(0.4),
+                      color: Colors.deepOrange.withValues(alpha: 0.4),
                       blurRadius: 10,
                     ),
                   ],
@@ -148,6 +148,45 @@ class _HudWidgetState extends State<HudWidget> {
                 ),
               ),
             ],
+            // Wave progress bar
+            const SizedBox(height: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              decoration: BoxDecoration(
+                color: Colors.black54,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.orange.withAlpha(100), width: 1),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '🌊 Next Wave: ${widget.game.hitCount}/10',
+                    style: const TextStyle(
+                      color: Colors.white70,
+                      fontSize: 11,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  SizedBox(
+                    width: 80,
+                    height: 8,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(4),
+                      child: LinearProgressIndicator(
+                        value: widget.game.hitCount / 10,
+                        backgroundColor: Colors.white24,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          widget.game.hitCount >= 7
+                              ? Colors.orange
+                              : Colors.orange.withAlpha(180),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ],
         ),
       ),

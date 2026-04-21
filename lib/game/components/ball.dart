@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'paddle.dart';
 import 'enemy.dart';
 import 'power_up.dart';
+import 'particles/explosion_particle.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -17,6 +19,8 @@ class Ball extends CircleComponent with CollisionCallbacks {
   double speed = baseSpeed;
   bool isFireball = false;
   bool isShielded = false;
+  double _shieldAngle = 0;
+  double _bounceScale = 1.0; // for bounce animation
 
   Ball({required this.paddle, required this.gameRef}) : super(
     radius: ballRadius,
@@ -41,22 +45,49 @@ class Ball extends CircleComponent with CollisionCallbacks {
     super.update(dt);
     position += velocity * dt;
 
+    // Bounce animation decay
+    if (_bounceScale != 1.0) {
+      _bounceScale = 1.0 + (_bounceScale - 1.0) * 0.85;
+      if ((_bounceScale - 1.0).abs() < 0.01) _bounceScale = 1.0;
+    }
+
+    // Shield rotation
+    if (isShielded) {
+      _shieldAngle += dt * 4;
+    }
+
     if (position.x - ballRadius <= 0) {
       position.x = ballRadius;
       velocity.x = velocity.x.abs();
+      _applyBounceEffect();
     } else if (position.x + ballRadius >= 400) {
       position.x = 400 - ballRadius;
       velocity.x = -velocity.x.abs();
+      _applyBounceEffect();
     }
 
     if (position.y - ballRadius <= 0) {
       position.y = ballRadius;
       velocity.y = velocity.y.abs();
+      _applyBounceEffect();
     }
 
     if (position.y > 400 + ballRadius) {
       gameRef.loseLife();
       reset();
+    }
+  }
+
+  void _applyBounceEffect() {
+    _bounceScale = 1.3;
+    // Spawn small particle burst on wall bounce
+    if (isFireball) {
+      gameRef.add(ExplosionEffect(
+        position: position.clone(),
+        color: const Color(0xFFFF5722),
+        count: 4,
+        speed: 80,
+      ));
     }
   }
 
@@ -70,11 +101,31 @@ class Ball extends CircleComponent with CollisionCallbacks {
       final angle = diff * 0.7;
       velocity = Vector2(sin(angle), -cos(angle)) * speed;
       position.y = other.position.y - Paddle.paddleHeight / 2 - ballRadius;
+      _applyBounceEffect();
+      gameRef.playSound('bounce');
     }
 
     if (other is Enemy) {
-      other.destroy();
-      gameRef.playSound('hit');
+      final destroyed = other.takeHit();
+      
+      // Bounce ball away from enemy
+      final bounceDir = (position - other.position).normalized();
+      velocity = bounceDir * speed;
+      _applyBounceEffect();
+      
+      if (destroyed) {
+        gameRef.playSound('hit');
+      } else {
+        // Heavy enemy hit but not destroyed - smaller effect
+        gameRef.add(ExplosionEffect(
+          position: other.position.clone(),
+          color: Enemy.getColor(other.color),
+          count: 4,
+          speed: 100,
+        ));
+        gameRef.playSound('hit');
+      }
+      
       if (isFireball) {
         speed = (speed + 20).clamp(baseSpeed, baseSpeed * 1.5);
         velocity = velocity.normalized() * speed;
@@ -88,14 +139,57 @@ class Ball extends CircleComponent with CollisionCallbacks {
     }
   }
 
+  @override
+  void render(Canvas canvas) {
+    // Shield ring effect
+    if (isShielded) {
+      final shieldPaint = Paint()
+        ..color = const Color(0xFF03A9F4).withAlpha(180)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      canvas.drawCircle(Offset.zero, ballRadius + 6, shieldPaint);
+      
+      // Rotating shield arcs
+      for (int i = 0; i < 3; i++) {
+        final arcAngle = _shieldAngle + (i * 2 * pi / 3);
+        final arcPaint = Paint()
+          ..color = const Color(0xFF03A9F4)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5
+          ..strokeCap = StrokeCap.round;
+        canvas.drawArc(
+          Rect.fromCircle(center: Offset.zero, radius: ballRadius + 8),
+          arcAngle,
+          pi / 2,
+          false,
+          arcPaint,
+        );
+      }
+    }
+    
+    // Fireball glow
+    if (isFireball) {
+      final glowPaint = Paint()
+        ..color = const Color(0xFFFF5722).withAlpha(100)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+      canvas.drawCircle(Offset.zero, ballRadius + 4, glowPaint);
+    }
+
+    // Main ball
+    final ballPaint = Paint()..color = isFireball ? const Color(0xFFFF5722) : const Color(0xFFFFFFFF);
+    canvas.drawCircle(Offset.zero, ballRadius * _bounceScale, ballPaint);
+    
+    // Inner highlight
+    final highlightPaint = Paint()..color = Colors.white.withAlpha(180);
+    canvas.drawCircle(Offset(-ballRadius * 0.3, -ballRadius * 0.3), ballRadius * 0.3, highlightPaint);
+  }
+
   void applyPowerUp(PowerUpType type) {
     switch (type) {
       case PowerUpType.fireball:
         isFireball = true;
-        paint = Paint()..color = const Color(0xFFFF5722);
         Future.delayed(const Duration(seconds: 3), () {
           isFireball = false;
-          paint = Paint()..color = const Color(0xFFFFFFFF);
         });
         break;
       case PowerUpType.explosive:
@@ -126,7 +220,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
     isFireball = false;
     isShielded = false;
     speed = baseSpeed;
-    paint = Paint()..color = const Color(0xFFFFFFFF);
+    _bounceScale = 1.0;
     _startMoving();
   }
 }

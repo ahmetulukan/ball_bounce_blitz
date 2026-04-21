@@ -10,7 +10,7 @@ class PauseScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: Colors.black87.withOpacity(0.9),
+        color: Colors.black87.withValues(alpha: 0.9),
       ),
       child: Center(
         child: Container(

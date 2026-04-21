@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../ball_bounce_game.dart';
 
 class WaveAnnouncement extends StatefulWidget {
   final int wave;
@@ -66,7 +65,7 @@ class _WaveAnnouncementState extends State<WaveAnnouncement>
                 border: Border.all(color: Colors.cyan, width: 3),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.cyan.withOpacity(0.5),
+                    color: Colors.cyan.withValues(alpha: 0.5),
                     blurRadius: 20,
                     spreadRadius: 5,
                   ),

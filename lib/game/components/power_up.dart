@@ -1,4 +1,5 @@
 import 'dart:ui';
+import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import '../ball_bounce_game.dart';
@@ -57,15 +58,35 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
   static String getIcon(PowerUpType type) {
     switch (type) {
       case PowerUpType.fireball:
-        return 'F';
+        return '🔥';
       case PowerUpType.explosive:
-        return 'E';
+        return '💥';
       case PowerUpType.shield:
-        return 'S';
+        return '🛡️';
       case PowerUpType.speedUp:
-        return 'U';
+        return '⚡';
       case PowerUpType.extraLife:
-        return '+';
+        return '❤️';
     }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Glow background
+    final glowPaint = Paint()
+      ..color = getColor(type).withAlpha(100)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(Offset.zero, powerUpSize / 2 + 2, glowPaint);
+    
+    // Main circle
+    final paint = Paint()..color = getColor(type);
+    canvas.drawCircle(Offset.zero, powerUpSize / 2, paint);
+    
+    // Border
+    final borderPaint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawCircle(Offset.zero, powerUpSize / 2, borderPaint);
   }
 }

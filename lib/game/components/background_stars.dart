@@ -37,7 +37,7 @@ class BackgroundStars extends Component {
   void render(Canvas canvas) {
     final paint = Paint()..color = const Color(0xFFFFFFFF);
     for (final star in _stars) {
-      paint.color = const Color(0xFFFFFFFF).withOpacity(0.3 + star.size * 0.3);
+      paint.color = const Color(0xFFFFFFFF).withValues(alpha: 0.3 + star.size * 0.3);
       canvas.drawCircle(star.position.toOffset(), star.size, paint);
     }
   }
