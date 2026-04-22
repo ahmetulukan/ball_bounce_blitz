@@ -1,0 +1,17 @@
+# Flutter build artifacts
+build/
+.dart_tool/package_graph.json
+
+# IDE
+.idea/
+*.iml
+
+# Platform files
+android/
+ios/
+linux/
+macos/
+windows/
+
+# Audio placeholder
+assets/audio/
