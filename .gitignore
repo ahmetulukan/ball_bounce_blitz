@@ -1,6 +1,7 @@
 # Flutter build artifacts
 build/
 .dart_tool/package_graph.json
+.dart_tool/dartpad/
 
 # IDE
 .idea/
