@@ -85,8 +85,8 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
       }
     }
 
-    if (position.y + radius >= paddle.position.y - Paddle.height / 2 &&
-        position.y - radius <= paddle.position.y + Paddle.height / 2 &&
+    if (position.y + radius >= paddle.position.y - Paddle.paddleHeight / 2 &&
+        position.y - radius <= paddle.position.y + Paddle.paddleHeight / 2 &&
         position.x >= paddle.position.x - paddle.currentWidth / 2 &&
         position.x <= paddle.position.x + paddle.currentWidth / 2 &&
         velocity.y > 0) {

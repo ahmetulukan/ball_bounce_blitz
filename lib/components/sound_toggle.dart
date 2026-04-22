@@ -1,8 +1,9 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
-import '../../services/audio_manager.dart';
+import '../services/audio_manager.dart';
 
-class SoundToggle extends PositionComponent {
+class SoundToggle extends PositionComponent with TapCallbacks {
   bool _muted = AudioManager.muted;
 
   SoundToggle({required super.position});

@@ -51,10 +51,10 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
       AudioManager.playScore();
       final pts = (type == EnemyType.big ? 50 : type == EnemyType.tough ? 40 : type == EnemyType.fast ? 20 : 25);
       scene?.onScore(pts);
+      scene?.onEnemyDestroyed();
       scene?.shake();
       removeFromParent();
     } else {
-      // Flash effect on partial hit
       scene?.onPartialHit();
     }
   }

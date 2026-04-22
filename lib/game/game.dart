@@ -1,14 +1,15 @@
 import 'package:flame/game.dart';
-import 'package:flame/events.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'scene/game_scene.dart';
 
-class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetection {
+class BallBounceBlitzGame extends FlameGame {
   GameScene? _scene;
   bool _gameStarted = false;
   int lastScore = 0;
+  int lastWave = 1;
+  int lastEnemiesDestroyed = 0;
   int _highScore = 0;
   static const String _highScoreKey = 'ball_bounce_high_score';
 
@@ -32,8 +33,14 @@ class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetect
     add(_scene!);
   }
 
-  void showGameOverScreen(int score, int highScore) {
+  void showGameOverScreen(int score, int wave, int enemiesDestroyed) {
     lastScore = score;
+    lastWave = wave;
+    lastEnemiesDestroyed = enemiesDestroyed;
+    if (score > _highScore) {
+      _highScore = score;
+      saveHighScore(score);
+    }
     overlays.add('GameOver');
   }
 
@@ -43,6 +50,8 @@ class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetect
     _scene = null;
     _gameStarted = false;
     lastScore = 0;
+    lastWave = 1;
+    lastEnemiesDestroyed = 0;
     startGame();
   }
 
@@ -65,9 +74,4 @@ class BallBounceBlitzGame extends FlameGame with TapDetector, HasCollisionDetect
   }
 
   int get highScore => _highScore;
-
-  @override
-  void onTapDown(TapDownEvent event) {
-    if (_scene == null) startGame();
-  }
 }

@@ -2,7 +2,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../game/game.dart';
 
-enum PowerUpType { speed, shield, multi, shrink }
+enum PowerUpType { speed, shield, multi, shrink, magnet }
 
 class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final PowerUpType type;
@@ -15,9 +15,10 @@ class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGam
     Color(0xFF4CAF50), // shield - green
     Color(0xFFFF9800), // multi - orange
     Color(0xFF9C27B0), // shrink - purple
+    Color(0xFFE91E63), // magnet - pink
   ];
 
-  static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻'];
+  static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲'];
 
   PowerUp({required double x, required double y, required this.type}) : super(position: Vector2(x, y), anchor: Anchor.center);
 

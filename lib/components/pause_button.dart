@@ -1,7 +1,9 @@
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
+import '../game/game.dart';
 
-class PauseButton extends PositionComponent with HasGameReference, TapCallbacks {
+class PauseButton extends PositionComponent with HasGameReference<BallBounceBlitzGame>, TapCallbacks {
   @override
   Future<void> onLoad() async {
     position = Vector2(gameRef.size.x - 20, 20);
@@ -10,13 +12,10 @@ class PauseButton extends PositionComponent with HasGameReference, TapCallbacks 
 
   @override
   void onTapDown(TapDownEvent event) {
-    if (gameRef is dynamic) {
-      final g = gameRef as dynamic;
-      if (g.overlays.contains('Pause')) {
-        g.overlays.remove('Pause');
-      } else {
-        g.overlays.add('Pause');
-      }
+    if (gameRef.overlays.contains('Pause')) {
+      gameRef.overlays.remove('Pause');
+    } else {
+      gameRef.overlays.add('Pause');
     }
   }
 
