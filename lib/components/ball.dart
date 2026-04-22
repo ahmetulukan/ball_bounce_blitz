@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../game/game.dart';
+import '../../services/audio_manager.dart';
 import 'paddle.dart';
 import 'enemy.dart';
 import 'power_up.dart';
@@ -102,6 +103,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
     final spd = _boosted ? _speed * 1.2 : _speed;
     velocity = Vector2(sin(angle) * spd, -cos(angle) * spd);
     onScore(10);
+    AudioManager.playHit();
     _speed += 5;
     _normalizeVelocity();
   }

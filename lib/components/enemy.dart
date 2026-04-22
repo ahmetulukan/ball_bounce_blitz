@@ -1,6 +1,7 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../game/game.dart';
+import '../../services/audio_manager.dart';
 
 enum EnemyType { normal, fast, tough, big }
 
@@ -47,6 +48,7 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
   void takeHit(dynamic scene) {
     hits--;
     if (hits <= 0) {
+      AudioManager.playScore();
       final pts = (type == EnemyType.big ? 50 : type == EnemyType.tough ? 40 : type == EnemyType.fast ? 20 : 25);
       scene?.onScore(pts);
       scene?.shake();
@@ -59,7 +61,7 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()..color = _typeColor();
+    final paint = Paint()..color = typeColor();
     canvas.drawRect(Rect.fromLTWH(-width / 2, -height / 2, width, height), paint);
 
     if (type == EnemyType.tough) {

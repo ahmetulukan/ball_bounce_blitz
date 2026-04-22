@@ -24,7 +24,6 @@ class ParticleEffect extends PositionComponent with HasGameReference<BallBounceB
   }
 
   @override
-  void update
   void update(double dt) {
     super.update(dt);
     elapsed += dt;
