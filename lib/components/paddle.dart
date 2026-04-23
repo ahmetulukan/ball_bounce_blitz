@@ -48,6 +48,15 @@ class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame
       final glow = Paint()..color = const Color(0x4000BCD4);
       canvas.drawRRect(RRect.fromRectAndRadius(rect.inflate(4), const Radius.circular(10)), glow);
     }
+    
+    // Draw critical zones on edges (gold color)
+    final leftCritRect = Rect.fromLTWH(0, 0, criticalZoneWidth, paddleHeight);
+    final rightCritRect = Rect.fromLTWH(currentWidth - criticalZoneWidth, 0, criticalZoneWidth, paddleHeight);
+    final critPaint = Paint()..color = const Color(0xFFFF9800).withAlpha(150);
+    canvas.drawRRect(RRect.fromRectAndRadius(leftCritRect, const Radius.circular(4)), critPaint);
+    canvas.drawRRect(RRect.fromRectAndRadius(rightCritRect, const Radius.circular(4)), critPaint);
+    
+    // Main paddle body
     final paint = Paint()..color = const Color(0xFF00BCD4);
     canvas.drawRRect(RRect.fromRectAndRadius(rect, const Radius.circular(8)), paint);
     final hi = Paint()..color = Colors.white.withAlpha(77);
