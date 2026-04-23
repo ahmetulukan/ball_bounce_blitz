@@ -1,12 +1,15 @@
-import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/collisions.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
+import 'paddle.dart';
 
 enum PowerUpType { speed, shield, multi, shrink, magnet }
 
-class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
+class PowerUp extends PositionComponent
+    with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {
   final PowerUpType type;
+  final dynamic gameScene;
   static const double sizeW = 24;
   static const double sizeH = 24;
   static const double fallSpeed = 100;
@@ -21,8 +24,14 @@ class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGam
 
   static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲'];
 
-  PowerUp({required double x, required double y, required this.type}) : super(position: Vector2(x, y), anchor: Anchor.center) {
+  PowerUp({
+    required double x,
+    required double y,
+    required this.type,
+    required this.gameScene,
+  }) : super(position: Vector2(x, y), anchor: Anchor.center) {
     add(RectangleHitbox());
+    size = Vector2(sizeW, sizeH);
   }
 
   @override
@@ -30,6 +39,15 @@ class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGam
     super.update(dt);
     position.y += fallSpeed * dt;
     if (position.y > game.size.y + 30) removeFromParent();
+  }
+
+  @override
+  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollisionStart(intersectionPoints, other);
+    if (other is Paddle) {
+      gameScene?.collectPowerUp(type);
+      removeFromParent();
+    }
   }
 
   @override
