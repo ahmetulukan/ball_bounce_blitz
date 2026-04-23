@@ -76,6 +76,18 @@ Bu dosya, proje üzerinde yapılan değişikliklerin ve sıradaki adımların te
 - Test sürecinde “sessiz mod” hedeflendiği için **ses dosyaları eklenmedi** (audio manager zaten stub).
 - Not: Audio dosyaları eklenecekse beklenen isimler: `hit.wav`, `score.wav`, `powerup.wav`, `gameover.wav`, `explosion.wav`.
 
+### 2026-04-23 - Critical Hit Zone sisteminin eklenmesi
+- Neden: OPENCLAW_HANDOFF.md'de "Risk–ödül vuruş bölgeleri (paddle kenarları kritik)" önerisi vardı
+- Ne değişti: Paddle'ın kenarlarında kritik vuruş bölgesi eklendi (paddle edges = bonus puan)
+- Dosyalar: lib/components/paddle.dart, lib/components/ball.dart
+- Doğrulama: paddle.dart'ta _isCriticalHitZone() metodu ve render()'da görsel gösterge
+
+### YYYY-MM-DD - <kısa başlık>
+- Neden: …
+- Ne değişti: …
+- Dosyalar: …
+- Doğrulama: (flutter analyze / build / run notları)
+
 ## OpenClaw için sıradaki adımlar (önerilen)
 - **Oynanış farklılaştırma**:
   - Paddle “spin/curve” (drag hızına göre falso)

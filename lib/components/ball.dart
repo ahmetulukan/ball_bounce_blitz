@@ -127,10 +127,16 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     final hitPos = (position.x - paddle.position.x) / (paddle.currentWidth / 2);
     final angle = hitPos * pi / 3;
     final spd = _boosted ? _speed * 1.2 : _speed;
+    
+    // Check for critical hit zone (paddle edges)
+    final bool isCritical = paddle.isInCriticalZone(position.x);
+    final int basePoints = isCritical ? 25 : 10;
+    final double speedBonus = isCritical ? 8.0 : 5.0;
+    
     velocity = Vector2(sin(angle) * spd, -cos(angle) * spd);
-    onScore(10);
+    onScore(basePoints);
     AudioManager.playHit();
-    _speed += 5;
+    _speed += speedBonus;
     _normalizeVelocity();
   }
 

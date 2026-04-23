@@ -7,9 +7,16 @@ import '../game/game.dart';
 class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame>, DragCallbacks {
   static const double baseWidth = 80;
   static const double paddleHeight = 15;
+  static const double criticalZoneWidth = 15;
   double currentWidth = baseWidth;
   bool shielded = false;
   int shrinkLevel = 0;
+
+  bool isInCriticalZone(double hitX) {
+    final leftEdge = position.x - currentWidth / 2;
+    final rightEdge = position.x + currentWidth / 2;
+    return (hitX <= leftEdge + criticalZoneWidth) || (hitX >= rightEdge - criticalZoneWidth);
+  }
 
   Paddle() : super(anchor: Anchor.bottomCenter) {
     add(RectangleHitbox());
