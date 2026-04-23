@@ -18,6 +18,8 @@ import '../../components/combo_display.dart';
 import '../../components/explosion_effect.dart';
 import '../../components/starfield.dart';
 import '../../components/ball_trail.dart';
+import '../../components/score_popup.dart';
+import '../../components/critical_hit_effect.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -83,6 +85,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     score += points;
     scoreDisplay.updateScore(score);
     add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFFFEB3B)));
+    add(ScorePopup(position: ball.position.clone(), score: points));
     _registerHit();
   }
 
@@ -93,6 +96,10 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     if (comboCount >= 5) {
       score += 5;
       scoreDisplay.updateScore(score);
+      add(ScorePopup(position: ball.position.clone(), score: 5));
+    }
+    if (comboCount >= 10) {
+      add(CriticalHitEffect(position: ball.position.clone()));
     }
   }
 
