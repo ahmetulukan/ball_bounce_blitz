@@ -1,18 +1,17 @@
 # Flutter build artifacts
 build/
-.dart_tool/package_graph.json
-.dart_tool/dartpad/
+.dart_tool/
+.flutter-plugins-dependencies
+.metadata
 
 # IDE
 .idea/
 *.iml
+.DS_Store
 
-# Platform files
-android/
-ios/
-linux/
-macos/
-windows/
+# CocoaPods / iOS
+ios/Pods/
+ios/Podfile.lock
 
-# Audio placeholder
-assets/audio/
+# Optional: local assets (keep folder structure)
+# assets/audio/

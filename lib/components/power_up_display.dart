@@ -12,9 +12,20 @@ class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceB
   }
 
   @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    position = Vector2(game.size.x - 16, 16);
+  }
+
+  @override
+  void onGameResize(Vector2 size) {
+    super.onGameResize(size);
+    position = Vector2(size.x - 16, 16);
+  }
+
+  @override
   void update(double dt) {
     super.update(dt);
-    position = Vector2(game.size.x - 16, 16);
     activeTimers.removeWhere((k, v) {
       activeTimers[k] = v - dt;
       return activeTimers[k]! <= 0;

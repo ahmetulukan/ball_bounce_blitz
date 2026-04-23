@@ -87,7 +87,8 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
       position.x = game.size.x - radius;
     }
     if (position.y <= radius) {
-      velocity.y = -_speed.abs();
+      // Bounce downwards when hitting the top edge.
+      velocity.y = _speed.abs();
       position.y = radius;
     }
     if (position.y >= game.size.y - radius) {
