@@ -178,6 +178,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   }
 
   void collectPowerUp(PowerUpType type) {
+    AudioManager.playPowerUp();
     switch (type) {
       case PowerUpType.speed:
         ball.boost();

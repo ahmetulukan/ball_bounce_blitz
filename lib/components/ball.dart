@@ -44,11 +44,16 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
   void boost() {
     _boosted = true;
     _boostTimer = 5;
+    _prevSpeedForBoost = _speed;
     _speed = baseSpeed * 1.5;
-    // refresh velocity direction
-    final angle = atan2(velocity.y, velocity.x);
-    velocity = Vector2(sin(angle) * _speed, -cos(angle) * _speed);
+    if (velocity.length > 0) {
+      velocity = velocity.normalized() * _speed;
+    } else {
+      velocity = Vector2(0, -_speed);
+    }
   }
+
+  double _prevSpeedForBoost = baseSpeed;
 
   @override
   void update(double dt) {
@@ -58,9 +63,13 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
       _boostTimer -= dt;
       if (_boostTimer <= 0) {
         _boosted = false;
-        _speed = (baseSpeed + (scoreFromSpeed * 0.5)).clamp(baseSpeed, baseSpeed + 150);
-        _normalizeVelocity();
+        _speed = (_prevSpeedForBoost + (_prevSpeedForBoost - baseSpeed) * 0.5).clamp(baseSpeed, baseSpeed + 150);
+        if (velocity.length > 0) velocity = velocity.normalized() * _speed;
       }
+    }
+
+    if (magnetActive) {
+      _applyMagnet(dt);
     }
 
     position += velocity * dt;
@@ -96,6 +105,19 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
 
   double get scoreFromSpeed => (_speed - baseSpeed) / 5;
   bool get isBoosted => _boosted;
+  bool get magnetActive => (gameScene as dynamic)?.magnetActive == true;
+
+  void _applyMagnet(double dt) {
+    if (paddle == null) return;
+    final dx = paddle.position.x - position.x;
+    final dy = paddle.position.y - position.y;
+    final distSq = dx * dx + dy * dy;
+    if (distSq < 160000) { // within 400px
+      final norm = Vector2(dx, dy).normalized();
+      velocity = velocity + norm * 400 * dt;
+      if (velocity.length > 0) velocity = velocity.normalized() * _speed;
+    }
+  }
 
   void _bounceOffPaddle() {
     final hitPos = (position.x - paddle.position.x) / (paddle.currentWidth / 2);
