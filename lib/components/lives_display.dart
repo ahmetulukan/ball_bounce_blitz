@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class LivesDisplay extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   int lives;

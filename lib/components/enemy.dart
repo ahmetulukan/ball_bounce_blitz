@@ -1,6 +1,7 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 import '../../services/audio_manager.dart';
 
 enum EnemyType { normal, fast, tough, big }
@@ -36,13 +37,15 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
         width = 50; height = 50; hits = 2; speed = speed * 0.5;
         break;
     }
+    size = Vector2(width, height);
+    add(RectangleHitbox());
   }
 
   @override
   void update(double dt) {
     super.update(dt);
     position.y += speed * dt;
-    if (position.y > gameRef.size.y + 60) removeFromParent();
+    if (position.y > game.size.y + 60) removeFromParent();
   }
 
   void takeHit(dynamic scene) {

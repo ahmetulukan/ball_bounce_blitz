@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class ComboDisplay extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   int comboCount = 0;

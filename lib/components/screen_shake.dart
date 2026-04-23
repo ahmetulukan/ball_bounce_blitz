@@ -1,5 +1,5 @@
 import 'package:flame/components.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class ScreenShake extends Component with HasGameReference<BallBounceBlitzGame> {
   double intensity = 0;

@@ -6,17 +6,13 @@ import '../game/game.dart';
 class PauseButton extends PositionComponent with HasGameReference<BallBounceBlitzGame>, TapCallbacks {
   @override
   Future<void> onLoad() async {
-    position = Vector2(gameRef.size.x - 20, 20);
+    position = Vector2(game.size.x - 20, 20);
     size = Vector2(30, 30);
   }
 
   @override
   void onTapDown(TapDownEvent event) {
-    if (gameRef.overlays.contains('Pause')) {
-      gameRef.overlays.remove('Pause');
-    } else {
-      gameRef.overlays.add('Pause');
-    }
+    game.overlays.toggle('Pause');
   }
 
   @override

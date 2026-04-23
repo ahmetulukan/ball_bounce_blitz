@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class ExplosionEffect extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final List<ExplosionParticle> particles = [];

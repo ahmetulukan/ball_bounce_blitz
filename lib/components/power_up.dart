@@ -1,6 +1,7 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 enum PowerUpType { speed, shield, multi, shrink, magnet }
 
@@ -20,13 +21,15 @@ class PowerUp extends PositionComponent with HasGameReference<BallBounceBlitzGam
 
   static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲'];
 
-  PowerUp({required double x, required double y, required this.type}) : super(position: Vector2(x, y), anchor: Anchor.center);
+  PowerUp({required double x, required double y, required this.type}) : super(position: Vector2(x, y), anchor: Anchor.center) {
+    add(RectangleHitbox());
+  }
 
   @override
   void update(double dt) {
     super.update(dt);
     position.y += fallSpeed * dt;
-    if (position.y > gameRef.size.y + 30) removeFromParent();
+    if (position.y > game.size.y + 30) removeFromParent();
   }
 
   @override

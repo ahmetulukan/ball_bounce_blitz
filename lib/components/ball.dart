@@ -1,13 +1,14 @@
 import 'dart:math';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../../game/game.dart';
 import '../../services/audio_manager.dart';
-import 'paddle.dart';
 import 'enemy.dart';
+import 'paddle.dart';
 import 'power_up.dart';
 
-class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
+class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {
   final Paddle paddle;
   final Function(int) onScore;
   final VoidCallback onLifeLost;
@@ -23,17 +24,20 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
 
   Ball({required this.paddle, required this.onScore, required this.onLifeLost, required this.onGameOver, required this.gameScene, this.isExtra = false}) : super(anchor: Anchor.center);
 
+
   @override
   Future<void> onLoad() async {
-    final gameSize = gameRef.size;
+    final gameSize = game.size;
     position = Vector2(gameSize.x / 2, isExtra ? gameSize.y * 0.6 : gameSize.y - 100);
     final angle = isExtra ? (Random().nextDouble() - 0.5) * pi / 2 : 0.0;
     velocity = Vector2(sin(angle) * _speed, -cos(angle) * _speed);
     size = Vector2(radius * 2, radius * 2);
+    // Add circle hitbox for proper collision detection
+    add(CircleHitbox(radius: radius));
   }
 
   void reset() {
-    final gameSize = gameRef.size;
+    final gameSize = game.size;
     position = Vector2(gameSize.x / 2, gameSize.y - 100);
     _speed = baseSpeed;
     _boosted = false;
@@ -78,15 +82,15 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
       velocity.x = _speed.abs();
       position.x = radius;
     }
-    if (position.x >= gameRef.size.x - radius) {
+    if (position.x >= game.size.x - radius) {
       velocity.x = -_speed.abs();
-      position.x = gameRef.size.x - radius;
+      position.x = game.size.x - radius;
     }
     if (position.y <= radius) {
       velocity.y = -_speed.abs();
       position.y = radius;
     }
-    if (position.y >= gameRef.size.y - radius) {
+    if (position.y >= game.size.y - radius) {
       if (isExtra) {
         removeFromParent();
       } else {
@@ -108,7 +112,6 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame> 
   bool get magnetActive => (gameScene as dynamic)?.magnetActive == true;
 
   void _applyMagnet(double dt) {
-    if (paddle == null) return;
     final dx = paddle.position.x - position.x;
     final dy = paddle.position.y - position.y;
     final distSq = dx * dx + dy * dy;

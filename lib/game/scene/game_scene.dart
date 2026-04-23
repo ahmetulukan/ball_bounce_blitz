@@ -3,20 +3,21 @@ import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../game.dart';
-import '../components/paddle.dart';
-import '../components/ball.dart';
-import '../components/enemy.dart';
-import '../components/score_display.dart';
-import '../components/lives_display.dart';
-import '../components/power_up_display.dart';
-import '../components/particle_effect.dart';
-import '../components/screen_shake.dart';
-import '../components/power_up.dart';
-import '../components/wave_announcement.dart';
-import '../components/combo_display.dart';
-import '../components/explosion_effect.dart';
-import '../components/starfield.dart';
-import '../components/ball_trail.dart';
+import '../../services/audio_manager.dart';
+import '../../components/paddle.dart';
+import '../../components/ball.dart';
+import '../../components/enemy.dart';
+import '../../components/score_display.dart';
+import '../../components/lives_display.dart';
+import '../../components/power_up_display.dart';
+import '../../components/particle_effect.dart';
+import '../../components/screen_shake.dart';
+import '../../components/power_up.dart';
+import '../../components/wave_announcement.dart';
+import '../../components/combo_display.dart';
+import '../../components/explosion_effect.dart';
+import '../../components/starfield.dart';
+import '../../components/ball_trail.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -110,7 +111,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     livesDisplay.lives = lives;
     screenShake.trigger(shakeIntensity: 8, shakeDuration: 0.4);
     add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFE91E63)));
-    add(ExplosionEffect(position: ball.position.clone(), color: const Color(0xFFE91E63), scale: 1.2));
+    add(ExplosionEffect(position: ball.position.clone(), color: const Color(0xFFE91E63), explosionScale: 1.2));
 
     if (lives <= 0) {
       onGameOver();

@@ -1,7 +1,7 @@
 import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class Star extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final double twinkleSpeed;
@@ -34,7 +34,7 @@ class Starfield extends Component with HasGameReference<BallBounceBlitzGame> {
 
   @override
   Future<void> onLoad() async {
-    final gameSize = gameRef.size;
+    final gameSize = game.size;
     for (int i = 0; i < count; i++) {
       final pos = Vector2(_rand.nextDouble() * gameSize.x, _rand.nextDouble() * gameSize.y);
       final speed = 0.3 + _rand.nextDouble() * 1.5;

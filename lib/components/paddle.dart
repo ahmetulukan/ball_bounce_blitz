@@ -1,7 +1,8 @@
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame>, DragCallbacks {
   static const double baseWidth = 80;
@@ -10,11 +11,13 @@ class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame
   bool shielded = false;
   int shrinkLevel = 0;
 
-  Paddle() : super(anchor: Anchor.bottomCenter);
+  Paddle() : super(anchor: Anchor.bottomCenter) {
+    add(RectangleHitbox());
+  }
 
   @override
   Future<void> onLoad() async {
-    final gameSize = gameRef.size;
+    final gameSize = game.size;
     position = Vector2(gameSize.x / 2, gameSize.y - 40);
     size = Vector2(currentWidth, paddleHeight);
   }
@@ -28,7 +31,7 @@ class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame
   @override
   void onDragUpdate(DragUpdateEvent event) {
     position.x += event.localDelta.x;
-    position.x = position.x.clamp(currentWidth / 2, gameRef.size.x - currentWidth / 2);
+    position.x = position.x.clamp(currentWidth / 2, game.size.x - currentWidth / 2);
   }
 
   @override

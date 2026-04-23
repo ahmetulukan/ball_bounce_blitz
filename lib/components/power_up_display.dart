@@ -1,6 +1,6 @@
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../../game/game.dart';
+import '../game/game.dart';
 
 class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final Map<String, double> activeTimers = {};
@@ -14,7 +14,7 @@ class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceB
   @override
   void update(double dt) {
     super.update(dt);
-    position = Vector2(gameRef.size.x - 16, 16);
+    position = Vector2(game.size.x - 16, 16);
     activeTimers.removeWhere((k, v) {
       activeTimers[k] = v - dt;
       return activeTimers[k]! <= 0;
