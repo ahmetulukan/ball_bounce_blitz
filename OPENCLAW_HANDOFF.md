@@ -9,7 +9,7 @@ Bu dosya, proje üzerinde yapılan değişikliklerin ve sıradaki adımların te
 
 ## Bu oturumda yapılan değişiklikler (nereden → nereye)
 
-### 1) Flutter “app” yapısı eksikleri tamamlandı
+### 1) Flutter "app" yapısı eksikleri tamamlandı
 - **Önce**: Repoda `android/`, `ios/`, `web/` vb. platform klasörleri yoktu; `flutter run/build` pratikte mümkün değildi.
 - **Sonra**: `flutter create .` ile standart Flutter proje iskeleti üretildi:
   - `android/`, `ios/`, `web/`, `macos/`, `windows/`, `linux/`
@@ -20,18 +20,18 @@ Bu dosya, proje üzerinde yapılan değişikliklerin ve sıradaki adımların te
 - **Sonra**: `flame: ^1.35.1` ile uyumlu hale getirildi ve `flutter pub get` çalışır hale geldi.
 - **Dosya**: `pubspec.yaml`
 
-### 3) Test dosyası “MyApp yok” hatası düzeltildi
-- **Önce**: `test/widget_test.dart` default Flutter counter test’ini kullanıyordu ve `MyApp` sınıfı projede olmadığı için analiz/build süreçlerinde hata doğuruyordu.
-- **Sonra**: Uygulamanın açılıp Home UI text’inin geldiğini kontrol eden basit smoke test’e dönüştürüldü.
+### 3) Test dosyası "MyApp yok" hatası düzeltildi
+- **Önce**: `test/widget_test.dart` default Flutter counter test'ini kullanıyordu ve `MyApp` sınıfı projede olmadığı için analiz/build süreçlerinde hata doğuruyordu.
+- **Sonra**: Uygulamanın açılıp Home UI text'inin geldiğini kontrol eden basit smoke test'e dönüştürüldü.
 - **Dosya**: `test/widget_test.dart`
 
-### 4) iOS: `shared_preferences_foundation` “Module not found” düzeltildi
+### 4) iOS: `shared_preferences_foundation` "Module not found" düzeltildi
 - **Önce**: Xcode build sırasında `GeneratedPluginRegistrant` içinde `shared_preferences_foundation` bulunamıyordu.
 - **Kök neden**:
   - CocoaPods kurulumunun/entegrasyonunun eksik kalması
-  - Flutter `.xcconfig` dosyalarında Pods include’larının etkin olmaması
+  - Flutter `.xcconfig` dosyalarında Pods include'larının etkin olmaması
 - **Sonra**:
-  - `ios/Flutter/Debug.xcconfig` ve `ios/Flutter/Release.xcconfig` içinde Pods include’ları aktif edildi
+  - `ios/Flutter/Debug.xcconfig` ve `ios/Flutter/Release.xcconfig` içinde Pods include'ları aktif edildi
   - Eksik `ios/Flutter/Profile.xcconfig` eklendi
   - `ios/Podfile` içine `platform :ios, '13.0'` eklendi
   - `pod install` tekrarlandı
@@ -42,29 +42,29 @@ Bu dosya, proje üzerinde yapılan değişikliklerin ve sıradaki adımların te
   - `ios/Flutter/Profile.xcconfig` (yeni)
   - `ios/Podfile`
 
-### 5) Flame crash: “component is detached / game == null” düzeltildi
-- **Önce**: `ScoreDisplay` constructor içinde `game.size` okuyordu. Component tree’ye eklenmeden `game` erişimi Flame assertion ile crash üretiyordu (Play sonrası siyah ekran).
+### 5) Flame crash: "component is detached / game == null" düzeltildi
+- **Önce**: `ScoreDisplay` constructor içinde `game.size` okuyordu. Component tree'ye eklenmeden `game` erişimi Flame assertion ile crash üretiyordu (Play sonrası siyah ekran).
 - **Sonra**: `game.size` erişimi `onLoad`/`onGameResize` aşamasına taşındı.
-- **Ek**: `PowerUpDisplay`’da her frame `game.size` okuma yerine `onLoad/onGameResize` ile konumlandırma yapıldı.
+- **Ek**: `PowerUpDisplay`'da her frame `game.size` okuma yerine `onLoad/onGameResize` ile konumlandırma yapıldı.
 - **Dosyalar**:
   - `lib/components/score_display.dart`
   - `lib/components/power_up_display.dart`
 
-### 6) Oyun fizik bug: Top üst duvarda “takılı kalıyor” düzeltildi
-- **Önce**: Top üst sınıra çarpınca `velocity.y` yanlış yönde ayarlanıyordu, top yukarı gidip “orada kalmış gibi” davranıyordu.
+### 6) Oyun fizik bug: Top üst duvarda "takılı kalıyor" düzeltildi
+- **Önce**: Top üst sınıra çarpınca `velocity.y` yanlış yönde ayarlanıyordu, top yukarı gidip "orada kalmış gibi" davranıyordu.
 - **Sonra**: Üst çarpışmada topun aşağı doğru sekmesi sağlandı.
 - **Dosya**: `lib/components/ball.dart`
 
-### 7) Power-up’lar paddle ile toplanmıyordu → paddle collision ile toplanır hale getirildi
-- **Önce**: Power-up’lar sadece **top ile collision** olunca toplanıyordu; paddle’a geldiğinde reaksiyon yoktu.
+### 7) Power-up'lar paddle ile toplanmıyordu → paddle collision ile toplanır hale getirildi
+- **Önce**: Power-up'lar sadece **top ile collision** olunca toplanıyordu; paddle'a geldiğinde reaksiyon yoktu.
 - **Sonra**: Power-up `CollisionCallbacks` ile **Paddle** ile çarpışınca `collectPowerUp` çağırıyor ve yok oluyor.
 - **Dosyalar**:
   - `lib/components/power_up.dart`
   - `lib/game/scene/game_scene.dart` (spawn parametresi)
 
 ### 8) Orientation davranışı (test stabilitesi için)
-- **Önce**: Dikey çevirme denemelerinde iOS tarafında görsel “flicker/black” gibi sorunlar raporlandı.
-- **Sonra**: Test aşamasında kararlılık için uygulama **landscape**’e kilitlendi.
+- **Önce**: Dikey çevirme denemelerinde iOS tarafında görsel "flicker/black" gibi sorunlar raporlandı.
+- **Sonra**: Test aşamasında kararlılık için uygulama **landscape**'e kilitlendi.
 - **Dosya**: `lib/main.dart`
 
 ## Build doğrulamaları
@@ -73,36 +73,46 @@ Bu dosya, proje üzerinde yapılan değişikliklerin ve sıradaki adımların te
 
 ## Asset/medya durumu
 - `pubspec.yaml` sadece `assets/audio/` tanımlıyor.
-- Test sürecinde “sessiz mod” hedeflendiği için **ses dosyaları eklenmedi** (audio manager zaten stub).
-- Not: Audio dosyaları eklenecekse beklenen isimler: `hit.wav`, `score.wav`, `powerup.wav`, `gameover.wav`, `explosion.wav`.
+- ✅ Ses dosyaları eklendi: `hit.wav`, `score.wav`, `powerup.wav`, `gameover.wav`, `explosion.wav` (procedural olarak üretildi)
+- `flame_audio: ^2.11.14` ile ses sistemi aktif.
 
-### 2026-04-23 - Critical Hit Zone sisteminin eklenmesi
+### 2026-04-23 - Critical Hit Zone sisteminin eklenmesi ✅
 - Neden: OPENCLAW_HANDOFF.md'de "Risk–ödül vuruş bölgeleri (paddle kenarları kritik)" önerisi vardı
 - Ne değişti: Paddle'ın kenarlarında kritik vuruş bölgesi eklendi (paddle edges = bonus puan)
 - Dosyalar: lib/components/paddle.dart, lib/components/ball.dart
 - Doğrulama: paddle.dart'ta _isCriticalHitZone() metodu ve render()'da görsel gösterge
 
+### 2026-04-24 - Audio System + flame_audio + Procedural SFX ✅
+- Neden: Oyun sadece görseldi, ses yoktu. Daha immersive bir deneyim için ses sistemi eklendi.
+- Ne değişti:
+  - `flame_audio: ^2.11.14` pubspec.yaml'a eklendi
+  - AudioManager servisi aktif hale getirildi (hit, score, powerup, gameover, explosion sesleri)
+  - Tüm oyun olaylarına ses tetikleri eklendi (ball bounce, enemy destroy, life lost, game over, boss defeat)
+  - Procedural WAV dosyaları oluşturuldu: hit.wav, score.wav, powerup.wav, gameover.wav, explosion.wav
+- Dosyalar: pubspec.yaml, lib/services/audio_manager.dart, lib/game/game.dart, lib/game/scene/game_scene.dart, assets/audio/*.wav
+- Doğrulama: flutter pub get ✓, flutter analyze (0 errors, sadece warnings/info)
+
 ### YYYY-MM-DD - <kısa başlık>
-- Neden: …
-- Ne değişti: …
-- Dosyalar: …
+- Neden: ...
+- Ne değişti: ...
+- Dosyalar: ...
 - Doğrulama: (flutter analyze / build / run notları)
 
 ## OpenClaw için sıradaki adımlar (önerilen)
 - **Oynanış farklılaştırma**:
-  - Paddle “spin/curve” (drag hızına göre falso)
-  - Risk–ödül vuruş bölgeleri (paddle kenarları kritik)
+  - Paddle "spin/curve" (drag hızına göre falso)
+  - Risk-ödül vuruş bölgeleri (paddle kenarları kritik)
   - Düşman davranış çeşitleri (dodge/parçalanma/şok dalgası)
-- **Portrait desteği istenecekse**: UI düzeni + fizik sınırları portrait’e göre yeniden ele alınmalı (şu an landscape kilitli).
+- **Portrait desteği istenecekse**: UI düzeni + fizik sınırları portrait'e göre yeniden ele alınmalı (şu an landscape kilitli).
 
 ## Değişiklik kaydı formatı (OpenClaw eklesin)
 Lütfen yeni değişiklikleri aşağıdaki şablonla bu dosyanın en üstüne (bu bölümün altına) ekleyin:
 
 ```
 ### YYYY-MM-DD - <kısa başlık>
-- Neden: …
-- Ne değişti: …
-- Dosyalar: …
+- Neden: ...
+- Ne değişti: ...
+- Dosyalar: ...
 - Doğrulama: (flutter analyze / build / run notları)
 ```
 
