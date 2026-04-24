@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import '../game/game.dart';
 import 'home_screen.dart';
+import 'pause_screen.dart';
 import 'game_over_screen.dart';
 
 class GameScreen extends StatelessWidget {
@@ -21,6 +22,7 @@ class GameScreen extends StatelessWidget {
             body: GameWidget(
               game: g,
               overlayBuilderMap: {
+                'Pause': (ctx, game) => PauseScreen(game: game as BallBounceBlitzGame),
                 'GameOver': (ctx, game) => GameOverScreen(
                   score: (game as BallBounceBlitzGame).lastScore,
                   highScore: (game as BallBounceBlitzGame).highScore,

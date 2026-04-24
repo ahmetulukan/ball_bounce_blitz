@@ -18,6 +18,7 @@ import '../../components/combo_display.dart';
 import '../../components/explosion_effect.dart';
 import '../../components/starfield.dart';
 import '../../components/ball_trail.dart';
+import '../../components/pause_button.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -30,6 +31,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late WaveAnnouncement waveAnnouncement;
   late ComboDisplay comboDisplay;
   late Starfield starfield;
+  late PauseButton pauseButton;
 
   int score = 0;
   int lives = 3;
@@ -63,6 +65,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     waveAnnouncement = WaveAnnouncement();
     comboDisplay = ComboDisplay();
     starfield = Starfield(count: 50);
+    pauseButton = PauseButton();
 
     await add(starfield);
     await add(paddle);
@@ -74,6 +77,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     await add(screenShake);
     await add(waveAnnouncement);
     await add(comboDisplay);
+    await add(pauseButton);
 
     await add(Enemy(x: 200, y: 50, speed: 80, gameScene: this));
     waveAnnouncement.showWave(1);
