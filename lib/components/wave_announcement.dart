@@ -22,6 +22,15 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
     active = true;
   }
 
+  void showBoss(int wave) {
+    displayedWave = wave;
+    timer = 2.5;
+    active = true;
+    _isBoss = true;
+  }
+
+  bool _isBoss = false;
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -57,7 +66,23 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
     tp.layout();
     tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
 
-    if (displayedWave > 1) {
+    if (_isBoss) {
+      final bossText = '👑 BOSS WAVE! 👑';
+      final bp = TextPainter(
+        text: TextSpan(
+          text: bossText,
+          style: TextStyle(
+            fontSize: 22 * scale,
+            fontWeight: FontWeight.bold,
+            color: const Color(0xFFFFD700).withAlpha((alpha * 255).toInt()),
+            shadows: const [Shadow(color: Color(0x80FF0000), blurRadius: 12)],
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      bp.layout();
+      bp.paint(canvas, Offset(-bp.width / 2, tp.height / 2 + 4));
+    } else if (displayedWave > 1) {
       final subText = 'Speed Up!';
       final sub = TextPainter(
         text: TextSpan(

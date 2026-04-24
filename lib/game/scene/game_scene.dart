@@ -19,6 +19,8 @@ import '../../components/explosion_effect.dart';
 import '../../components/starfield.dart';
 import '../../components/ball_trail.dart';
 import '../../components/pause_button.dart';
+import '../../components/boss_enemy.dart';
+import '../../components/wave_progress_bar.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -32,6 +34,8 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late ComboDisplay comboDisplay;
   late Starfield starfield;
   late PauseButton pauseButton;
+  late WaveProgressBar waveProgressBar;
+  bool bossSpawnedThisWave = false;
 
   int score = 0;
   int lives = 3;
@@ -66,6 +70,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     comboDisplay = ComboDisplay();
     starfield = Starfield(count: 50);
     pauseButton = PauseButton();
+    waveProgressBar = WaveProgressBar(enemiesInWave: 15);
 
     await add(starfield);
     await add(paddle);
@@ -78,6 +83,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     await add(waveAnnouncement);
     await add(comboDisplay);
     await add(pauseButton);
+    await add(waveProgressBar);
 
     await add(Enemy(x: 200, y: 50, speed: 80, gameScene: this));
     waveAnnouncement.showWave(1);
@@ -227,13 +233,45 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
   void onEnemyDestroyed() {
     enemiesDestroyed++;
-    final newWave = (enemiesDestroyed ~/ 15) + 1;
+    waveProgressBar.setProgress(enemiesDestroyed % 15, 15);
+    final waveFloor = enemiesDestroyed ~/ 15;
+    final newWave = waveFloor + 1;
     if (newWave > wave) {
       wave = newWave;
+      bossSpawnedThisWave = false;
       waveAnnouncement.showWave(wave);
       enemySpawnInterval = (1.5 - wave * 0.08).clamp(0.5, 1.5);
     }
+
+    // Boss spawns at wave 5, 10, 15...
+    if (wave >= 5 && waveFloor > 0 && waveFloor % 5 == 0 && !bossSpawnedThisWave && enemiesDestroyed % 15 == 0) {
+      bossSpawnedThisWave = true;
+      _spawnBoss();
+    }
   }
 
-  void shake() => screenShake.trigger();
+  void _spawnBoss() {
+    final gameSize = findGame()?.size ?? Vector2(400, 600);
+    final x = gameSize.x / 2;
+    waveAnnouncement.showBoss(wave);
+    add(BossEnemy(x: x, y: -50, speed: 40, gameScene: this, wave: wave));
+  }
+
+  void onBossDefeated() {
+    // Bonus for defeating boss
+    score += wave * 100;
+    scoreDisplay.updateScore(score);
+    for (int i = 0; i < 5; i++) {
+      add(ParticleEffect(
+        position: Vector2(
+          40 + _rand.nextDouble() * (findGame()?.size.x ?? 400) - 80,
+          40 + _rand.nextDouble() * 200,
+        ),
+        color: const Color(0xFFFFD700),
+      ));
+    }
+    screenShake.trigger(shakeIntensity: 12, shakeDuration: 0.5);
+  }
+
+  void shake() => screenShake.trigger(shakeIntensity: 5, shakeDuration: 0.2);
 }
