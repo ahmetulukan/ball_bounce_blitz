@@ -22,6 +22,7 @@ import '../../components/pause_button.dart';
 import '../../components/boss_enemy.dart';
 import '../../components/wave_progress_bar.dart';
 import '../../components/barrier.dart';
+import '../../components/score_popup.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -96,6 +97,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     score += points;
     scoreDisplay.updateScore(score);
     add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFFFEB3B)));
+    add(ScorePopup(position: ball.position.clone(), text: '+$points'));
     _registerHit();
   }
 
@@ -106,6 +108,13 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     if (comboCount >= 5) {
       score += 5;
       scoreDisplay.updateScore(score);
+      if (comboCount == 5 || comboCount == 10 || comboCount == 15 || comboCount % 10 == 0) {
+        add(ScorePopup(
+          position: Vector2(ball.position.x, ball.position.y - 30),
+          text: '🔥 COMBO x$comboCount',
+          color: const Color(0xFFFF9800),
+        ));
+      }
     }
   }
 
@@ -205,6 +214,8 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
   void collectPowerUp(PowerUpType type) {
     AudioManager.playPowerUp();
+    final labels = {'speed': '⚡ SPEED!', 'shield': '🛡️ SHIELD!', 'multi': '✖3 MULTI!', 'shrink': '🔻 SHRINK!', 'magnet': '🧲 MAGNET!'};
+    add(ScorePopup(position: ball.position.clone(), text: labels[type.name] ?? '✨', color: const Color(0xFF00BCD4)));
     switch (type) {
       case PowerUpType.speed:
         ball.boost();
@@ -276,6 +287,11 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     // Bonus for defeating boss
     score += wave * 100;
     scoreDisplay.updateScore(score);
+    add(ScorePopup(
+      position: Vector2(findGame()?.size.x ?? 200, (findGame()?.size.y ?? 300) / 2),
+      text: '👑 BOSS DEFEATED! +${wave * 100}',
+      color: const Color(0xFFFFD700),
+    ));
     for (int i = 0; i < 5; i++) {
       add(ParticleEffect(
         position: Vector2(
