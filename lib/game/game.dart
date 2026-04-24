@@ -1,6 +1,7 @@
 import 'package:flame/game.dart';
 import 'package:flame/flame.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../services/audio_manager.dart';
 import 'scene/game_scene.dart';
 
 class BallBounceBlitzGame extends FlameGame {
@@ -16,6 +17,7 @@ class BallBounceBlitzGame extends FlameGame {
   Future<void> onLoad() async {
     await Flame.device.fullScreen();
     await Flame.device.setLandscape();
+    await AudioManager.init();
   }
 
   @override
@@ -41,6 +43,7 @@ class BallBounceBlitzGame extends FlameGame {
       saveHighScore(score);
     }
     overlays.add('GameOver');
+    AudioManager.playGameOver();
   }
 
   void restart() {

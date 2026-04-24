@@ -134,6 +134,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     screenShake.trigger(shakeIntensity: 8, shakeDuration: 0.4);
     add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFE91E63)));
     add(ExplosionEffect(position: ball.position.clone(), color: const Color(0xFFE91E63), explosionScale: 1.2));
+    AudioManager.playExplosion();
 
     if (lives <= 0) {
       onGameOver();
@@ -316,6 +317,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
         enemy.hits = (enemy.hits - 1).clamp(0, 999);
         if (enemy.hits <= 0) {
           AudioManager.playScore();
+          AudioManager.playExplosion();
           final pts = enemy.type == EnemyType.big ? 50 : enemy.type == EnemyType.tough ? 40 : enemy.type == EnemyType.fast ? 20 : 25;
           onScore(pts);
           onEnemyDestroyed();
