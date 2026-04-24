@@ -9,15 +9,13 @@ class BossEnemy extends PositionComponent with HasGameReference<BallBounceBlitzG
   int hits;
   int maxHits;
   final dynamic gameScene;
-  static const double width = 80;
-  static const double height = 80;
+  static const double bossWidth = 80;
+  static const double bossHeight = 80;
 
   BossEnemy({required double x, required double y, required this.speed, required this.gameScene, int wave = 1})
-      : super(anchor: Anchor.center) {
+      : hits = 3 + wave, maxHits = 3 + wave, super(anchor: Anchor.center) {
     position = Vector2(x, y);
-    hits = 3 + wave;
-    maxHits = hits;
-    size = Vector2(width, height);
+    size = Vector2(bossWidth, bossHeight);
     add(RectangleHitbox());
   }
 
@@ -53,14 +51,14 @@ class BossEnemy extends PositionComponent with HasGameReference<BallBounceBlitzG
   void render(Canvas canvas) {
     // Body
     final bodyPaint = Paint()..color = const Color(0xFF1A1A2E);
-    canvas.drawRect(Rect.fromLTWH(-width / 2, -height / 2, width, height), bodyPaint);
+    canvas.drawRect(Rect.fromLTWH(-bossWidth / 2, -bossHeight / 2, bossWidth, bossHeight), bodyPaint);
 
     // Border glow
     final borderPaint = Paint()
       ..color = const Color(0xFFFFD700)
       ..strokeWidth = 3
       ..style = PaintingStyle.stroke;
-    canvas.drawRect(Rect.fromLTWH(-width / 2, -height / 2, width, height), borderPaint);
+    canvas.drawRect(Rect.fromLTWH(-bossWidth / 2, -bossHeight / 2, bossWidth, bossHeight), borderPaint);
 
     // Inner pattern
     final innerPaint = Paint()..color = const Color(0xFFFFD700);
@@ -68,9 +66,9 @@ class BossEnemy extends PositionComponent with HasGameReference<BallBounceBlitzG
 
     // HP bar
     final hpBg = Paint()..color = const Color(0xFF333333);
-    canvas.drawRect(Rect.fromLTWH(-width / 2, -height / 2 - 12, width, 6), hpBg);
+    canvas.drawRect(Rect.fromLTWH(-bossWidth / 2, -bossHeight / 2 - 12, bossWidth, 6), hpBg);
     final hpFill = Paint()..color = Color.lerp(const Color(0xFFE91E63), const Color(0xFFFFEB3B), hits / maxHits)!;
-    canvas.drawRect(Rect.fromLTWH(-width / 2, -height / 2 - 12, width * (hits / maxHits), 6), hpFill);
+    canvas.drawRect(Rect.fromLTWH(-bossWidth / 2, -bossHeight / 2 - 12, bossWidth * (hits / maxHits), 6), hpFill);
 
     // Crown icon on boss
     final crownPaint = Paint()

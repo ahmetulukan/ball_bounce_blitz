@@ -7,6 +7,7 @@ import '../../services/audio_manager.dart';
 import 'enemy.dart';
 import 'paddle.dart';
 import 'power_up.dart';
+import 'barrier.dart';
 
 class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {
   final Paddle paddle;
@@ -153,6 +154,18 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     } else if (other is PowerUp) {
       gameScene?.collectPowerUp(other.type);
       other.removeFromParent();
+    } else if (other is Barrier) {
+      other.takeHit(gameScene);
+      if (intersectionPoints.isNotEmpty) {
+        final hitPoint = intersectionPoints.first;
+        final dx = hitPoint.x - other.position.x;
+        final dy = hitPoint.y - other.position.y;
+        if (dx.abs() > dy.abs()) {
+          velocity.x = -velocity.x;
+        } else {
+          velocity.y = -velocity.y;
+        }
+      }
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../game/game.dart';
 
 class PauseScreen extends StatelessWidget {
   final BallBounceBlitzGame game;

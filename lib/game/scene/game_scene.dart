@@ -21,6 +21,7 @@ import '../../components/ball_trail.dart';
 import '../../components/pause_button.dart';
 import '../../components/boss_enemy.dart';
 import '../../components/wave_progress_bar.dart';
+import '../../components/barrier.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -49,6 +50,8 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   double enemySpawnInterval = 1.5;
   double powerUpSpawnTimer = 0;
   final double powerUpSpawnInterval = 8.0;
+  double barrierSpawnTimer = 0;
+  final double barrierSpawnInterval = 12.0;
   bool shieldActive = false;
   int paddleShrinkTicks = 0;
 
@@ -162,6 +165,11 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       powerUpSpawnTimer = 0;
       _spawnPowerUp();
     }
+    barrierSpawnTimer += dt;
+    if (barrierSpawnTimer >= barrierSpawnInterval && wave >= 3) {
+      barrierSpawnTimer = 0;
+      _spawnBarrier();
+    }
   }
 
   void _spawnEnemy() {
@@ -186,6 +194,13 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     final typeIndex = _rand.nextInt(PowerUpType.values.length);
     final type = PowerUpType.values[typeIndex];
     add(PowerUp(x: x, y: -20, type: type, gameScene: this));
+  }
+
+  void _spawnBarrier() {
+    final gameSize = findGame()?.size ?? Vector2(400, 600);
+    final x = 60 + _rand.nextDouble() * (gameSize.x - 120);
+    final hits = (wave ~/ 3).clamp(1, 3);
+    add(Barrier(x: x, y: -20, hits: hits));
   }
 
   void collectPowerUp(PowerUpType type) {
@@ -274,4 +289,23 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   }
 
   void shake() => screenShake.trigger(shakeIntensity: 5, shakeDuration: 0.2);
+
+  void triggerChainReaction(Vector2 origin, double radius) {
+    final enemies = children.query<Enemy>();
+    for (final enemy in enemies) {
+      final dx = enemy.position.x - origin.x;
+      final dy = enemy.position.y - origin.y;
+      final dist = (dx * dx + dy * dy);
+      if (dist < radius * radius && dist > 0) {
+        enemy.hits = (enemy.hits - 1).clamp(0, 999);
+        if (enemy.hits <= 0) {
+          AudioManager.playScore();
+          final pts = enemy.type == EnemyType.big ? 50 : enemy.type == EnemyType.tough ? 40 : enemy.type == EnemyType.fast ? 20 : 25;
+          onScore(pts);
+          onEnemyDestroyed();
+          enemy.removeFromParent();
+        }
+      }
+    }
+  }
 }

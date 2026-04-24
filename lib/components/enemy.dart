@@ -55,6 +55,7 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
       final pts = (type == EnemyType.big ? 50 : type == EnemyType.tough ? 40 : type == EnemyType.fast ? 20 : 25);
       scene?.onScore(pts);
       scene?.onEnemyDestroyed();
+      scene?.triggerChainReaction(position, type == EnemyType.big ? 80.0 : 60.0);
       scene?.shake();
       removeFromParent();
     } else {

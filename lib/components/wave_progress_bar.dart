@@ -7,7 +7,7 @@ class WaveProgressBar extends PositionComponent {
   static const double barWidth = 120;
   static const double barHeight = 8;
 
-  WaveProgressBar({int enemiesInWave = 15}) : enemiesDestroyed = 0, super(priority: 10);
+  WaveProgressBar({int enemiesInWave = 15}) : enemiesInWave = enemiesInWave, enemiesDestroyed = 0, super(priority: 10);
 
   void setProgress(int destroyed, int total) {
     enemiesDestroyed = destroyed;
