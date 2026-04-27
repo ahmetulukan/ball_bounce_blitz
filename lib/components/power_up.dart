@@ -1,5 +1,5 @@
-import 'package:flame/components.dart';
 import 'package:flame/collisions.dart';
+import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
 import 'paddle.dart';
@@ -23,6 +23,7 @@ class PowerUp extends PositionComponent
   ];
 
   static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲'];
+  static const List<String> names = ['SPEED', 'SHIELD', 'MULTI', 'SHRINK', 'MAGNET'];
 
   PowerUp({
     required double x,
@@ -42,8 +43,8 @@ class PowerUp extends PositionComponent
   }
 
   @override
-  void onCollisionStart(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollisionStart(intersectionPoints, other);
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (other is Paddle) {
       gameScene?.collectPowerUp(type);
       removeFromParent();
@@ -53,12 +54,36 @@ class PowerUp extends PositionComponent
   @override
   void render(Canvas canvas) {
     final color = colors[type.index];
-    final paint = Paint()..color = color;
-    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, sizeW, sizeH), const Radius.circular(6)), paint);
+    
+    // Glow effect
+    final glowPaint = Paint()..color = color.withAlpha(50);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-2, -2, sizeW + 4, sizeH + 4),
+        const Radius.circular(8),
+      ),
+      glowPaint,
+    );
 
+    // Main body
+    final paint = Paint()..color = color;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(0, 0, sizeW, sizeH), const Radius.circular(6)),
+      paint,
+    );
+
+    // Shine effect
+    final shinePaint = Paint()..color = Colors.white.withAlpha(80);
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(Rect.fromLTWH(2, 2, sizeW - 4, sizeH / 2 - 2), const Radius.circular(3)),
+      shinePaint,
+    );
+
+    // Icon
     final label = labels[type.index];
-    final textPainter = TextPainter(text: TextSpan(text: label, style: const TextStyle(fontSize: 14, color: Colors.white)), textDirection: TextDirection.ltr);
-    textPainter.layout();
-    textPainter.paint(canvas, Offset((sizeW - textPainter.width) / 2, (sizeH - textPainter.height) / 2));
+    final textStyle = TextStyle(fontSize: 14, color: Colors.white, fontWeight: FontWeight.bold);
+    final tp = TextPainter(text: TextSpan(text: label, style: textStyle), textDirection: TextDirection.ltr);
+    tp.layout();
+    tp.paint(canvas, Offset((sizeW - tp.width) / 2, (sizeH - tp.height) / 2));
   }
 }

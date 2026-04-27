@@ -22,9 +22,18 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
   double _speed = baseSpeed;
   bool _boosted = false;
   double _boostTimer = 0;
+  bool _hasHitPaddleThisLaunch = false;
+  static const double maxSpeed = 500;
+  static const double minSpeed = 150;
 
-  Ball({required this.paddle, required this.onScore, required this.onLifeLost, required this.onGameOver, required this.gameScene, this.isExtra = false}) : super(anchor: Anchor.center);
-
+  Ball({
+    required this.paddle,
+    required this.onScore,
+    required this.onLifeLost,
+    required this.onGameOver,
+    required this.gameScene,
+    this.isExtra = false,
+  }) : super(anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
@@ -33,7 +42,6 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     final angle = isExtra ? (Random().nextDouble() - 0.5) * pi / 2 : 0.0;
     velocity = Vector2(sin(angle) * _speed, -cos(angle) * _speed);
     size = Vector2(radius * 2, radius * 2);
-    // Add circle hitbox for proper collision detection
     add(CircleHitbox(radius: radius));
   }
 
@@ -43,6 +51,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     _speed = baseSpeed;
     _boosted = false;
     _boostTimer = 0;
+    _hasHitPaddleThisLaunch = false;
     velocity = Vector2(0, -_speed);
   }
 
@@ -50,7 +59,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     _boosted = true;
     _boostTimer = 5;
     _prevSpeedForBoost = _speed;
-    _speed = baseSpeed * 1.5;
+    _speed = (baseSpeed * 1.5).clamp(minSpeed, maxSpeed);
     if (velocity.length > 0) {
       velocity = velocity.normalized() * _speed;
     } else {
@@ -68,7 +77,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
       _boostTimer -= dt;
       if (_boostTimer <= 0) {
         _boosted = false;
-        _speed = (_prevSpeedForBoost + (_prevSpeedForBoost - baseSpeed) * 0.5).clamp(baseSpeed, baseSpeed + 150);
+        _speed = (_prevSpeedForBoost + (_prevSpeedForBoost - baseSpeed) * 0.5).clamp(minSpeed, maxSpeed);
         if (velocity.length > 0) velocity = velocity.normalized() * _speed;
       }
     }
@@ -79,6 +88,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
 
     position += velocity * dt;
 
+    // Wall bounces
     if (position.x <= radius) {
       velocity.x = _speed.abs();
       position.x = radius;
@@ -88,7 +98,6 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
       position.x = game.size.x - radius;
     }
     if (position.y <= radius) {
-      // Bounce downwards when hitting the top edge.
       velocity.y = _speed.abs();
       position.y = radius;
     }
@@ -100,16 +109,23 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
       }
     }
 
-    if (position.y + radius >= paddle.position.y - Paddle.paddleHeight / 2 &&
+    // Paddle collision - single trigger per launch
+    if (!_hasHitPaddleThisLaunch &&
+        position.y + radius >= paddle.position.y - Paddle.paddleHeight / 2 &&
         position.y - radius <= paddle.position.y + Paddle.paddleHeight / 2 &&
         position.x >= paddle.position.x - paddle.currentWidth / 2 &&
         position.x <= paddle.position.x + paddle.currentWidth / 2 &&
         velocity.y > 0) {
       _bounceOffPaddle();
+      _hasHitPaddleThisLaunch = true;
+    }
+
+    // Reset when ball goes above paddle
+    if (position.y < paddle.position.y - Paddle.paddleHeight) {
+      _hasHitPaddleThisLaunch = false;
     }
   }
 
-  double get scoreFromSpeed => (_speed - baseSpeed) / 5;
   bool get isBoosted => _boosted;
   bool get magnetActive => (gameScene as dynamic)?.magnetActive == true;
 
@@ -117,7 +133,7 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     final dx = paddle.position.x - position.x;
     final dy = paddle.position.y - position.y;
     final distSq = dx * dx + dy * dy;
-    if (distSq < 160000) { // within 400px
+    if (distSq < 160000) {
       final norm = Vector2(dx, dy).normalized();
       velocity = velocity + norm * 400 * dt;
       if (velocity.length > 0) velocity = velocity.normalized() * _speed;
@@ -127,9 +143,8 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
   void _bounceOffPaddle() {
     final hitPos = (position.x - paddle.position.x) / (paddle.currentWidth / 2);
     final angle = hitPos * pi / 3;
-    final spd = _boosted ? _speed * 1.2 : _speed;
+    final spd = _boosted ? (_speed * 1.2).clamp(minSpeed, maxSpeed) : _speed;
     
-    // Check for critical hit zone (paddle edges)
     final bool isCritical = paddle.isInCriticalZone(position.x);
     final int basePoints = isCritical ? 25 : 10;
     final double speedBonus = isCritical ? 8.0 : 5.0;
@@ -137,13 +152,12 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     velocity = Vector2(sin(angle) * spd, -cos(angle) * spd);
     onScore(basePoints);
     AudioManager.playHit();
-    _speed += speedBonus;
+    _speed = (_speed + speedBonus).clamp(minSpeed, maxSpeed);
     _normalizeVelocity();
   }
 
   void _normalizeVelocity() {
-    final mag = velocity.length;
-    if (mag > 0) velocity = velocity.normalized() * _speed;
+    if (velocity.length > 0) velocity = velocity.normalized() * _speed;
   }
 
   @override
@@ -151,31 +165,65 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     super.onCollision(intersectionPoints, other);
     if (other is Enemy) {
       other.takeHit(gameScene);
+      // Bounce ball
+      final dy = position.y - other.position.y;
+      final dx = position.x - other.position.x;
+      if (dy.abs() > dx.abs()) {
+        velocity.y = -velocity.y;
+      } else {
+        velocity.x = -velocity.x;
+      }
+      _speed = (_speed + 2).clamp(minSpeed, maxSpeed);
     } else if (other is PowerUp) {
       gameScene?.collectPowerUp(other.type);
       other.removeFromParent();
     } else if (other is Barrier) {
       other.takeHit(gameScene);
-      if (intersectionPoints.isNotEmpty) {
+      if (intersectionPoints.isNotEmpty && velocity.length > 0) {
         final hitPoint = intersectionPoints.first;
-        final dx = hitPoint.x - other.position.x;
-        final dy = hitPoint.y - other.position.y;
-        if (dx.abs() > dy.abs()) {
+        final dx = (hitPoint.x - other.position.x).abs();
+        final dy = (hitPoint.y - other.position.y).abs();
+        if (dx > dy) {
           velocity.x = -velocity.x;
         } else {
           velocity.y = -velocity.y;
         }
+        _speed = (_speed * 0.95).clamp(minSpeed, maxSpeed);
       }
     }
   }
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()..color = isExtra ? const Color(0xFFCDDC39) : const Color(0xFFFFEB3B);
-    canvas.drawCircle(Offset(radius, radius), radius, paint);
+    // Boost glow
     if (_boosted) {
-      final glow = Paint()..color = const Color(0x80FF9800);
-      canvas.drawCircle(Offset(radius, radius), radius + 4, glow);
+      final glow = Paint()..color = const Color(0x60FF9800);
+      canvas.drawCircle(Offset(radius, radius), radius + 5, glow);
+    }
+
+    // Main ball
+    final paint = Paint()
+      ..shader = RadialGradient(
+        center: const Alignment(-0.3, -0.3),
+        radius: 0.8,
+        colors: [
+          isExtra ? const Color(0xFFCDDC39) : const Color(0xFFFFEB3B),
+          isExtra ? const Color(0xFF827717) : const Color(0xFFFFA000),
+        ],
+      ).createShader(Rect.fromLTWH(0, 0, radius * 2, radius * 2));
+    canvas.drawCircle(Offset(radius, radius), radius, paint);
+
+    // Highlight
+    final hiPaint = Paint()..color = Colors.white.withAlpha(120);
+    canvas.drawCircle(Offset(radius * 0.55, radius * 0.55), radius * 0.3, hiPaint);
+
+    // Extra ball ring
+    if (isExtra) {
+      final ringPaint = Paint()
+        ..color = const Color(0xFFCDDC39)
+        ..strokeWidth = 2
+        ..style = PaintingStyle.stroke;
+      canvas.drawCircle(Offset(radius, radius), radius + 3, ringPaint);
     }
   }
 }
