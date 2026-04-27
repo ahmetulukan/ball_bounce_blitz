@@ -4,6 +4,7 @@ import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../game.dart';
 import '../../services/audio_manager.dart';
+import '../../services/achievement_service.dart';
 import '../../components/paddle.dart';
 import '../../components/ball.dart';
 import '../../components/enemy.dart';
@@ -23,6 +24,7 @@ import '../../components/boss_enemy.dart';
 import '../../components/wave_progress_bar.dart';
 import '../../components/barrier.dart';
 import '../../components/score_popup.dart';
+import '../../components/achievement_popup.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -37,7 +39,10 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Starfield starfield;
   late PauseButton pauseButton;
   late WaveProgressBar waveProgressBar;
+  late AchievementService achievements;
   bool bossSpawnedThisWave = false;
+  int _powerUpsCollected = 0;
+  int _livesAtWaveStart = 3;
 
   int score = 0;
   int lives = 3;
@@ -75,6 +80,9 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     starfield = Starfield(count: 50);
     pauseButton = PauseButton();
     waveProgressBar = WaveProgressBar(enemiesInWave: 15);
+    achievements = AchievementService();
+    await achievements.init();
+    _livesAtWaveStart = lives;
 
     await add(starfield);
     await add(paddle);
@@ -96,6 +104,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   void onScore(int points) {
     score += points;
     scoreDisplay.updateScore(score);
+    achievements.onScoreChanged(score);
     add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFFFEB3B)));
     add(ScorePopup(position: ball.position.clone(), text: '+$points'));
     _registerHit();
@@ -105,6 +114,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     comboCount++;
     comboTimer = comboTimeout;
     comboDisplay.onHit();
+    achievements.onComboChanged(comboCount);
     if (comboCount >= 5) {
       score += 5;
       scoreDisplay.updateScore(score);
@@ -213,7 +223,23 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     add(Barrier(x: x, y: -20, hits: hits));
   }
 
+  void _checkNoDamageAchievement(int wave) {
+    // No damage for this wave = lives same as when wave started
+  }
+
+  void _showAchievementPopup(Achievement ach) {
+    final gameSize = findGame()?.size ?? Vector2(400, 600);
+    final popup = AchievementPopup(
+      achievement: ach,
+      position: Vector2(gameSize.x / 2, gameSize.y * 0.35),
+      startY: gameSize.y * 0.35,
+    );
+    add(popup);
+  }
+
   void collectPowerUp(PowerUpType type) {
+    _powerUpsCollected++;
+    achievements.onEnemyDestroyed(enemiesDestroyed, _powerUpsCollected);
     AudioManager.playPowerUp();
     final labels = {'speed': '⚡ SPEED!', 'shield': '🛡️ SHIELD!', 'multi': '✖3 MULTI!', 'shrink': '🔻 SHRINK!', 'magnet': '🧲 MAGNET!'};
     add(ScorePopup(position: ball.position.clone(), text: labels[type.name] ?? '✨', color: const Color(0xFF00BCD4)));
@@ -260,12 +286,18 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
   void onEnemyDestroyed() {
     enemiesDestroyed++;
+    if (enemiesDestroyed == 1) achievements.onFirstEnemyDestroyed();
+    achievements.onEnemyDestroyed(enemiesDestroyed, _powerUpsCollected);
     waveProgressBar.setProgress(enemiesDestroyed % 15, 15);
     final waveFloor = enemiesDestroyed ~/ 15;
     final newWave = waveFloor + 1;
     if (newWave > wave) {
       wave = newWave;
+      _checkNoDamageAchievement(wave);
+      achievements.onWaveChanged(wave);
+      achievements.onWaveCleared(wave, lives, enemiesDestroyed);
       bossSpawnedThisWave = false;
+      _livesAtWaveStart = lives;
       waveAnnouncement.showWave(wave);
       enemySpawnInterval = (1.5 - wave * 0.08).clamp(0.5, 1.5);
     }
@@ -285,6 +317,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   }
 
   void onBossDefeated() {
+    achievements.onBossDefeated();
     // Bonus for defeating boss
     score += wave * 100;
     scoreDisplay.updateScore(score);
