@@ -199,10 +199,11 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
     EnemyType type = EnemyType.normal;
     if (wave >= 3) {
-      final roll = _rand.nextInt(4);
+      final roll = _rand.nextInt(5);
       if (roll == 0) type = EnemyType.fast;
       else if (roll == 1) type = EnemyType.tough;
       else if (roll == 2) type = EnemyType.big;
+      else if (roll == 3) type = EnemyType.shooter;
     }
 
     add(Enemy(x: x, y: -30, speed: speed.toDouble(), gameScene: this, type: type));
@@ -235,6 +236,10 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       startY: gameSize.y * 0.35,
     );
     add(popup);
+  }
+
+  void onProjectileHit() {
+    onLifeLost();
   }
 
   void collectPowerUp(PowerUpType type) {
