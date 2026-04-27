@@ -4,11 +4,18 @@ import '../game/game.dart';
 
 class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final Map<String, double> activeTimers = {};
+  String? _flashMessage;
+  double _flashTimer = 0;
 
   PowerUpDisplay() : super(anchor: Anchor.topRight, position: Vector2(0, 16));
 
   void addPowerUp(String label, double durationSeconds) {
     activeTimers[label] = durationSeconds;
+  }
+
+  void flash(String message) {
+    _flashMessage = message;
+    _flashTimer = 1.5;
   }
 
   @override
@@ -26,6 +33,10 @@ class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceB
   @override
   void update(double dt) {
     super.update(dt);
+    if (_flashTimer > 0) {
+      _flashTimer -= dt;
+      if (_flashTimer <= 0) _flashMessage = null;
+    }
     activeTimers.removeWhere((k, v) {
       activeTimers[k] = v - dt;
       return activeTimers[k]! <= 0;
@@ -34,6 +45,23 @@ class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceB
 
   @override
   void render(Canvas canvas) {
+    // Flash message overlay
+    if (_flashMessage != null && _flashTimer > 0) {
+      final alpha = (_flashTimer * 180).clamp(0.0, 255.0).toInt();
+      final paint = Paint()..color = const Color(0xFF00BCD4).withAlpha(alpha);
+      final textPainter = TextPainter(
+        text: TextSpan(text: _flashMessage, style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      final cx = (game.size.x - textPainter.width) / 2;
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(cx - 8, -30, textPainter.width + 16, 26), const Radius.circular(6)),
+        paint,
+      );
+      textPainter.paint(canvas, Offset(cx, -26));
+    }
+
     int i = 0;
     for (final entry in activeTimers.entries) {
       final paint = Paint()..color = const Color(0xFF4CAF50).withAlpha(204);

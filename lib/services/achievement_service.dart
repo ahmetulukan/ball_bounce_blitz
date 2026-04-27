@@ -111,6 +111,10 @@ class AchievementService {
 
   void onFirstEnemyDestroyed() => tryUnlock(Achievement.firstBlood);
 
+  void onPowerUpCollected(int count) {
+    if (count >= 10) tryUnlock(Achievement.powerUpCollector);
+  }
+
   void onWaveCleared(int wave, int lives, int enemiesDestroyed) {
     // No damage = still had all starting lives at end of wave
     if (lives == _livesAtWaveStart) {

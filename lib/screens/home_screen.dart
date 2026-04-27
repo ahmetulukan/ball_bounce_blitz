@@ -11,6 +11,7 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> {
   int _highScore = 0;
+  bool _showTutorial = false;
 
   @override
   void initState() {
@@ -96,9 +97,79 @@ class _HomeScreenState extends State<HomeScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(color: Colors.white38, fontSize: 13, height: 1.6),
                 ),
+                const SizedBox(height: 16),
+                TextButton(
+                  onPressed: () => setState(() => _showTutorial = true),
+                  child: const Text('📖 HOW TO PLAY', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
+                ),
               ],
             ),
           ),
+          // Tutorial overlay
+          if (_showTutorial) _buildTutorialOverlay(),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildTutorialOverlay() {
+    return Container(
+      color: Colors.black.withAlpha(230),
+      child: Center(
+        child: Container(
+          margin: const EdgeInsets.all(24),
+          padding: const EdgeInsets.all(24),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1A2E),
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: const Color(0xFF00BCD4).withAlpha(100)),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('📖 HOW TO PLAY', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 22, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 20),
+              _tutRow('🕹', 'Move paddle left/right'),
+              _tutRow('⚡', 'Hit enemies to score points'),
+              _tutRow('🔥', 'Build combos for bonus points'),
+              _tutRow('🎯', 'Hit paddle edges for critical hits (25 pts)'),
+              _tutRow('💥', 'Chain reactions destroy nearby enemies'),
+              _tutRow('🌊', 'Waves increase difficulty over time'),
+              _tutRow('👑', 'Boss appears every 5 waves'),
+              const SizedBox(height: 16),
+              const Text('Power-Ups:', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 8),
+              _tutRow('⚡', 'Speed - Ball speeds up'),
+              _tutRow('🛡️', 'Shield - Extra life'),
+              _tutRow('✖3', 'Multi-Ball - Spawn 2 extra balls'),
+              _tutRow('🔻', 'Shrink - Narrow enemies'),
+              _tutRow('🧲', 'Magnet - Ball follows paddle'),
+              const SizedBox(height: 20),
+              ElevatedButton(
+                onPressed: () => setState(() => _showTutorial = false),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF00BCD4),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+                ),
+                child: const Text('GOT IT!', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tutRow(String icon, String text) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 18)),
+          const SizedBox(width: 12),
+          Text(text, style: const TextStyle(color: Colors.white70, fontSize: 14)),
         ],
       ),
     );

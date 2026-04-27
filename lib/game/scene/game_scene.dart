@@ -239,7 +239,7 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
   void collectPowerUp(PowerUpType type) {
     _powerUpsCollected++;
-    achievements.onEnemyDestroyed(enemiesDestroyed, _powerUpsCollected);
+    achievements.onPowerUpCollected(_powerUpsCollected);
     AudioManager.playPowerUp();
     final labels = {'speed': '⚡ SPEED!', 'shield': '🛡️ SHIELD!', 'multi': '✖3 MULTI!', 'shrink': '🔻 SHRINK!', 'magnet': '🧲 MAGNET!'};
     add(ScorePopup(position: ball.position.clone(), text: labels[type.name] ?? '✨', color: const Color(0xFF00BCD4)));
@@ -296,9 +296,18 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       _checkNoDamageAchievement(wave);
       achievements.onWaveChanged(wave);
       achievements.onWaveCleared(wave, lives, enemiesDestroyed);
+      // Wave clear bonus
+      final waveBonus = wave * 10;
+      score += waveBonus;
+      scoreDisplay.updateScore(score);
+      add(ScorePopup(
+        position: Vector2(findGame()?.size.x ?? 200, (findGame()?.size.y ?? 300) * 0.4),
+        text: '✨ WAVE $wave CLEARED! +$waveBonus',
+        color: const Color(0xFF4CAF50),
+      ));
+      waveAnnouncement.showWaveComplete(wave);
       bossSpawnedThisWave = false;
       _livesAtWaveStart = lives;
-      waveAnnouncement.showWave(wave);
       enemySpawnInterval = (1.5 - wave * 0.08).clamp(0.5, 1.5);
     }
 
