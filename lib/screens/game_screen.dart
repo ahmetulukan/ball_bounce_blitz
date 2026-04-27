@@ -23,13 +23,16 @@ class GameScreen extends StatelessWidget {
               game: g,
               overlayBuilderMap: {
                 'Pause': (ctx, game) => PauseScreen(game: game as BallBounceBlitzGame),
-                'GameOver': (ctx, game) => GameOverScreen(
-                  score: (game as BallBounceBlitzGame).lastScore,
-                  highScore: (game as BallBounceBlitzGame).highScore,
-                  wave: (game as BallBounceBlitzGame).lastWave,
-                  enemiesDestroyed: (game as BallBounceBlitzGame).lastEnemiesDestroyed,
-                  onRestart: () => (game as BallBounceBlitzGame).restart(),
-                ),
+                'GameOver': (ctx, game) {
+                  final g = game as BallBounceBlitzGame;
+                  return GameOverScreen(
+                    score: g.lastScore,
+                    highScore: g.highScore,
+                    wave: g.lastWave,
+                    enemiesDestroyed: g.lastEnemiesDestroyed,
+                    onRestart: () => g.restart(),
+                  );
+                },
               },
               backgroundBuilder: (_) => Container(color: const Color(0xFF0D0D1A)),
             ),

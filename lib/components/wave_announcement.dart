@@ -58,9 +58,6 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
     final scale = progress < 0.2 ? progress / 0.2 : 1.0;
     final alpha = progress < 0.3 ? progress / 0.3 : 1.0;
 
-    final paint = Paint()..color = Color.fromARGB((alpha * 255).toInt(), 0, 188, 212);
-    final shadowPaint = Paint()..color = Colors.black.withAlpha((alpha * 180).toInt());
-
     final text = 'WAVE $displayedWave';
     final tp = TextPainter(
       text: TextSpan(
