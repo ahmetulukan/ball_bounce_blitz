@@ -2,6 +2,7 @@ import 'dart:math';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
+import 'enemy.dart';
 
 /// Manages enemy wave spawning with progressive difficulty
 class EnemySpawnManager extends Component with HasGameReference<BallBounceBlitzGame> {
@@ -30,7 +31,7 @@ class EnemySpawnManager extends Component with HasGameReference<BallBounceBlitzG
     _waveInProgress = true;
   }
 
-  void update(double dt, dynamic gameScene) {
+  void updateSpawning(double dt, dynamic gameScene) {
     if (!_waveInProgress) return;
     
     _spawnTimer += dt * spawnRateMultiplier;

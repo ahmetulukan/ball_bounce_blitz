@@ -1,7 +1,9 @@
 import 'dart:math';
 import 'package:flame/components.dart';
+import 'package:flame/events.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
+import 'package:flame/collisions.dart';
 
 class Paddle extends PositionComponent with HasGameReference<BallBounceBlitzGame>, DragCallbacks {
   static const double baseWidth = 80;

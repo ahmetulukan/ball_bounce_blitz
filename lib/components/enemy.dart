@@ -4,6 +4,8 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
 import 'ball.dart';
+import 'enemy_projectile.dart';
+import 'enemy_destroy_particle.dart';
 
 enum EnemyType { normal, fast, tough, big, shooter }
 
@@ -269,90 +271,5 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
     if (ratio > 0.6) return const Color(0xFF4CAF50);
     if (ratio > 0.3) return const Color(0xFFFF9800);
     return const Color(0xFFE91E63);
-  }
-}
-
-/// Enemy projectile shot by shooter type enemies
-class EnemyProjectile extends PositionComponent with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {
-  static const double speed = 150;
-  static const double size = 8;
-  bool _hit = false;
-
-  EnemyProjectile({required double x, required double y, required dynamic gameScene}) 
-      : super(position: Vector2(x, y), anchor: Anchor.center);
-
-  @override
-  Future<void> onLoad() async {
-    size = Vector2(size * 2, size * 2);
-    add(CircleHitbox(radius: size / 2));
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_hit) return;
-    position.y += speed * dt;
-    if (position.y > game.size.y + 20) removeFromParent();
-  }
-
-  @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    if (_hit) return;
-    if (other is Paddle) {
-      _hit = true;
-      (gameScene as dynamic)?.onProjectileHit();
-      removeFromParent();
-    }
-  }
-
-  @override
-  void render(Canvas canvas) {
-    // Danger glow
-    final glowPaint = Paint()..color = const Color(0x60F44336);
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2 + 3, glowPaint);
-
-    // Main projectile
-    final paint = Paint()..color = const Color(0xFFF44336);
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 2, paint);
-
-    // Core
-    final corePaint = Paint()..color = Colors.amber;
-    canvas.drawCircle(Offset(size / 2, size / 2), size / 4, corePaint);
-  }
-}
-
-/// Particle spawned when enemy is destroyed
-class EnemyDestroyParticle extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
-  final Color color;
-  final int count;
-  double life = 0.4;
-  late Vector2 velocity;
-  double size = 4;
-
-  EnemyDestroyParticle({required Vector2 position, required this.color, this.count = 8}) : super(anchor: Anchor.center) {
-    this.position = position;
-    final angle = (DateTime.now().microsecond % 6283) / 1000.0;
-    final speed = 80 + (DateTime.now().microsecond % 120);
-    velocity = Vector2(
-      ((angle).cos() * speed),
-      ((angle).sin() * speed),
-    );
-    size = 4 + (DateTime.now().microsecond % 4);
-  }
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    position += velocity * dt;
-    velocity = velocity * 0.92;
-    life -= dt;
-    if (life <= 0) removeFromParent();
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final alpha = (life / 0.4).clamp(0.0, 1.0);
-    final paint = Paint()..color = color.withAlpha((alpha * 255).toInt());
-    canvas.drawCircle(Offset.zero, size * alpha, paint);
   }
 }

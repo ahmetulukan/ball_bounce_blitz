@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import '../game/game.dart';
+import 'settings_screen.dart';
+import 'achievements_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final BallBounceBlitzGame game;
@@ -101,6 +103,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton(
                   onPressed: () => setState(() => _showTutorial = true),
                   child: const Text('📖 HOW TO PLAY', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
+                ),
+                const SizedBox(height: 8),
+                TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsScreen(game: widget.game))),
+                  child: const Text('⚙️ SETTINGS', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AchievementsScreen(game: widget.game))),
+                  child: const Text('🏆 ACHIEVEMENTS', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
                 ),
               ],
             ),

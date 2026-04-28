@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -184,8 +185,8 @@ class BossExplosionParticle extends PositionComponent with HasGameReference<Ball
   BossExplosionParticle({required Vector2 position, required this.color}) : super(anchor: Anchor.center) {
     this.position = position;
     final angle = (DateTime.now().microsecond % 6283) / 1000.0;
-    final speed = 100 + (DateTime.now().microsecond % 150);
-    velocity = Vector2(((angle).cos() * speed), ((angle).sin() * speed));
+    final speed = 100 + (DateTime.now().microsecond % 150).toDouble();
+    velocity = Vector2(cos(angle) * speed, sin(angle) * speed);
     rotationSpeed = (DateTime.now().microsecond % 300) / 50 - 3;
   }
 
