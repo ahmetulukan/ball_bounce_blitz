@@ -5,7 +5,7 @@
   "packages": [
     {
       "name": "ball_bounce_blitz",
-      "version": "1.1.0+3",
+      "version": "1.2.0+4",
       "dependencies": [
         "flame",
         "flame_audio",

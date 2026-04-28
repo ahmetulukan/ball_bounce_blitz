@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import '../game/game.dart';
 import 'paddle.dart';
 
-enum PowerUpType { speed, shield, multi, shrink, magnet, fireball, explosive }
+enum PowerUpType { speed, shield, multi, shrink, magnet, fireball, explosive, freeze }
 
 class PowerUp extends PositionComponent
     with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {
@@ -22,10 +22,11 @@ class PowerUp extends PositionComponent
     Color(0xFFE91E63), // magnet - pink
     Color(0xFFFF5722), // fireball - orange-red
     Color(0xFF673AB7), // explosive - deep purple
+    Color(0xFF00E5FF), // freeze - ice blue
   ];
 
-  static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲', '🔥', '💣'];
-  static const List<String> names = ['SPEED', 'SHIELD', 'MULTI', 'SHRINK', 'MAGNET', 'FIREBALL', 'EXPLOSIVE'];
+  static const List<String> labels = ['⚡', '🛡️', '✖3', '🔻', '🧲', '🔥', '💣', '❄️'];
+  static const List<String> names = ['SPEED', 'SHIELD', 'MULTI', 'SHRINK', 'MAGNET', 'FIREBALL', 'EXPLOSIVE', 'FREEZE'];
 
   PowerUp({
     required double x,

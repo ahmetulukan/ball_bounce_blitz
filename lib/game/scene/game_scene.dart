@@ -25,6 +25,7 @@ import '../../components/wave_progress_bar.dart';
 import '../../components/barrier.dart';
 import '../../components/score_popup.dart';
 import '../../components/achievement_popup.dart';
+import '../../components/screen_flash.dart';
 
 class GameScene extends Component with TapCallbacks, HasCollisionDetection {
   late Paddle paddle;
@@ -63,6 +64,8 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
 
   bool magnetActive = false;
   double magnetTimer = 0;
+  bool freezeActive = false;
+  double freezeTimer = 0;
 
   final Random _rand = Random();
 
@@ -185,10 +188,25 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       powerUpSpawnTimer = 0;
       _spawnPowerUp();
     }
+    if (freezeActive) {
+      freezeTimer -= dt;
+      if (freezeTimer <= 0) {
+        freezeActive = false;
+        _unfreezeAllEnemies();
+        powerUpDisplay.removePowerUp('FREEZE');
+      }
+    }
+
     barrierSpawnTimer += dt;
     if (barrierSpawnTimer >= barrierSpawnInterval && wave >= 3) {
       barrierSpawnTimer = 0;
       _spawnBarrier();
+    }
+  }
+
+  void _unfreezeAllEnemies() {
+    for (final enemy in children.query<Enemy>()) {
+      enemy.frozen = false;
     }
   }
 
@@ -206,7 +224,9 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       else if (roll == 3) type = EnemyType.shooter;
     }
 
-    add(Enemy(x: x, y: -30, speed: speed.toDouble(), gameScene: this, type: type));
+    final enemy = Enemy(x: x, y: -30, speed: speed.toDouble(), gameScene: this, type: type);
+    if (freezeActive) enemy.applyFreeze(freezeTimer);
+    add(enemy);
   }
 
   void _spawnPowerUp() {
@@ -254,7 +274,10 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       'magnet': '🧲 MAGNET!',
       'fireball': '🔥 FIREBALL!',
       'explosive': '💣 EXPLOSIVE!',
+      'freeze': '❄️ TIME FREEZE!',
     };
+    // Screen flash on power-up collect
+    add(ScreenFlash(flashColor: const Color(0xFF00E5FF), duration: 0.25, maxOpacity: 0.3));
     add(ScorePopup(position: ball.position.clone(), text: labels[type.name] ?? '✨', color: const Color(0xFF00BCD4)));
     switch (type) {
       case PowerUpType.speed:
@@ -292,7 +315,33 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
         _triggerExplosiveEffect();
         powerUpDisplay.addPowerUp('EXPLOSIVE', 5);
         break;
+      case PowerUpType.freeze:
+        _activateFreeze();
+        powerUpDisplay.addPowerUp('FREEZE', 6);
+        break;
     }
+  }
+
+  void _activateFreeze() {
+    freezeActive = true;
+    freezeTimer = 6;
+    // Freeze all existing enemies
+    for (final enemy in children.query<Enemy>()) {
+      enemy.applyFreeze(freezeTimer);
+    }
+    // Ice particles
+    for (int i = 0; i < 10; i++) {
+      add(ParticleEffect(position: Vector2(
+        40 + _rand.nextDouble() * ((findGame()?.size.x ?? 400) - 80),
+        40 + _rand.nextDouble() * 200,
+      ), color: const Color(0xFF00E5FF)));
+    }
+    add(ScorePopup(
+      position: Vector2(findGame()?.size.x ?? 200, (findGame()?.size.y ?? 300) * 0.4),
+      text: '❄️ TIME FROZEN!',
+      color: const Color(0xFF00E5FF),
+    ));
+    screenShake.trigger(shakeIntensity: 4, shakeDuration: 0.2);
   }
 
   void _triggerExplosiveEffect() {

@@ -13,6 +13,10 @@ class PowerUpDisplay extends PositionComponent with HasGameReference<BallBounceB
     activeTimers[label] = durationSeconds;
   }
 
+  void removePowerUp(String label) {
+    activeTimers.remove(label);
+  }
+
   void flash(String message) {
     _flashMessage = message;
     _flashTimer = 1.5;

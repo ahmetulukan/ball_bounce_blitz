@@ -19,6 +19,9 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
   bool _isDestroying = false;
   double _flashTimer = 0;
   double _shootTimer = 0;
+  bool frozen = false;
+  double _frozenTimer = 0;
+  double _baseSpeed = 0; // stored before freezing
 
   Enemy({required double x, required double y, required this.speed, this.gameScene, this.type = EnemyType.normal})
       : super(anchor: Anchor.center) {
@@ -44,8 +47,18 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
         width = 32; height = 32; hits = 2; maxHits = 2; speed = speed * 0.6;
         break;
     }
+    _baseSpeed = speed;
     size = Vector2(width, height);
     add(RectangleHitbox());
+  }
+
+  void applyFreeze(double duration) {
+    if (!frozen) {
+      _baseSpeed = speed;
+      speed = 0;
+      frozen = true;
+    }
+    _frozenTimer = duration;
   }
 
   @override
@@ -53,6 +66,14 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
     super.update(dt);
     if (_isDestroying) return;
     if (_flashTimer > 0) _flashTimer -= dt;
+    if (frozen) {
+      _frozenTimer -= dt;
+      if (_frozenTimer <= 0) {
+        frozen = false;
+        speed = _baseSpeed;
+      }
+      return; // don't move while frozen
+    }
     position.y += speed * dt;
 
     // Shooter enemy fires projectiles
@@ -169,6 +190,20 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
     // Type-specific decorations
     _renderTypeDecoration(canvas);
 
+    // Frozen ice crystal overlay
+    if (frozen) {
+      final icePaint = Paint()..color = const Color(0xFF00E5FF).withAlpha(80);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(-width / 2, -height / 2, width, height), const Radius.circular(4)),
+        icePaint,
+      );
+      // Ice sparkles
+      final sparklePaint = Paint()..color = Colors.white.withAlpha(200);
+      canvas.drawCircle(Offset(-width * 0.2, -height * 0.2), 2, sparklePaint);
+      canvas.drawCircle(Offset(width * 0.25, height * 0.1), 1.5, sparklePaint);
+      canvas.drawCircle(Offset(width * 0.1, -height * 0.3), 1, sparklePaint);
+    }
+
     // HP pips for multi-hit enemies
     if (maxHits > 1) {
       final hpBgPaint = Paint()..color = Colors.black.withAlpha(100);
@@ -254,6 +289,7 @@ class Enemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>
   }
 
   Color typeColor() {
+    if (frozen) return const Color(0xFF00E5FF);
     switch (type) {
       case EnemyType.normal: return const Color(0xFFE91E63);
       case EnemyType.fast: return const Color(0xFFFF5722);
