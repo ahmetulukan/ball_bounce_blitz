@@ -49,11 +49,6 @@ class Barrier extends PositionComponent with HasGameReference<BallBounceBlitzGam
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
-    super.onCollision(intersectionPoints, other);
-  }
-
-  @override
   void render(Canvas canvas) {
     final hpRatio = maxHits > 0 ? (hits / maxHits).toDouble() : 0.0;
     final baseColor = Color.lerp(const Color(0xFF607D8B), const Color(0xFF00BCD4), hpRatio)!;

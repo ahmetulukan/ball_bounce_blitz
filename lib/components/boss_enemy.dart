@@ -3,7 +3,6 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
-import '../../services/audio_manager.dart';
 import 'ball.dart';
 
 class BossEnemy extends PositionComponent with HasGameReference<BallBounceBlitzGame>, CollisionCallbacks {

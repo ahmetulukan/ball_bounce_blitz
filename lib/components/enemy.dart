@@ -1,10 +1,7 @@
-import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
-import 'ball.dart';
-import 'enemy_projectile.dart';
 import 'enemy_destroy_particle.dart';
 
 enum EnemyType { normal, fast, tough, big, shooter }

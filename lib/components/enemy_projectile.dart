@@ -1,4 +1,3 @@
-import 'dart:math';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -32,6 +31,7 @@ class EnemyProjectile extends PositionComponent with HasGameReference<BallBounce
 
   @override
   void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (_hit) return;
     if (other is Paddle) {
       _hit = true;
