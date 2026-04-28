@@ -246,7 +246,15 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
     _powerUpsCollected++;
     achievements.onPowerUpCollected(_powerUpsCollected);
     AudioManager.playPowerUp();
-    final labels = {'speed': '⚡ SPEED!', 'shield': '🛡️ SHIELD!', 'multi': '✖3 MULTI!', 'shrink': '🔻 SHRINK!', 'magnet': '🧲 MAGNET!'};
+    final labels = {
+      'speed': '⚡ SPEED!',
+      'shield': '🛡️ SHIELD!',
+      'multi': '✖3 MULTI!',
+      'shrink': '🔻 SHRINK!',
+      'magnet': '🧲 MAGNET!',
+      'fireball': '🔥 FIREBALL!',
+      'explosive': '💣 EXPLOSIVE!',
+    };
     add(ScorePopup(position: ball.position.clone(), text: labels[type.name] ?? '✨', color: const Color(0xFF00BCD4)));
     switch (type) {
       case PowerUpType.speed:
@@ -272,7 +280,49 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
         magnetTimer = 6;
         powerUpDisplay.addPowerUp('MAGNET', 6);
         break;
+      case PowerUpType.fireball:
+        ball.activateFireball();
+        powerUpDisplay.addPowerUp('FIREBALL', 6);
+        // Fire particles
+        for (int i = 0; i < 8; i++) {
+          add(ParticleEffect(position: ball.position.clone(), color: const Color(0xFFFF5722)));
+        }
+        break;
+      case PowerUpType.explosive:
+        _triggerExplosiveEffect();
+        powerUpDisplay.addPowerUp('EXPLOSIVE', 5);
+        break;
     }
+  }
+
+  void _triggerExplosiveEffect() {
+    // Destroy all enemies on screen
+    final enemies = children.query<Enemy>();
+    for (final enemy in enemies) {
+      enemy.takeHit(this);
+    }
+    // Also destroy barriers
+    final barriers = children.query<Barrier>();
+    for (final barrier in barriers) {
+      barrier.takeHit(this);
+    }
+    // Big explosion effect
+    screenShake.trigger(shakeIntensity: 15, shakeDuration: 0.6);
+    for (int i = 0; i < 15; i++) {
+      add(ParticleEffect(
+        position: Vector2(
+          40 + _rand.nextDouble() * (findGame()?.size.x ?? 400) - 80,
+          40 + _rand.nextDouble() * 200,
+        ),
+        color: const Color(0xFF673AB7),
+      ));
+    }
+    add(ScorePopup(
+      position: Vector2(findGame()?.size.x ?? 200, (findGame()?.size.y ?? 300) * 0.4),
+      text: '💣 MASSIVE EXPLOSION!',
+      color: const Color(0xFF673AB7),
+    ));
+    AudioManager.playExplosion();
   }
 
   void _spawnExtraBalls() {
@@ -280,8 +330,8 @@ class GameScene extends Component with TapCallbacks, HasCollisionDetection {
       final extra = Ball(
         paddle: paddle,
         onScore: (pts) { score += pts ~/ 2; scoreDisplay.updateScore(score); _registerHit(); },
-        onLifeLost: onLifeLost,
-        onGameOver: onGameOver,
+        onLifeLost: () {}, // Extra balls don't cost lives when they fall
+        onGameOver: () {},
         gameScene: this,
         isExtra: true,
       );

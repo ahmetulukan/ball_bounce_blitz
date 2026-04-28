@@ -5,13 +5,17 @@ Arcade reflex game built with Flutter & Flame engine.
 ## Features
 
 - **Wave System** - Progressive difficulty across unlimited waves
-- **6 Enemy Types** - Normal, Fast, Tough, Big, Shielded, Explosive
-- **5 Power-ups** - Speed Boost ⚡, Shield 🛡️, Multi-Ball ✖3, Paddle Shrink 🔻, Magnet 🧲
+- **7 Enemy Types** - Normal, Fast, Tough, Big, Shooter, Boss
+- **7 Power-ups** - Speed Boost ⚡, Shield 🛡️, Multi-Ball ✖3, Paddle Shrink 🔻, Magnet 🧲, Fireball 🔥, Explosive 💣
 - **Combo System** - Consecutive hits build combo multiplier
+- **Chain Reactions** - Explosive enemy kills trigger nearby enemies
+- **Critical Zone** - Paddle edges give 25 pts vs 10 pts center
 - **Particle Effects** - Score particles, explosion effects, ball trails
 - **Screen Shake** - Impact feedback on hits and game over
 - **Starfield Background** - Animated twinkling stars
 - **Ball Trail** - Visual trail following the ball
+- **Boss Battles** - Wave 5, 10, 15... boss enemies
+- **Achievement System** - 12 unlockable achievements
 
 ## Running
 

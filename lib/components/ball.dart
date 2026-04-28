@@ -25,6 +25,8 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
   bool _hasHitPaddleThisLaunch = false;
   static const double maxSpeed = 500;
   static const double minSpeed = 150;
+  bool fireballActive = false;
+  double _fireballTimer = 0;
 
   Ball({
     required this.paddle,
@@ -67,6 +69,11 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     }
   }
 
+  void activateFireball() {
+    fireballActive = true;
+    _fireballTimer = 6;
+  }
+
   double _prevSpeedForBoost = baseSpeed;
 
   @override
@@ -80,6 +87,11 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
         _speed = (_prevSpeedForBoost + (_prevSpeedForBoost - baseSpeed) * 0.5).clamp(minSpeed, maxSpeed);
         if (velocity.length > 0) velocity = velocity.normalized() * _speed;
       }
+    }
+
+    if (fireballActive) {
+      _fireballTimer -= dt;
+      if (_fireballTimer <= 0) fireballActive = false;
     }
 
     if (magnetActive) {
@@ -165,15 +177,20 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     super.onCollision(intersectionPoints, other);
     if (other is Enemy) {
       other.takeHit(gameScene);
-      // Bounce ball
-      final dy = position.y - other.position.y;
-      final dx = position.x - other.position.x;
-      if (dy.abs() > dx.abs()) {
-        velocity.y = -velocity.y;
+      // Fireball pierces through enemies without bouncing
+      if (!fireballActive) {
+        final dy = position.y - other.position.y;
+        final dx = position.x - other.position.x;
+        if (dy.abs() > dx.abs()) {
+          velocity.y = -velocity.y;
+        } else {
+          velocity.x = -velocity.x;
+        }
+        _speed = (_speed + 2).clamp(minSpeed, maxSpeed);
       } else {
-        velocity.x = -velocity.x;
+        // Fireball trail effect
+        AudioManager.playExplosion();
       }
-      _speed = (_speed + 2).clamp(minSpeed, maxSpeed);
     } else if (other is PowerUp) {
       gameScene?.collectPowerUp(other.type);
       other.removeFromParent();
@@ -199,6 +216,14 @@ class Ball extends PositionComponent with HasGameReference<BallBounceBlitzGame>,
     if (_boosted) {
       final glow = Paint()..color = const Color(0x60FF9800);
       canvas.drawCircle(Offset(radius, radius), radius + 5, glow);
+    }
+
+    // Fireball glow - orange-red fire effect
+    if (fireballActive) {
+      final fireGlowOuter = Paint()..color = const Color(0x60FF5722);
+      canvas.drawCircle(Offset(radius, radius), radius + 8, fireGlowOuter);
+      final fireGlowInner = Paint()..color = const Color(0x80FF9800);
+      canvas.drawCircle(Offset(radius, radius), radius + 4, fireGlowInner);
     }
 
     // Main ball

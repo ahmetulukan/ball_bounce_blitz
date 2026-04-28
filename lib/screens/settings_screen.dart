@@ -2,9 +2,19 @@ import 'package:flutter/material.dart';
 import '../game/game.dart';
 import '../services/audio_manager.dart';
 
-class SettingsScreen extends StatelessWidget {
+class SettingsScreen extends StatefulWidget {
   final BallBounceBlitzGame game;
   const SettingsScreen({super.key, required this.game});
+
+  @override
+  State<SettingsScreen> createState() => _SettingsScreenState();
+}
+
+class _SettingsScreenState extends State<SettingsScreen> {
+  void _toggleSound() {
+    AudioManager.toggleMute();
+    setState(() {}); // Rebuild to update toggle state
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -23,25 +33,37 @@ class SettingsScreen extends StatelessWidget {
         padding: const EdgeInsets.all(20),
         children: [
           _buildSection('Audio', [
-            _SoundToggleTile(
-              icon: AudioManager.muted ? '🔇' : '🔊',
-              title: 'Sound Effects',
-              subtitle: AudioManager.muted ? 'Muted' : 'On',
-              onTap: () {
-                AudioManager.toggleMute();
-                // Force rebuild by popping and re-pushing
-              },
+            ListTile(
+              leading: Text(AudioManager.muted ? '🔇' : '🔊', style: const TextStyle(fontSize: 24)),
+              title: const Text('Sound Effects', style: TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
+              subtitle: Text(AudioManager.muted ? 'Muted' : 'On', style: TextStyle(color: Colors.white.withAlpha(100))),
+              trailing: Switch(
+                value: !AudioManager.muted,
+                activeColor: const Color(0xFF00BCD4),
+                onChanged: (_) => _toggleSound(),
+              ),
+              onTap: _toggleSound,
             ),
           ]),
           const SizedBox(height: 24),
           _buildSection('Gameplay', [
-            _InfoTile(icon: '🎮', title: 'High Score', subtitle: '${game.highScore}'),
-            _InfoTile(icon: '📱', title: 'Version', subtitle: '1.1.0'),
+            _InfoTile(icon: '🏆', title: 'High Score', subtitle: '${widget.game.highScore}'),
+            const _InfoTile(icon: '📱', title: 'Version', subtitle: '1.2.0'),
           ]),
           const SizedBox(height: 24),
           _buildSection('Controls', [
-            _InfoTile(icon: '🕹️', title: 'Paddle', subtitle: 'Drag left/right'),
-            _InfoTile(icon: '⚡', title: 'Critical Zone', subtitle: 'Paddle edges = 25 pts'),
+            const _InfoTile(icon: '🕹️', title: 'Paddle', subtitle: 'Drag left/right'),
+            const _InfoTile(icon: '⚡', title: 'Critical Zone', subtitle: 'Paddle edges = 25 pts'),
+            const _InfoTile(icon: '🔥', title: 'Fireball', subtitle: 'Pierce through enemies'),
+            const _InfoTile(icon: '💣', title: 'Explosive', subtitle: 'Destroy all on screen'),
+          ]),
+          const SizedBox(height: 24),
+          _buildSection('Power-Ups', [
+            const _InfoTile(icon: '⚡', title: 'SPEED', subtitle: 'Ball speed boost'),
+            const _InfoTile(icon: '🛡️', title: 'SHIELD', subtitle: 'Block one hit'),
+            const _InfoTile(icon: '✖3', title: 'MULTI', subtitle: 'Spawn 2 extra balls'),
+            const _InfoTile(icon: '🔻', title: 'SHRINK', subtitle: 'Make paddle smaller'),
+            const _InfoTile(icon: '🧲', title: 'MAGNET', subtitle: 'Attract ball to paddle'),
           ]),
         ],
       ),
@@ -71,32 +93,6 @@ class SettingsScreen extends StatelessWidget {
   }
 }
 
-class _SoundToggleTile extends StatefulWidget {
-  final String icon, title, subtitle;
-  final VoidCallback onTap;
-  const _SoundToggleTile({required this.icon, required this.title, required this.subtitle, required this.onTap});
-
-  @override
-  State<_SoundToggleTile> createState() => _SoundToggleTileState();
-}
-
-class _SoundToggleTileState extends State<_SoundToggleTile> {
-  @override
-  Widget build(BuildContext context) {
-    return ListTile(
-      leading: Text(widget.icon, style: const TextStyle(fontSize: 24)),
-      title: Text(widget.title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-      subtitle: Text(widget.subtitle, style: TextStyle(color: Colors.white.withAlpha(100))),
-      trailing: Switch(
-        value: !AudioManager.muted,
-        activeColor: const Color(0xFF00BCD4),
-        onChanged: (_) => widget.onTap(),
-      ),
-      onTap: widget.onTap,
-    );
-  }
-}
-
 class _InfoTile extends StatelessWidget {
   final String icon, title, subtitle;
   const _InfoTile({required this.icon, required this.title, required this.subtitle});
@@ -106,7 +102,7 @@ class _InfoTile extends StatelessWidget {
     return ListTile(
       leading: Text(icon, style: const TextStyle(fontSize: 24)),
       title: Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w500)),
-      trailing: Text(subtitle, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 14)),
+      trailing: Text(subtitle, style: TextStyle(color: Colors.white.withAlpha(150), fontSize: 12)),
     );
   }
 }
