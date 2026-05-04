@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
@@ -7,40 +8,22 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
   double duration = 1.8;
   int displayedWave = 1;
   bool active = false;
+  bool _isBoss = false;
 
-  WaveAnnouncement() : super(anchor: Anchor.center);
+  WaveAnnouncement(int wave, [bool isBoss = false])
+      : super(anchor: Anchor.center) {
+    displayedWave = wave;
+    _isBoss = isBoss;
+    timer = isBoss ? 2.5 : 1.8;
+    duration = timer;
+    active = true;
+  }
 
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
     position = Vector2(size.x / 2, size.y * 0.35);
   }
-
-  void showWave(int wave) {
-    displayedWave = wave;
-    timer = duration;
-    active = true;
-  }
-
-  void showBoss(int wave) {
-    displayedWave = wave;
-    timer = 2.5;
-    duration = 2.5;
-    active = true;
-    _isBoss = true;
-  }
-
-  void showWaveComplete(int wave) {
-    displayedWave = wave;
-    timer = 2.0;
-    duration = 2.0;
-    active = true;
-    _isBoss = false;
-    _waveComplete = true;
-  }
-
-  bool _waveComplete = false;
-  bool _isBoss = false;
 
   @override
   void update(double dt) {
@@ -65,7 +48,7 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
         style: TextStyle(
           fontSize: 42 * scale,
           fontWeight: FontWeight.bold,
-          color: Colors.white.withAlpha((alpha * 255).toInt()),
+          color: Color.fromARGB((alpha * 255).toInt(), 255, 255, 255),
           shadows: const [Shadow(color: Color(0x80000000), blurRadius: 8)],
         ),
       ),
@@ -82,7 +65,7 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
           style: TextStyle(
             fontSize: 22 * scale,
             fontWeight: FontWeight.bold,
-            color: const Color(0xFFFFD700).withAlpha((alpha * 255).toInt()),
+            color: Color.fromARGB((alpha * 255).toInt(), 255, 215, 0),
             shadows: const [Shadow(color: Color(0x80FF0000), blurRadius: 12)],
           ),
         ),
@@ -90,28 +73,14 @@ class WaveAnnouncement extends PositionComponent with HasGameReference<BallBounc
       );
       bp.layout();
       bp.paint(canvas, Offset(-bp.width / 2, tp.height / 2 + 4));
-    } else if (_waveComplete) {
-      final subText = '✨ Wave Clear! +${displayedWave * 10}';
-      final sub = TextPainter(
-        text: TextSpan(
-          text: subText,
-          style: TextStyle(
-            fontSize: 18 * scale,
-            color: const Color(0xFF4CAF50).withAlpha((alpha * 255).toInt()),
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      sub.layout();
-      sub.paint(canvas, Offset(-sub.width / 2, tp.height / 2 + 4));
     } else if (displayedWave > 1) {
-      final subText = 'Speed Up!';
+      final subText = '⚡ Speed Up!';
       final sub = TextPainter(
         text: TextSpan(
           text: subText,
           style: TextStyle(
             fontSize: 18 * scale,
-            color: const Color(0xFFFFEB3B).withAlpha((alpha * 255).toInt()),
+            color: Color.fromARGB((alpha * 255).toInt(), 255, 235, 59),
           ),
         ),
         textDirection: TextDirection.ltr,

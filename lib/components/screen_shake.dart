@@ -1,15 +1,15 @@
+import 'dart:math';
 import 'package:flame/components.dart';
 import '../game/game.dart';
 
 class ScreenShake extends Component with HasGameReference<BallBounceBlitzGame> {
-  double intensity = 0;
-  double duration = 0;
+  double intensity;
+  double duration;
   double elapsed = 0;
   Vector2 offset = Vector2.zero();
+  final Random _rand = Random();
 
-  void trigger({double shakeIntensity = 5, double shakeDuration = 0.3}) {
-    intensity = shakeIntensity;
-    duration = shakeDuration;
+  ScreenShake({this.intensity = 5, this.duration = 0.3}) {
     elapsed = 0;
   }
 
@@ -21,8 +21,8 @@ class ScreenShake extends Component with HasGameReference<BallBounceBlitzGame> {
       final progress = elapsed / duration;
       final currentIntensity = intensity * (1 - progress);
       offset = Vector2(
-        (DateTime.now().microsecond % 100 - 50) / 50 * currentIntensity,
-        (DateTime.now().microsecond % 97 - 48) / 50 * currentIntensity,
+        (_rand.nextDouble() * 2 - 1) * currentIntensity,
+        (_rand.nextDouble() * 2 - 1) * currentIntensity,
       );
     } else {
       offset = Vector2.zero();

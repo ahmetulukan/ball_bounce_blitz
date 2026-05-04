@@ -1,8 +1,8 @@
+import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../game/game.dart';
 
-/// Floating score popup that drifts upward and fades out
 class ScorePopup extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final String text;
   final Color color;
@@ -34,11 +34,11 @@ class ScorePopup extends PositionComponent with HasGameReference<BallBounceBlitz
       text: TextSpan(
         text: text,
         style: TextStyle(
-          color: color.withAlpha((alpha * 255).toInt()),
+          color: Color.fromARGB((alpha * 255).toInt(), color.value >> 16 & 0xFF, color.value >> 8 & 0xFF, color.value & 0xFF),
           fontSize: 16 * scale,
           fontWeight: FontWeight.bold,
           shadows: const [
-            Shadow(color: Colors.black54, blurRadius: 4, offset: Offset(1, 1)),
+            Shadow(color: Color(0x54000000), blurRadius: 4, offset: Offset(1, 1)),
           ],
         ),
       ),

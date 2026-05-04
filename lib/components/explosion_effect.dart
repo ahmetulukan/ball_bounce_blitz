@@ -1,6 +1,6 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
 import '../game/game.dart';
 
 class ExplosionEffect extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
@@ -12,10 +12,10 @@ class ExplosionEffect extends PositionComponent with HasGameReference<BallBounce
 
   ExplosionEffect({
     required Vector2 position,
-    required Color color,
+    Color? color,
     this.lifetime = 0.6,
     this.explosionScale = 1.0,
-  })  : explosionColor = color,
+  })  : explosionColor = color ?? const Color(0xFFFF6B6B),
         super(position: position, anchor: Anchor.center);
 
   @override
@@ -55,7 +55,7 @@ class ExplosionEffect extends PositionComponent with HasGameReference<BallBounce
       canvas.translate(p.offset.dx, p.offset.dy);
       canvas.rotate(p.angle);
       final paint = Paint()
-        ..color = explosionColor.withAlpha((alpha * 255).toInt())
+        ..color = Color.fromARGB((alpha * 255).toInt(), explosionColor.value >> 16 & 0xFF, explosionColor.value >> 8 & 0xFF, explosionColor.value & 0xFF)
         ..style = PaintingStyle.fill;
       canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size), paint);
       canvas.restore();

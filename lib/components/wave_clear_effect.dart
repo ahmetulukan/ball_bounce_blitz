@@ -1,20 +1,20 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart';
 import '../game/game.dart';
 
 class WaveClearEffect extends PositionComponent with HasGameReference<BallBounceBlitzGame> {
   final List<WaveParticle> particles = [];
   double elapsed = 0;
-  final double lifetime = 1.2;
-  final Color color;
+  final double lifetime;
   final int count;
 
   WaveClearEffect({
-    required Vector2 position,
-    this.color = const Color(0xFF4CAF50),
-    this.count = 24,
-  }) : super(position: position, anchor: Anchor.center);
+    Vector2? position,
+    this.lifetime = 1.5,
+    this.count = 30,
+    Color color = const Color(0xFF4CAF50),
+  }) : super(position: position ?? Vector2(0, 0), anchor: Anchor.center);
 
   @override
   Future<void> onLoad() async {
@@ -25,7 +25,7 @@ class WaveClearEffect extends PositionComponent with HasGameReference<BallBounce
       particles.add(WaveParticle(
         offset: Offset.zero,
         velocity: Vector2(cos(angle) * speed, sin(angle) * speed),
-        size: 5 + rand.nextDouble() * 4,
+        size: 5 + rand.nextDouble() * 6,
         rotation: rand.nextDouble() * 6.28,
         rotSpeed: (rand.nextDouble() - 0.5) * 8,
       ));
@@ -52,7 +52,7 @@ class WaveClearEffect extends PositionComponent with HasGameReference<BallBounce
       canvas.translate(p.offset.dx, p.offset.dy);
       canvas.rotate(p.rotation);
       final paint = Paint()
-        ..color = color.withAlpha((alpha * 255).toInt())
+        ..color = Color.fromARGB((alpha * 255).toInt(), 76, 175, 80)
         ..style = PaintingStyle.fill;
       canvas.drawRect(Rect.fromCenter(center: Offset.zero, width: p.size, height: p.size), paint);
       canvas.restore();
