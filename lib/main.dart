@@ -1,17 +1,39 @@
-import 'package:flame/flame.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'screens/game_screen.dart';
+import 'game/ball_bounce_game.dart';
+import 'game/ui/game_over_screen.dart';
+import 'game/ui/hud_widget.dart';
+import 'game/ui/main_menu_screen.dart';
+import 'game/ui/pause_screen.dart';
+import 'game/ui/wave_announcement.dart';
 
-void main() async {
+void main() {
   WidgetsFlutterBinding.ensureInitialized();
+  runApp(const BallBounceApp());
+}
 
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
+class BallBounceApp extends StatelessWidget {
+  const BallBounceApp({super.key});
 
-  await Flame.device.fullScreen();
-  await Flame.device.setLandscape();
-  runApp(GameScreen());
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Ball Bounce Blitz',
+      debugShowCheckedModeBanner: false,
+      home: GameWidget<BallBounceGame>.controlled(
+        gameFactory: () => BallBounceGame(),
+        overlayBuilderMap: {
+          'GameOver': (context, game) => GameOverScreen(game: game),
+          'Hud': (context, game) => HudWidget(game: game),
+          'MainMenu': (context, game) => MainMenuScreen(game: game),
+          'Pause': (context, game) => PauseScreen(game: game),
+          'WaveAnnouncement': (context, game) => WaveAnnouncement(
+            wave: game.wave,
+            onComplete: () => game.overlays.remove('WaveAnnouncement'),
+          ),
+        },
+        initialActiveOverlays: const ['MainMenu'],
+      ),
+    );
+  }
 }

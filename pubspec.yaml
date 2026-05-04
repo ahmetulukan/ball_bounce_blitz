@@ -1,24 +1,29 @@
 name: ball_bounce_blitz
-description: Ball Bounce Blitz - Arcade reflex game built with Flame engine
+description: "Ball Bounce Blitz - Arcade action game built with Flutter and Flame engine."
 publish_to: 'none'
-version: 1.0.0+2
+version: 1.0.0+1
 
 environment:
-  sdk: '>=3.0.0 <4.0.0'
+  sdk: ^3.11.4
 
 dependencies:
   flutter:
     sdk: flutter
+  cupertino_icons: ^1.0.8
   flame: ^1.18.0
   flame_audio: ^2.10.2
-  shared_preferences: ^2.2.2
+  hive: ^2.2.3
+  hive_flutter: ^1.1.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^3.0.1
+  flutter_lints: ^6.0.0
+  hive_generator: ^2.0.1
+  build_runner: ^2.4.9
 
 flutter:
   uses-material-design: true
+
   assets:
     - assets/audio/

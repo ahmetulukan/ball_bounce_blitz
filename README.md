@@ -1,27 +1,17 @@
-# Ball Bounce Blitz 🏐⚡
+# ball_bounce_blitz
 
-Arcade reflex game built with Flutter + Flame engine.
+A new Flutter project.
 
-## How to Play
-- Drag the paddle horizontally to keep the ball bouncing
-- Destroy enemies with the ball to score points
-- Survive waves and beat your high score!
+## Getting Started
 
-## Features
-- ⚡ Power-ups: Speed Boost, Shield, Multi-Ball, Magnet, Paddle Shrink
-- 🌟 Particle effects, ball trails, screen shake
-- 🎵 Sound effects
-- 🏆 Wave system with increasing difficulty
-- 💎 Combo system for bonus points
+This project is a starting point for a Flutter application.
 
-## Run
-```bash
-flutter pub get
-flutter run
-```
+A few resources to get you started if this is your first Flutter project:
 
-## Build
-```bash
-flutter build apk --release
-flutter build ios --release
-```
+- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
+- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+
+For help getting started with Flutter development, view the
+[online documentation](https://docs.flutter.dev/), which offers tutorials,
+samples, guidance on mobile development, and a full API reference.
