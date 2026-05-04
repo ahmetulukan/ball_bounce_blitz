@@ -117,10 +117,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) async {
     super.onCollision(intersectionPoints, other);
 
     if (other is Paddle) {
+      paddle.onBallHit();
       final paddleCenter = other.position.x;
       final diff = (position.x - paddleCenter) / (Paddle.paddleWidth / 2);
       final angle = diff * 0.7;
@@ -139,6 +140,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
       _applyBounceEffect();
       
       if (destroyed) {
+        gameRef.comboSystem.onEnemyDestroyed(other);
         gameRef.playSound('hit');
       } else {
         // Heavy enemy hit but not destroyed - smaller effect

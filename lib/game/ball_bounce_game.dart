@@ -47,6 +47,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     screenShake = ScreenShake();
     backgroundStars = BackgroundStars();
     paddle = Paddle();
+    paddle.gameRef = this;
     ball = Ball(paddle: paddle, gameRef: this);
 
     add(backgroundStars);
@@ -169,6 +170,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   void loseLife() {
     if (ball.isShielded) return;
     lives--;
+    paddle.resetStreak();
     comboSystem.reset();
     playSound('lose');
     if (lives <= 0) {

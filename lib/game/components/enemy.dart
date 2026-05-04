@@ -4,11 +4,11 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import '../ball_bounce_game.dart';
 
-enum EnemyType { square, circle, triangle }
-enum EnemyColorType { red, green, purple }
+enum EnemyType { square, circle, triangle, diamond, hexagon }
+enum EnemyColorType { red, green, purple, gold }
 
 // Enemy behavior types
-enum EnemyBehavior { normal, zigzag, fast, heavy }
+enum EnemyBehavior { normal, zigzag, fast, heavy, splitting }
 
 class Enemy extends PositionComponent with CollisionCallbacks {
   static const double enemySize = 30;
@@ -25,6 +25,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   bool _isDestroyed = false;
   double _zigzagPhase = 0;
   double _initialX = 0;
+  double _pulsePhase = 0;
 
   Enemy({
     required this.type,
@@ -53,6 +54,8 @@ class Enemy extends PositionComponent with CollisionCallbacks {
     super.update(dt);
     if (_isDestroyed) return;
     
+    _pulsePhase += dt * 4;
+    
     // Apply behavior-specific movement
     switch (behavior) {
       case EnemyBehavior.normal:
@@ -69,6 +72,9 @@ class Enemy extends PositionComponent with CollisionCallbacks {
       case EnemyBehavior.heavy:
         position.y += speed * 0.7 * dt;
         break;
+      case EnemyBehavior.splitting:
+        position.y += speed * 1.2 * dt;
+        break;
     }
 
     if (position.y > 430) {
@@ -84,7 +90,6 @@ class Enemy extends PositionComponent with CollisionCallbacks {
       destroy();
       return true;
     }
-    // Visual flash for heavy enemies when hit once
     return false;
   }
 
@@ -96,7 +101,6 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   }
 
   Color get displayColor {
-    // Flash white when heavy enemy takes a hit
     if (behavior == EnemyBehavior.heavy && _currentHits > 0) {
       return const Color(0xFFFFFFFF);
     }
@@ -111,41 +115,42 @@ class Enemy extends PositionComponent with CollisionCallbacks {
         return const Color(0xFF43A047);
       case EnemyColorType.purple:
         return const Color(0xFF8E24AA);
+      case EnemyColorType.gold:
+        return const Color(0xFFFFD700);
     }
   }
 
   @override
   void render(Canvas canvas) {
-    final paint = Paint()..color = displayColor;
+    final basePaint = Paint()..color = displayColor;
+    final pulseScale = 1.0 + sin(_pulsePhase) * 0.05;
     
     switch (type) {
       case EnemyType.square:
-        // Draw heavy indicator
         if (behavior == EnemyBehavior.heavy) {
-          paint.style = PaintingStyle.stroke;
-          paint.strokeWidth = 3;
+          basePaint.style = PaintingStyle.stroke;
+          basePaint.strokeWidth = 3;
           canvas.drawRect(
             Rect.fromCenter(
               center: Offset.zero,
               width: enemySize + 6,
               height: enemySize + 6,
             ),
-            paint,
+            basePaint,
           );
-          paint.style = PaintingStyle.fill;
+          basePaint.style = PaintingStyle.fill;
         }
         canvas.drawRect(
           Rect.fromCenter(
             center: Offset.zero,
-            width: enemySize,
-            height: enemySize,
+            width: enemySize * pulseScale,
+            height: enemySize * pulseScale,
           ),
-          paint,
+          basePaint,
         );
         break;
       case EnemyType.circle:
-        canvas.drawCircle(Offset.zero, enemySize / 2, paint);
-        // Speed trail effect
+        canvas.drawCircle(Offset.zero, enemySize / 2 * pulseScale, basePaint);
         if (behavior == EnemyBehavior.fast) {
           final trailPaint = Paint()..color = displayColor.withAlpha(80);
           canvas.drawCircle(Offset(0, -8), enemySize / 3, trailPaint);
@@ -154,12 +159,12 @@ class Enemy extends PositionComponent with CollisionCallbacks {
         break;
       case EnemyType.triangle:
         final path = Path();
-        path.moveTo(0, -enemySize / 2);
-        path.lineTo(enemySize / 2, enemySize / 2);
-        path.lineTo(-enemySize / 2, enemySize / 2);
+        final size = enemySize / 2 * pulseScale;
+        path.moveTo(0, -size);
+        path.lineTo(size, size);
+        path.lineTo(-size, size);
         path.close();
-        canvas.drawPath(path, paint);
-        // Zigzag indicator
+        canvas.drawPath(path, basePaint);
         if (behavior == EnemyBehavior.zigzag) {
           final indicatorPaint = Paint()
             ..color = const Color(0xFFFFFFFF).withAlpha(150)
@@ -167,6 +172,81 @@ class Enemy extends PositionComponent with CollisionCallbacks {
             ..style = PaintingStyle.stroke;
           canvas.drawCircle(Offset.zero, enemySize / 2 + 4, indicatorPaint);
         }
+        break;
+      case EnemyType.diamond:
+        final path = Path();
+        final size = enemySize / 2 * pulseScale;
+        path.moveTo(0, -size);
+        path.lineTo(size, 0);
+        path.lineTo(0, size);
+        path.lineTo(-size, 0);
+        path.close();
+        canvas.drawPath(path, basePaint);
+        break;
+      case EnemyType.hexagon:
+        final path = Path();
+        final size = enemySize / 2 * pulseScale;
+        for (int i = 0; i < 6; i++) {
+          final angle = (i * 60 - 90) * pi / 180;
+          final x = cos(angle) * size;
+          final y = sin(angle) * size;
+          if (i == 0) {
+            path.moveTo(x, y);
+          } else {
+            path.lineTo(x, y);
+          }
+        }
+        path.close();
+        
+        if (behavior == EnemyBehavior.splitting) {
+          final glowPaint = Paint()
+            ..color = const Color(0xFFFFD700).withAlpha(100)
+            ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+          canvas.drawPath(path, glowPaint);
+        }
+        
+        canvas.drawPath(path, basePaint);
+        break;
+    }
+    
+    _renderBehaviorIndicator(canvas);
+  }
+
+  void _renderBehaviorIndicator(Canvas canvas) {
+    switch (behavior) {
+      case EnemyBehavior.heavy:
+        if (hitCount > 1 && _currentHits < hitCount) {
+          final textPainter = TextPainter(
+            text: TextSpan(
+              text: '${hitCount - _currentHits}',
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            textDirection: TextDirection.ltr,
+          );
+          textPainter.layout();
+          textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+        }
+        break;
+      case EnemyBehavior.fast:
+        final trailPaint = Paint()
+          ..color = displayColor.withAlpha(60)
+          ..strokeWidth = 2;
+        canvas.drawLine(Offset(0, enemySize / 2), Offset(0, enemySize), trailPaint);
+        canvas.drawLine(Offset(-5, enemySize / 2), Offset(-5, enemySize * 0.8), trailPaint);
+        canvas.drawLine(Offset(5, enemySize / 2), Offset(5, enemySize * 0.8), trailPaint);
+        break;
+      case EnemyBehavior.splitting:
+        final outlinePaint = Paint()
+          ..color = Colors.white.withAlpha((150 + sin(_pulsePhase * 2) * 100).round().clamp(0, 255))
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke;
+        canvas.drawCircle(Offset.zero, enemySize / 2 + 6, outlinePaint);
+        break;
+      default:
         break;
     }
   }
@@ -176,24 +256,25 @@ class EnemyFactory {
   static final Random _random = Random();
 
   static Enemy create(double x, int wave, BallBounceGame game) {
-    final types = EnemyType.values;
-    final colors = EnemyColorType.values;
+    final types = [EnemyType.square, EnemyType.circle, EnemyType.triangle, EnemyType.diamond, EnemyType.hexagon];
+    final colors = [EnemyColorType.red, EnemyColorType.green, EnemyColorType.purple, EnemyColorType.gold];
     final type = types[_random.nextInt(types.length)];
     final color = colors[_random.nextInt(colors.length)];
     
-    // Determine behavior based on wave and random chance
     EnemyBehavior behavior = EnemyBehavior.normal;
     int hitCount = 1;
     
     if (wave >= 3) {
       final roll = _random.nextDouble();
-      if (roll < 0.15) {
+      if (roll < 0.12) {
         behavior = EnemyBehavior.heavy;
         hitCount = 2;
-      } else if (roll < 0.30) {
+      } else if (roll < 0.25) {
         behavior = EnemyBehavior.zigzag;
-      } else if (roll < 0.40) {
+      } else if (roll < 0.35) {
         behavior = EnemyBehavior.fast;
+      } else if (roll < 0.42) {
+        behavior = EnemyBehavior.splitting;
       }
     } else if (wave >= 2) {
       final roll = _random.nextDouble();
@@ -201,16 +282,18 @@ class EnemyFactory {
         behavior = EnemyBehavior.zigzag;
       } else if (roll < 0.30) {
         behavior = EnemyBehavior.fast;
+      } else if (roll < 0.35) {
+        behavior = EnemyBehavior.splitting;
       }
     }
 
     double baseEnemySpeed = Enemy.baseSpeed + (wave * 25);
     int basePoints = 10 + (wave * 5);
     
-    // Behavior modifiers
     if (behavior == EnemyBehavior.heavy) basePoints = (basePoints * 1.5).round();
     if (behavior == EnemyBehavior.fast) basePoints = (basePoints * 1.2).round();
     if (behavior == EnemyBehavior.zigzag) basePoints = (basePoints * 1.3).round();
+    if (behavior == EnemyBehavior.splitting) basePoints = (basePoints * 2.0).round();
     
     final enemy = Enemy(
       type: type,

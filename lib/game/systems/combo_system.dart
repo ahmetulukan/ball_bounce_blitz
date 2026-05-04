@@ -30,8 +30,6 @@ class ComboSystem extends Component {
     final basePoints = enemy.points;
     final bonusPoints = (basePoints * (multiplier - 1)).round();
     gameRef.score += bonusPoints;
-    
-    gameRef.onEnemyDestroyed(enemy);
   }
 
   @override
