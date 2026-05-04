@@ -77,6 +77,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   }
 
   void startGame() {
+    _gameState.incrementGamesPlayed();
     score = 0;
     lives = 3;
     wave = 1;
@@ -230,6 +231,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
       highScore = score;
       _gameState.saveHighScore(score);
     }
+    _gameState.addToTotalScore(score);
   }
 
   bool get isBossWave => _bossWave;
