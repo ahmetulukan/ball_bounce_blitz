@@ -6,6 +6,7 @@ import 'package:flame/components.dart';
 import 'paddle.dart';
 import 'enemy.dart';
 import 'power_up.dart';
+import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
 import '../ball_bounce_game.dart';
@@ -163,6 +164,32 @@ class Ball extends CircleComponent with CollisionCallbacks {
       gameRef.collectPowerUp(other.type);
       gameRef.playSound('powerup');
       other.removeFromParent();
+    }
+
+    if (other is Barrier) {
+      // Bounce off barrier
+      final bounceDir = (position - other.position).normalized();
+      // Determine if this is a top/bottom or side collision
+      final relPos = position - other.position;
+      if (relPos.y.abs() > other.size.x / 2) {
+        // Vertical barrier hit
+        velocity.y = -velocity.y;
+        position.y = other.position.y + (velocity.y > 0 ? -1 : 1) * (ballRadius + barrier.barrierHeight);
+      } else {
+        // Horizontal barrier hit
+        velocity.x = -velocity.x;
+        position.x = other.position.x + (velocity.x > 0 ? -1 : 1) * (ballRadius + other.size.x / 2);
+      }
+      _applyBounceEffect();
+      gameRef.playSound('bounce');
+      
+      // Barrier hit effect
+      gameRef.add(ExplosionEffect(
+        position: position.clone(),
+        color: const Color(0xFF00BCD4),
+        count: 5,
+        speed: 80,
+      ));
     }
   }
 

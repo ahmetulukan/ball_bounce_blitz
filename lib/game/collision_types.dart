@@ -6,3 +6,13 @@ enum CollisionType {
   barrier,
   paddle,
 }
+
+/// Collision categories for grouping collision types
+enum CollisionCategory {
+  none,
+  ball,
+  enemy,
+  powerUp,
+  barrier,
+  paddle,
+}

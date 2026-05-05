@@ -13,6 +13,7 @@ import 'components/particles/trail_particle.dart';
 import 'components/background_stars.dart';
 import 'components/screen_shake.dart';
 import 'components/boss_enemy.dart';
+import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
@@ -27,6 +28,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late BackgroundStars backgroundStars;
   late ComboSystem comboSystem;
   late ScreenShake screenShake;
+  late BarrierSpawner barrierSpawner;
   late GameStateService _gameState;
   late AchievementService _achievements;
   GameStateService get gameState => _gameState;
@@ -78,6 +80,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     add(spawnSystem);
     add(comboSystem);
     add(screenShake);
+    barrierSpawner = BarrierSpawner();
+    barrierSpawner.setGame(this);
+    add(barrierSpawner);
   }
 
   @override
@@ -150,6 +155,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     children.whereType<ExplosionEffect>().toList().forEach(remove);
     children.whereType<BossEnemy>().toList().forEach(remove);
     children.whereType<AchievementPopup>().toList().forEach(remove);
+    children.whereType<Barrier>().toList().forEach(remove);
+    barrierSpawner.reset();
     spawnSystem.reset();
     spawnSystem.onWaveChanged(wave);
     comboSystem.reset();
@@ -180,6 +187,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     children.whereType<ExplosionEffect>().toList().forEach(remove);
     children.whereType<BossEnemy>().toList().forEach(remove);
     children.whereType<AchievementPopup>().toList().forEach(remove);
+    children.whereType<Barrier>().toList().forEach(remove);
+    barrierSpawner.reset();
     spawnSystem.reset();
     comboSystem.reset();
     ball.reset();
