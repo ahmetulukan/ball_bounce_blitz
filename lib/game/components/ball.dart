@@ -168,13 +168,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
     if (other is Barrier) {
       // Bounce off barrier
-      final bounceDir = (position - other.position).normalized();
-      // Determine if this is a top/bottom or side collision
       final relPos = position - other.position;
       if (relPos.y.abs() > other.size.x / 2) {
         // Vertical barrier hit
         velocity.y = -velocity.y;
-        position.y = other.position.y + (velocity.y > 0 ? -1 : 1) * (ballRadius + barrier.barrierHeight);
+        position.y = other.position.y + (velocity.y > 0 ? -1 : 1) * (ballRadius + other.size.y / 2);
       } else {
         // Horizontal barrier hit
         velocity.x = -velocity.x;

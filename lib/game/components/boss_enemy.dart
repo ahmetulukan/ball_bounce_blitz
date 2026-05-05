@@ -4,6 +4,7 @@ import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'particles/explosion_particle.dart';
+import 'ball.dart';
 import '../ball_bounce_game.dart';
 
 class BossEnemy extends PositionComponent with CollisionCallbacks {
@@ -34,6 +35,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   static const double _teleportInterval = 6.0;
   bool _isTeleporting = false;
   double _teleportPhase = 0;
+  double opacity = 1.0;
 
   BossEnemy({
     required this.wave,
@@ -423,7 +425,10 @@ class BossProjectile extends CircleComponent with CollisionCallbacks {
     // Homing behavior
     if (isHoming && gameRef.isPaused == false) {
       final toBall = (gameRef.ball.position - position).normalized();
-      velocity = Vector2.lerp(velocity.normalized(), toBall, _homingStrength.clamp(0, 0.5)) * velocity.length();
+      final t = _homingStrength.clamp(0.0, 0.5);
+      final vn = velocity.normalized();
+      final nd = vn + (toBall - vn) * t;
+      velocity = Vector2(nd.x.clamp(-1.0, 1.0), nd.y.clamp(-1.0, 1.0)).normalized() * velocity.length;
       _homingStrength += dt * 0.3;
     }
     
