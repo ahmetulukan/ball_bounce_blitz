@@ -1,53 +1,72 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
+import '../components/ball.dart';
+import '../systems/combo_system.dart';
 
-class HudOverlay extends StatelessWidget {
+class HudOverlay extends StatefulWidget {
   final BallBounceGame game;
 
   const HudOverlay({super.key, required this.game});
 
   @override
-  Widget build(BuildContext context) {
-    return ValueListenableBuilder(
-      valueListenable: _HudNotifier(game),
-      builder: (context, _, __) {
-        final combo = game.comboSystem;
-        final comboActive = combo.currentCombo >= 3;
+  State<HudOverlay> createState() => _HudOverlayState();
+}
 
-        return Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+class _HudOverlayState extends State<HudOverlay> {
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final combo = widget.game.comboSystem;
+    final comboActive = combo.currentCombo >= 3;
+
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Left: Score + Combo
+          Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              // Left: Score + Combo
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _scoreChip(),
-                  if (comboActive) ...[
-                    const SizedBox(height: 6),
-                    _comboChip(combo),
-                  ],
-                ],
-              ),
-              // Center: Wave
-              _waveChip(),
-              // Right: Lives + Power-up indicators
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _livesRow(),
-                  const SizedBox(height: 6),
-                  _powerUpIndicators(),
-                ],
-              ),
+              _scoreChip(),
+              if (comboActive) ...[
+                const SizedBox(height: 6),
+                _comboChip(combo),
+              ],
             ],
           ),
-        );
-      },
+          // Center: Wave
+          _waveChip(),
+          // Right: Lives + Power-up indicators
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _livesRow(),
+              const SizedBox(height: 6),
+              _powerUpIndicators(),
+            ],
+          ),
+        ],
+      ),
     );
   }
 
@@ -59,7 +78,7 @@ class HudOverlay extends StatelessWidget {
         borderRadius: BorderRadius.circular(8),
       ),
       child: Text(
-        'SCORE: ${game.score}',
+        'SCORE: ${widget.game.score}',
         style: const TextStyle(
           color: Colors.white,
           fontSize: 14,
@@ -93,7 +112,6 @@ class HudOverlay extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          // Decay timer bar
           Container(
             width: 70,
             height: 3,
@@ -134,11 +152,13 @@ class HudOverlay extends StatelessWidget {
   }
 
   Widget _waveChip() {
-    final isBoss = game.isBossWave;
+    final isBoss = widget.game.isBossWave;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
       decoration: BoxDecoration(
-        color: isBoss ? const Color(0xFFFF5722).withAlpha(200) : const Color(0xFF9C27B0).withAlpha(200),
+        color: isBoss
+            ? const Color(0xFFFF5722).withAlpha(200)
+            : const Color(0xFF9C27B0).withAlpha(200),
         borderRadius: BorderRadius.circular(8),
         border: Border.all(
           color: isBoss ? const Color(0xFFFFD700) : const Color(0xFFCE93D8),
@@ -146,7 +166,7 @@ class HudOverlay extends StatelessWidget {
         ),
       ),
       child: Text(
-        isBoss ? '👑 WAVE ${game.wave}' : '🌊 WAVE ${game.wave}',
+        isBoss ? '👑 WAVE ${widget.game.wave}' : '🌊 WAVE ${widget.game.wave}',
         style: TextStyle(
           color: isBoss ? const Color(0xFFFFD700) : Colors.white,
           fontSize: 14,
@@ -160,7 +180,7 @@ class HudOverlay extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: List.generate(3, (index) {
-        final isActive = index < game.lives;
+        final isActive = index < widget.game.lives;
         return Padding(
           padding: const EdgeInsets.only(left: 2),
           child: Icon(
@@ -175,26 +195,24 @@ class HudOverlay extends StatelessWidget {
 
   Widget _powerUpIndicators() {
     final indicators = <Widget>[];
+    final ball = widget.game.ball;
 
-    if (game.ball.isFireball) {
-      indicators.add(_powerUpBadge('🔥', 'Fire'));
+    if (ball.isFireball) {
+      indicators.add(_powerUpBadge('🔥'));
     }
-    if (game.ball.isShielded) {
-      indicators.add(_powerUpBadge('🛡️', 'Shield'));
+    if (ball.isShielded) {
+      indicators.add(_powerUpBadge('🛡️'));
     }
-    if (game.ball.speed > Ball.baseSpeed * 1.1) {
-      indicators.add(_powerUpBadge('⚡', 'Fast'));
+    if (ball.speed > Ball.baseSpeed * 1.1) {
+      indicators.add(_powerUpBadge('⚡'));
     }
 
     if (indicators.isEmpty) return const SizedBox.shrink();
 
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: indicators,
-    );
+    return Row(mainAxisSize: MainAxisSize.min, children: indicators);
   }
 
-  Widget _powerUpBadge(String icon, String label) {
+  Widget _powerUpBadge(String icon) {
     return Container(
       margin: const EdgeInsets.only(left: 4),
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -205,23 +223,5 @@ class HudOverlay extends StatelessWidget {
       ),
       child: Text(icon, style: const TextStyle(fontSize: 12)),
     );
-  }
-}
-
-// Simple notifier that ticks every 100ms
-class _HudNotifier extends ChangeNotifier {
-  final BallBounceGame game;
-  int _tick = 0;
-
-  _HudNotifier(this.game) {
-    _startTicking();
-  }
-
-  void _startTicking() async {
-    while (true) {
-      await Future.delayed(const Duration(milliseconds: 100));
-      _tick++;
-      notifyListeners();
-    }
   }
 }

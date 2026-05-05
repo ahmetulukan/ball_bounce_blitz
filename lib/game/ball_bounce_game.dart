@@ -2,6 +2,8 @@ import 'dart:ui';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter/widgets.dart';
 import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
@@ -18,7 +20,7 @@ import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';
 import 'ui/achievements_overlay.dart';
 
-class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
+class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasCollisionDetection {
   late Paddle paddle;
   late Ball ball;
   late SpawnSystem spawnSystem;
@@ -27,6 +29,7 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   late ScreenShake screenShake;
   late GameStateService _gameState;
   late AchievementService _achievements;
+  GameStateService get gameState => _gameState;
   
   final List<_PendingPopup> _popupQueue = [];
   double _popupTimer = 0;
@@ -45,6 +48,9 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
 
   bool isGameOver = false;
   bool isPaused = false;
+
+  final Set<LogicalKeyboardKey> _keysDown = {};
+  static const double _keyboardPaddleSpeed = 400;
 
   @override
   Future<void> onLoad() async {
@@ -77,7 +83,21 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
   @override
   void update(double dt) {
     super.update(dt);
-    
+
+    // Process keyboard input
+    if (!isGameOver && !isPaused) {
+      double dx = 0;
+      if (_keysDown.contains(LogicalKeyboardKey.arrowLeft) ||
+          _keysDown.contains(LogicalKeyboardKey.keyA)) {
+        dx -= _keyboardPaddleSpeed * dt;
+      }
+      if (_keysDown.contains(LogicalKeyboardKey.arrowRight) ||
+          _keysDown.contains(LogicalKeyboardKey.keyD)) {
+        dx += _keyboardPaddleSpeed * dt;
+      }
+      if (dx != 0) paddle.move(dx);
+    }
+
     // Process achievement popup queue
     if (_popupQueue.isNotEmpty) {
       _popupTimer += dt;
@@ -186,9 +206,9 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     _noDamageThisWave = true;
   }
 
-  void _checkNoDamageAchievement() {
+  Future<void> _checkNoDamageAchievement() async {
     if (_noDamageThisWave && lives >= _livesAtWaveStart && wave > _waveAtStart) {
-      final a = _achievements.tryUnlock(Achievement.noDamage);
+      final a = await _achievements.tryUnlock(Achievement.noDamage);
       if (a != null) _queueAchievement(a);
     }
     _noDamageThisWave = false;
@@ -295,16 +315,14 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
     }
   }
 
-  void onBossDestroyed() {
-    final a = _achievements.tryUnlock(Achievement.bossSlayer);
+  Future<void> onBossDestroyed() async {
+    final a = await _achievements.tryUnlock(Achievement.bossSlayer);
     if (a != null) _queueAchievement(a);
   }
 
-  void collectPowerUp(PowerUpType type) {
+  Future<void> collectPowerUp(PowerUpType type) async {
     ball.applyPowerUp(type);
-    
-    // Check powerUpCollector achievement
-    final a = _achievements.tryUnlock(Achievement.powerUpCollector);
+    final a = await _achievements.tryUnlock(Achievement.powerUpCollector);
     if (a != null) _queueAchievement(a);
   }
 
@@ -332,6 +350,22 @@ class BallBounceGame extends FlameGame with PanDetector, HasCollisionDetection {
       overlays.remove('GameOver');
       resetGame();
     }
+  }
+
+  @override
+  KeyEventResult onKeyEvent(KeyEvent event, Set<LogicalKeyboardKey> keysPressed) {
+    if (event is KeyDownEvent) {
+      _keysDown.add(event.logicalKey);
+      if (event.logicalKey == LogicalKeyboardKey.escape) {
+        if (!isPaused && !isGameOver) togglePause();
+      }
+      if (event.logicalKey == LogicalKeyboardKey.space) {
+        if (isPaused && !isGameOver) resumeGame();
+      }
+    } else if (event is KeyUpEvent) {
+      _keysDown.remove(event.logicalKey);
+    }
+    return KeyEventResult.ignored;
   }
 
   void loseLife() {

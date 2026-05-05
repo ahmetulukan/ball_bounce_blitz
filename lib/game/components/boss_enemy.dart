@@ -4,6 +4,8 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 import '../ball_bounce_game.dart';
+import 'ball.dart';
+import 'particles/explosion_particle.dart';
 
 class BossEnemy extends PositionComponent with CollisionCallbacks {
   late BallBounceGame gameRef;
@@ -92,20 +94,23 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   }
 
   void _attackShoot() {
-    // Spawn enemy projectiles (handled by game adding them)
-    gameRef.add(BossProjectile(
+    // Spawn enemy projectiles
+    final p1 = BossProjectile(
       position: position.clone(),
       velocity: Vector2(0, 120),
-    ));
+    )..gameRef = gameRef;
+    gameRef.add(p1);
     // Side projectiles
-    gameRef.add(BossProjectile(
+    final p2 = BossProjectile(
       position: position.clone() + Vector2(-30, 0),
       velocity: Vector2(-40, 100),
-    ));
-    gameRef.add(BossProjectile(
+    )..gameRef = gameRef;
+    gameRef.add(p2);
+    final p3 = BossProjectile(
       position: position.clone() + Vector2(30, 0),
       velocity: Vector2(40, 100),
-    ));
+    )..gameRef = gameRef;
+    gameRef.add(p3);
   }
 
   void _attackSweep() {
@@ -231,10 +236,11 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   }
 }
 
-class BossProjectile extends CircleComponent {
+class BossProjectile extends CircleComponent with CollisionCallbacks {
   static const double projectileRadius = 8;
   Vector2 velocity;
   double _life = 4.0;
+  late BallBounceGame gameRef;
 
   BossProjectile({required Vector2 position, required this.velocity})
       : super(
@@ -244,11 +250,26 @@ class BossProjectile extends CircleComponent {
         );
 
   @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    add(CircleHitbox());
+  }
+
+  @override
   void update(double dt) {
     super.update(dt);
     position += velocity * dt;
     _life -= dt;
     if (_life <= 0 || position.y > 420) {
+      removeFromParent();
+    }
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+    if (other is Ball) {
+      gameRef.loseLife();
       removeFromParent();
     }
   }

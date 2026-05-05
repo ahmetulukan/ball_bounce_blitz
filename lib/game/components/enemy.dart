@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 
 enum EnemyType { square, circle, triangle, diamond, hexagon }

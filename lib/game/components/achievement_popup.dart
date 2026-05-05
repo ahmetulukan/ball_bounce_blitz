@@ -1,7 +1,7 @@
+import 'dart:ui';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
-import '../services/achievement_service.dart';
-import '../../services/achievement_service.dart' as svc;
 
 class AchievementPopup extends PositionComponent {
   final String title;

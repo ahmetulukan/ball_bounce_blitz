@@ -1,6 +1,7 @@
 import 'dart:math';
 import 'dart:ui';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 
 class Paddle extends PositionComponent {
@@ -172,6 +173,7 @@ class PaddleHitParticle extends PositionComponent {
   final Color color;
   double _life = particleLife;
   final Random _random = Random();
+  Vector2 velocity = Vector2.zero();
 
   PaddleHitParticle({required Vector2 position, required this.color}) : super(position: position);
 

@@ -19,6 +19,24 @@ class SpawnSystem extends Component {
     gameRef = game;
   }
 
+  double get _difficultyMultiplier {
+    final diff = gameRef.gameState.settings.difficulty;
+    switch (diff) {
+      case 1: return 0.75; // Easy - slower spawn
+      case 3: return 1.3;  // Hard - faster spawn
+      default: return 1.0;
+    }
+  }
+
+  double get _enemySpeedMultiplier {
+    final diff = gameRef.gameState.settings.difficulty;
+    switch (diff) {
+      case 1: return 0.8;
+      case 3: return 1.25;
+      default: return 1.0;
+    }
+  }
+
   @override
   void update(double dt) {
     super.update(dt);
@@ -31,7 +49,7 @@ class SpawnSystem extends Component {
     _spawnTimer += dt;
     _powerUpTimer += dt;
 
-    if (_spawnTimer >= _spawnInterval) {
+    if (_spawnTimer >= _spawnInterval / _difficultyMultiplier) {
       _spawnTimer = 0;
       _spawnEnemy();
     }
@@ -45,6 +63,8 @@ class SpawnSystem extends Component {
   void _spawnEnemy() {
     final x = 30.0 + _random.nextDouble() * 340;
     final enemy = EnemyFactory.create(x, _difficultyLevel, gameRef);
+    enemy.speed *= _enemySpeedMultiplier;
+    enemy.gameRef = gameRef;
     gameRef.add(enemy);
   }
 

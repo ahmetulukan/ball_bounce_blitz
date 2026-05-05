@@ -35,14 +35,13 @@ class ExplosionParticle extends PositionComponent {
   }
 }
 
-class ExplosionEffect extends Component {
-  final Vector2 position;
+class ExplosionEffect extends PositionComponent {
   final Color color;
   final int count;
   final double speed;
 
   ExplosionEffect({
-    required this.position,
+    required super.position,
     this.color = const Color(0xFFFF5722),
     this.count = 12,
     this.speed = 200,

@@ -99,6 +99,15 @@ class _HudWidgetState extends State<HudWidget> {
                           fontWeight: FontWeight.bold,
                         ),
                       ),
+                      if (widget.game.comboSystem.multiplier > 1.0)
+                        Text(
+                          '×${widget.game.comboSystem.multiplier.toStringAsFixed(1)}',
+                          style: TextStyle(
+                            color: Colors.deepOrange,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
                     ],
                   ),
                 ),

@@ -8,7 +8,6 @@ import 'enemy.dart';
 import 'power_up.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
-import 'particles/ball_trail.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -99,7 +98,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
       velocity: Vector2.zero(),
       color: trailColor,
       life: 0.25,
-      radius: isFireball ? 5 : 3,
+      particleRadius: isFireball ? 5 : 3,
     );
     gameRef.add(trail);
   }

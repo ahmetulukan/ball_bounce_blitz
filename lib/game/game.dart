@@ -1,11 +1,11 @@
+// Legacy entry point - main game uses ball_bounce_game.dart
+// This file is kept for screen compatibility
 import 'package:flame/game.dart';
 import 'package:flame/flame.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../services/audio_manager.dart';
-import 'scene/game_scene.dart';
 
 class BallBounceBlitzGame extends FlameGame {
-  GameScene? _scene;
   bool _gameStarted = false;
   int lastScore = 0;
   int lastWave = 1;
@@ -23,15 +23,10 @@ class BallBounceBlitzGame extends FlameGame {
   @override
   void onGameResize(Vector2 size) {
     super.onGameResize(size);
-    if (!_gameStarted) {
-      startGame();
-    }
   }
 
   void startGame() {
     _gameStarted = true;
-    _scene = GameScene();
-    add(_scene!);
   }
 
   void showGameOverScreen(int score, int wave, int enemiesDestroyed) {
@@ -48,8 +43,6 @@ class BallBounceBlitzGame extends FlameGame {
 
   void restart() {
     overlays.remove('GameOver');
-    _scene?.removeFromParent();
-    _scene = null;
     _gameStarted = false;
     lastScore = 0;
     lastWave = 1;
