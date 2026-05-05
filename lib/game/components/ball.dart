@@ -7,6 +7,7 @@ import 'paddle.dart';
 import 'enemy.dart';
 import 'power_up.dart';
 import 'particles/explosion_particle.dart';
+import 'particles/trail_particle.dart';
 import 'particles/ball_trail.dart';
 import '../ball_bounce_game.dart';
 

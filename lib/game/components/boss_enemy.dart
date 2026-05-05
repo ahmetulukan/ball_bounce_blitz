@@ -154,6 +154,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
     }
     gameRef.screenShake.shake(intensity: 12, duration: 0.5);
     gameRef.score += 200 * wave;
+    gameRef.onBossDestroyed();
     gameRef.playSound('gameover');
     removeFromParent();
   }

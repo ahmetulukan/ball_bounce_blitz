@@ -6,6 +6,7 @@ import 'game/ui/hud_widget.dart';
 import 'game/ui/main_menu_screen.dart';
 import 'game/ui/pause_screen.dart';
 import 'game/ui/wave_announcement.dart';
+import 'game/ui/achievements_overlay.dart';
 
 void main() {
   WidgetsFlutterBinding.ensureInitialized();
@@ -30,6 +31,12 @@ class BallBounceApp extends StatelessWidget {
           'WaveAnnouncement': (context, game) => WaveAnnouncement(
             wave: game.wave,
             onComplete: () => game.overlays.remove('WaveAnnouncement'),
+          ),
+          'Achievements': (context, game) => Material(
+            color: Colors.black.withValues(alpha: 0.7),
+            child: AchievementsListWidget(
+              onClose: () => game.overlays.remove('Achievements'),
+            ),
           ),
         },
         initialActiveOverlays: const ['MainMenu'],

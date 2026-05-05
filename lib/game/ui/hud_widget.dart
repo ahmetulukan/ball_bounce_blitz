@@ -112,12 +112,19 @@ class _HudWidgetState extends State<HudWidget> {
                   ),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
-                    children: List.generate(3, (i) {
-                      return Text(
-                        i < widget.game.lives ? '❤️' : '🖤',
-                        style: const TextStyle(fontSize: 18),
-                      );
-                    }),
+                    children: [
+                      ...List.generate(3, (i) {
+                        return Text(
+                          i < widget.game.lives ? '❤️' : '🖤',
+                          style: const TextStyle(fontSize: 18),
+                        );
+                      }),
+                      const SizedBox(width: 8),
+                      GestureDetector(
+                        onTap: () => widget.game.showAchievementsOverlay(),
+                        child: const Text('🏆', style: TextStyle(fontSize: 18)),
+                      ),
+                    ],
                   ),
                 ),
               ],
