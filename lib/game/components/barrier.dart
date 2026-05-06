@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'particles/explosion_particle.dart';
 import '../ball_bounce_game.dart';
 
 enum BarrierType { horizontal, vertical, angled, moving }
@@ -69,6 +70,8 @@ class Barrier extends PositionComponent with CollisionCallbacks {
   void render(Canvas canvas) {
     if (!isActive) return;
     
+    final pulse = sin(_phase * 3) * 0.15 + 1.0;
+    
     // Glow effect
     final glowPaint = Paint()
       ..color = const Color(0xFF00BCD4).withAlpha(80)
@@ -81,11 +84,11 @@ class Barrier extends PositionComponent with CollisionCallbacks {
       glowPaint,
     );
     
-    // Main barrier
+    // Main barrier with pulse
     final barrierPaint = Paint()..color = const Color(0xFF00BCD4);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: size.x, height: size.y),
+        Rect.fromCenter(center: Offset.zero, width: size.x * pulse, height: size.y * pulse),
         const Radius.circular(4),
       ),
       barrierPaint,
@@ -95,11 +98,26 @@ class Barrier extends PositionComponent with CollisionCallbacks {
     final highlightPaint = Paint()..color = Colors.white.withAlpha(100);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset(0, -2), width: size.x - 8, height: 3),
+        Rect.fromCenter(center: Offset(0, -2), width: (size.x - 8) * pulse, height: 3 * pulse),
         const Radius.circular(2),
       ),
       highlightPaint,
     );
+    
+    // Electric sparks at ends
+    for (int i = 0; i < 2; i++) {
+      final sparkX = i == 0 ? -size.x / 2 : size.x / 2;
+      final sparkPhase = _phase + i * pi;
+      final sparkSize = (sin(sparkPhase * 5) * 2 + 3) * pulse;
+      
+      final sparkPaint = Paint()..color = const Color(0xFFFFFFFF).withAlpha(150);
+      canvas.drawCircle(Offset(sparkX, 0), sparkSize, sparkPaint);
+      
+      final sparkGlow = Paint()
+        ..color = const Color(0xFF00E5FF).withAlpha(100)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
+      canvas.drawCircle(Offset(sparkX, 0), sparkSize * 2, sparkGlow);
+    }
   }
 }
 

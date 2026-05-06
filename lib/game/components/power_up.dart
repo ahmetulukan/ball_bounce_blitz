@@ -4,7 +4,7 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import '../ball_bounce_game.dart';
 
-enum PowerUpType { fireball, explosive, shield, speedUp, extraLife }
+enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet }
 
 class PowerUp extends PositionComponent with CollisionCallbacks {
   static const double powerUpSize = 25;
@@ -12,6 +12,7 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
 
   final PowerUpType type;
   late BallBounceGame gameRef;
+  double _spin = 0;
 
   PowerUp({required this.type}) : super(
     size: Vector2(powerUpSize, powerUpSize),
@@ -27,6 +28,7 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
+    _spin += dt * 3;
     position.y += speed * dt;
 
     if (position.y > 420) {
@@ -52,6 +54,8 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
         return const Color(0xFF9C27B0);
       case PowerUpType.extraLife:
         return const Color(0xFF4CAF50);
+      case PowerUpType.magnet:
+        return const Color(0xFFE91E63);
     }
   }
 
@@ -67,20 +71,37 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
         return '⚡';
       case PowerUpType.extraLife:
         return '❤️';
+      case PowerUpType.magnet:
+        return '🧲';
     }
   }
 
   @override
   void render(Canvas canvas) {
+    // Spin rotation for visual interest
+    canvas.save();
+    canvas.rotate(_spin * 0.3);
+    
     // Glow background
     final glowPaint = Paint()
       ..color = getColor(type).withAlpha(100)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
     canvas.drawCircle(Offset.zero, powerUpSize / 2 + 2, glowPaint);
     
+    // Outer rotating ring
+    final ringPaint = Paint()
+      ..color = getColor(type).withAlpha(150)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawCircle(Offset.zero, powerUpSize / 2 + 5 + sin(_spin * 2) * 2, ringPaint);
+    
     // Main circle
     final paint = Paint()..color = getColor(type);
     canvas.drawCircle(Offset.zero, powerUpSize / 2, paint);
+    
+    // Inner highlight
+    final innerPaint = Paint()..color = Colors.white.withAlpha(80);
+    canvas.drawCircle(Offset(-3, -3), powerUpSize / 4, innerPaint);
     
     // Border
     final borderPaint = Paint()
@@ -88,5 +109,7 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
     canvas.drawCircle(Offset.zero, powerUpSize / 2, borderPaint);
+    
+    canvas.restore();
   }
 }

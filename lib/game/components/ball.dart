@@ -9,6 +9,7 @@ import 'power_up.dart';
 import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
+import 'chain_lightning.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -143,6 +144,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
       if (destroyed) {
         gameRef.comboSystem.onEnemyDestroyed(other);
         gameRef.playSound('hit');
+        
+        // Chain lightning on fireball combo
+        if (isFireball && gameRef.comboSystem.currentCombo >= 3) {
+          _spawnChainLightningEffect(other.position);
+        }
       } else {
         // Heavy enemy hit but not destroyed - smaller effect
         gameRef.add(ExplosionEffect(
@@ -264,6 +270,38 @@ class Ball extends CircleComponent with CollisionCallbacks {
       case PowerUpType.extraLife:
         gameRef.lives += 1;
         break;
+    }
+  }
+
+  void _spawnChainLightningEffect(Vector2 hitPos) {
+    // Find nearby enemies and create lightning chains
+    final enemies = gameRef.children.whereType<Enemy>().toList();
+    if (enemies.length < 2) return;
+    
+    // Sort by distance from hit
+    enemies.sort((a, b) {
+      final da = (a.position - hitPos).length;
+      final db = (b.position - hitPos).length;
+      return da.compareTo(db);
+    });
+    
+    // Create chain to nearest 2 enemies
+    final chainTargets = enemies.take(2).toList();
+    for (final target in chainTargets) {
+      gameRef.add(ChainLightning(
+        start: hitPos.clone(),
+        end: target.position.clone(),
+        life: 0.4,
+        color: const Color(0xFF00E5FF),
+      ));
+    }
+    
+    // Show critical hit if chain is strong
+    if (chainTargets.length >= 2) {
+      gameRef.add(CriticalHitText(
+        position: position.clone(),
+        life: 0.6,
+      ));
     }
   }
 
