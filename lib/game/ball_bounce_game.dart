@@ -15,6 +15,7 @@ import 'components/screen_shake.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
+import 'components/effects.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
@@ -264,15 +265,27 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     if (combo >= 5) {
       final a = await _achievements.tryUnlock(Achievement.combo5);
       if (a != null) _queueAchievement(a);
+      if (combo == 5) _showComboFlash(5);
     }
     if (combo >= 10) {
       final a = await _achievements.tryUnlock(Achievement.combo10);
       if (a != null) _queueAchievement(a);
+      if (combo == 10) _showComboFlash(10);
     }
     if (combo >= 15) {
       final a = await _achievements.tryUnlock(Achievement.combo15);
       if (a != null) _queueAchievement(a);
+      if (combo == 15) _showComboFlash(15);
     }
+  }
+
+  void _showComboFlash(int level) {
+    add(ComboFlash(comboLevel: level));
+    screenShake.shake(intensity: 2, duration: 0.1);
+  }
+
+  void _showWaveClear() {
+    add(WaveClearText(position: Vector2(200, 200)));
   }
 
   void onEnemyDestroyed(Enemy enemy) {
@@ -288,12 +301,20 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
       count: 8,
     ));
     screenShake.shake(intensity: 4, duration: 0.15);
-    
+
+    // Score popup
+    add(ScorePopup(
+      position: enemy.position.clone() + Vector2(0, -20),
+      text: '+${enemy.points}',
+      color: const Color(0xFFFFD700),
+    ));
+
     _checkAchievements();
 
     if (!_bossWave) {
       if (hitCount >= 10) {
         _checkNoDamageAchievement();
+        _showWaveClear();
         wave++;
         hitCount = 0;
         spawnSystem.increaseDifficulty();
