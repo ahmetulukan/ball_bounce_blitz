@@ -401,6 +401,8 @@ class BossProjectile extends CircleComponent with CollisionCallbacks {
   late BallBounceGame gameRef;
   bool isHoming = false;
   double _homingStrength = 0;
+  double _trailTimer = 0;
+  static const double _trailInterval = 0.04;
 
   BossProjectile({
     required Vector2 position,
@@ -434,6 +436,18 @@ class BossProjectile extends CircleComponent with CollisionCallbacks {
     
     position += velocity * dt;
     _life -= dt;
+
+    // Spawn trail particles
+    _trailTimer += dt;
+    if (_trailTimer >= _trailInterval) {
+      _trailTimer = 0;
+      final trailColor = isHoming ? const Color(0xFFFF00FF) : const Color(0xFFFF4444);
+      gameRef.add(_BossProjectileTrail(
+        position: position.clone(),
+        color: trailColor,
+      ));
+    }
+
     if (_life <= 0 || position.y > 450 || position.x < -20 || position.x > 420) {
       removeFromParent();
     }
@@ -478,5 +492,32 @@ class BossProjectile extends CircleComponent with CollisionCallbacks {
         ..strokeWidth = 1.5;
       canvas.drawCircle(Offset.zero, projectileRadius + 4 + sin(_life * 10) * 2, ringPaint);
     }
+  }
+}
+
+/// Trail particle spawned by boss projectiles
+class _BossProjectileTrail extends PositionComponent {
+  final Color color;
+  double _life = 0.25;
+  static const double _maxLife = 0.25;
+
+  _BossProjectileTrail({required Vector2 position, required this.color}) : super(
+    position: position,
+    size: Vector2(6, 6),
+    anchor: Anchor.center,
+  );
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / _maxLife * 180).round().clamp(0, 180);
+    final paint = Paint()..color = color.withAlpha(alpha);
+    canvas.drawCircle(Offset.zero, 3 * (_life / _maxLife), paint);
   }
 }

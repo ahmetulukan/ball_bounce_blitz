@@ -78,9 +78,24 @@ class Enemy extends PositionComponent with CollisionCallbacks {
         break;
     }
 
+    // Soft push away from other enemies
+    _applyEnemySeparation();
+
     if (position.y > 430) {
       gameRef.loseLife();
       removeFromParent();
+    }
+  }
+
+  void _applyEnemySeparation() {
+    final allEnemies = gameRef.children.whereType<Enemy>().where((e) => e != this && !e._isDestroyed);
+    for (final other in allEnemies) {
+      final diff = position - other.position;
+      final dist = diff.length;
+      if (dist < enemySize * 1.5 && dist > 0) {
+        final push = diff.normalized() * (enemySize * 1.5 - dist) * 0.5;
+        position += push * 0.016; // per-frame nudge
+      }
     }
   }
 
@@ -97,8 +112,33 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   void destroy() {
     if (_isDestroyed) return;
     _isDestroyed = true;
+
+    // Splitting enemies spawn 2 mini enemies on death
+    if (behavior == EnemyBehavior.splitting) {
+      _spawnSplitEnemies();
+    }
+
     gameRef.onEnemyDestroyed(this);
     removeFromParent();
+  }
+
+  void _spawnSplitEnemies() {
+    final types = [EnemyType.square, EnemyType.circle, EnemyType.triangle];
+    for (int i = 0; i < 2; i++) {
+      final splitType = types[i % types.length];
+      final offsetX = (i == 0 ? -1.0 : 1.0) * 20;
+      final mini = Enemy(
+        type: splitType,
+        color: color,
+        speed: speed * 1.3,
+        points: (points * 0.4).round(),
+        behavior: EnemyBehavior.normal,
+        hitCount: 1,
+      );
+      mini.gameRef = gameRef;
+      mini.position = Vector2(position.x + offsetX, position.y);
+      gameRef.add(mini);
+    }
   }
 
   Color get displayColor {

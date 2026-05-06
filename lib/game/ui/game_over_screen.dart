@@ -9,7 +9,6 @@ class GameOverScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isNewHighScore = game.score >= game.highScore && game.score > 0;
-    
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -24,7 +23,18 @@ class GameOverScreen extends StatelessWidget {
           decoration: BoxDecoration(
             color: Colors.black87,
             borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: Colors.red, width: 2),
+            border: Border.all(
+              color: isNewHighScore ? const Color(0xFFFFD700) : Colors.red,
+              width: 2,
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: (isNewHighScore ? const Color(0xFFFFD700) : Colors.red)
+                    .withAlpha(80),
+                blurRadius: 24,
+                spreadRadius: 4,
+              ),
+            ],
           ),
           child: Column(
             mainAxisSize: MainAxisSize.min,
@@ -43,39 +53,94 @@ class GameOverScreen extends StatelessWidget {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.amber.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.amber, width: 1),
-                  ),
-                  child: const Text(
-                    '🎉 NEW HIGH SCORE!',
-                    style: TextStyle(
-                      color: Colors.amber,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
                     ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('🎉', style: TextStyle(fontSize: 16)),
+                      SizedBox(width: 6),
+                      Text(
+                        'NEW HIGH SCORE!',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${game.highScore - game.score} points away',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(120),
+                    fontSize: 13,
                   ),
                 ),
               ],
               const SizedBox(height: 24),
+              
+              // Stats grid
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.white10,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withAlpha(15),
+                      Colors.white.withAlpha(5),
+                    ],
+                  ),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
                   children: [
-                    _statRow('🏆 Score', '${game.score}'),
-                    const SizedBox(height: 8),
-                    _statRow('🏆 Best', '${game.highScore}'),
-                    const SizedBox(height: 8),
-                    _statRow('🌊 Wave', '${game.wave}'),
-                    const SizedBox(height: 8),
-                    _statRow('🔥 Combo Bonus', 'x${game.comboSystem.multiplier.toStringAsFixed(1)}'),
+                    _statRow('🏆 Score', '${game.score}', Colors.amber),
+                    const Divider(color: Colors.white12, height: 16),
+                    _statRow('👑 Best', '${game.highScore}', Colors.grey),
+                    const Divider(color: Colors.white12, height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _statItem('🌊 Wave', '${game.wave}'),
+                        _statItem('💀 Enemies', '${game.totalEnemiesDestroyed}'),
+                        _statItem('🔥 Max Combo', 'x${game.comboSystem.maxCombo}'),
+                      ],
+                    ),
+                    const Divider(color: Colors.white12, height: 16),
+                    _statRow(
+                      '⚡ Combo Bonus',
+                      'x${game.comboSystem.multiplier.toStringAsFixed(1)}',
+                      Colors.orange,
+                    ),
                   ],
                 ),
               ),
+              
+              // Difficulty indicator
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                decoration: BoxDecoration(
+                  color: Colors.white.withAlpha(15),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(
+                  'Mode: ${game.gameState.settings.difficultyName}',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(150),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+              
               const SizedBox(height: 32),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -91,14 +156,22 @@ class GameOverScreen extends StatelessWidget {
                     onPressed: () {
                       game.overlays.remove('GameOver');
                       game.resetGame();
+                      game.startGame();
                     },
-                    child: const Text(
-                      '🔄 Retry',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🔄', style: TextStyle(fontSize: 18)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Retry',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                   const SizedBox(width: 16),
@@ -114,13 +187,20 @@ class GameOverScreen extends StatelessWidget {
                       game.overlays.remove('GameOver');
                       game.overlays.add('MainMenu');
                     },
-                    child: const Text(
-                      '🏠 Menu',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🏠', style: TextStyle(fontSize: 18)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Menu',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ],
@@ -132,7 +212,7 @@ class GameOverScreen extends StatelessWidget {
     );
   }
 
-  Widget _statRow(String label, String value) {
+  Widget _statRow(String label, String value, Color valueColor) {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -145,10 +225,32 @@ class GameOverScreen extends StatelessWidget {
         ),
         Text(
           value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _statItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
           style: const TextStyle(
             color: Colors.white,
             fontSize: 18,
             fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withAlpha(120),
+            fontSize: 11,
           ),
         ),
       ],

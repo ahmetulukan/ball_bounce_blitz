@@ -5,6 +5,7 @@ import '../components/enemy.dart';
 class ComboSystem extends Component {
   late BallBounceGame gameRef;
   int comboCount = 0;
+  int maxCombo = 0;
   double comboTimer = 0;
   static const double comboTimeout = 3.0;
 
@@ -27,6 +28,7 @@ class ComboSystem extends Component {
 
   void onEnemyDestroyed(Enemy enemy) {
     comboCount++;
+    if (comboCount > maxCombo) maxCombo = comboCount;
     comboTimer = comboTimeout;
 
     final basePoints = enemy.points;
