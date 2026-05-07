@@ -13,6 +13,9 @@ class Paddle extends PositionComponent {
   double _glowIntensity = 0;
   double _hitFlash = 0;
   int consecutiveHits = 0;
+  double _currentWidthScale = 1.0;
+  double _targetWidthScale = 1.0;
+  double _baseWidth = paddleWidth;
 
   Paddle() : super(
     position: Vector2(200, 350),
@@ -23,6 +26,7 @@ class Paddle extends PositionComponent {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    _baseWidth = paddleWidth;
   }
 
   void move(double dx) {
@@ -55,6 +59,9 @@ class Paddle extends PositionComponent {
     super.update(dt);
     position.x = position.x.clamp(paddleWidth / 2, 400 - paddleWidth / 2);
     
+    // Smooth width transition
+    _currentWidthScale += (_targetWidthScale - _currentWidthScale) * 0.1;
+    
     // Decay effects
     _hitFlash *= 0.9;
     _glowIntensity *= 0.95;
@@ -62,6 +69,16 @@ class Paddle extends PositionComponent {
     if (_hitFlash < 0.01) _hitFlash = 0;
     if (_glowIntensity < 0.01) _glowIntensity = 0;
   }
+
+  void shrink() {
+    _targetWidthScale = 0.5;
+  }
+
+  void restore() {
+    _targetWidthScale = 1.0;
+  }
+
+  double get currentWidth => _baseWidth * _currentWidthScale;
 
   @override
   void render(Canvas canvas) {
@@ -106,12 +123,13 @@ class Paddle extends PositionComponent {
     }
 
     // Main paddle body
+    final currentWidth = _baseWidth * _currentWidthScale;
     final paddlePaint = Paint()..color = baseColor;
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset.zero,
-          width: paddleWidth,
+          width: currentWidth,
           height: paddleHeight,
         ),
         const Radius.circular(6),
@@ -125,7 +143,7 @@ class Paddle extends PositionComponent {
       RRect.fromRectAndRadius(
         Rect.fromCenter(
           center: Offset(0, -paddleHeight / 4),
-          width: paddleWidth - 10,
+          width: currentWidth - 10,
           height: 4,
         ),
         const Radius.circular(2),

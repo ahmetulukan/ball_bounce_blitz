@@ -287,6 +287,15 @@ class Ball extends CircleComponent with CollisionCallbacks {
       case PowerUpType.extraLife:
         gameRef.lives += 1;
         break;
+      case PowerUpType.multiball:
+        gameRef.spawnMultiball();
+        break;
+      case PowerUpType.slowmo:
+        gameRef.startSlowMo();
+        break;
+      case PowerUpType.shrink:
+        gameRef.shrinkPaddle();
+        break;
     }
   }
 

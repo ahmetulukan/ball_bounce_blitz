@@ -1,7 +1,7 @@
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
-import '../ball_bounce_game.dart';
+// achievement popup
 
 class AchievementPopup extends PositionComponent {
   final String title;

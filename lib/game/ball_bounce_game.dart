@@ -1,4 +1,4 @@
-import 'dart:ui';
+import 'dart:math';
 import 'package:flame/events.dart';
 import 'package:flame/game.dart';
 import 'package:flame_audio/flame_audio.dart';
@@ -9,20 +9,19 @@ import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/power_up.dart';
 import 'components/particles/explosion_particle.dart';
-import 'components/particles/trail_particle.dart';
+// enhanced particles imported when needed
 import 'components/background_stars.dart';
 import 'components/screen_shake.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
-import 'components/achievement_popup.dart' hide ScorePopup;
-import 'components/effects.dart' hide ScorePopup;
-import 'components/chain_lightning.dart';
+import 'components/achievement_popup.dart' ;
+import 'components/effects.dart' ;
 import 'systems/spawn_system.dart';
 import 'systems/score_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';
-import 'ui/achievements_overlay.dart';
+// achievements overlay
 
 class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasCollisionDetection {
   late Paddle paddle;
@@ -53,6 +52,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   bool isGameOver = false;
   bool isPaused = false;
+  bool isSlowMo = false;
+  double gameSpeed = 1.0;
 
   final Set<LogicalKeyboardKey> _keysDown = {};
   static const double _keyboardPaddleSpeed = 400;
@@ -90,6 +91,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   @override
   void update(double dt) {
+    if (isSlowMo) dt *= 0.5;
     super.update(dt);
 
     // Process keyboard input
@@ -308,9 +310,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     screenShake.shake(intensity: 4, duration: 0.15);
 
     // Score popup
-    add(ScorePopup(
+    add(FloatingScorePopup(
       position: enemy.position.clone() + Vector2(0, -20),
-      score: enemy.points,
+      text: '${enemy.points}',
       color: const Color(0xFFFFD700),
     ));
 
@@ -376,7 +378,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   void startMagnetEffect() {
     ball.isMagnetized = true;
     // Visual effect: attract nearby power-ups
-    add(MagnetField(position: ball.position.clone(), life: 5.0));
+    add(MagnetField(position: ball.position.clone(), maxAge: 5.0));
     Future.delayed(const Duration(seconds: 5), () {
       ball.isMagnetized = false;
     });
@@ -455,6 +457,38 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   void showAchievementsOverlay() {
     overlays.add('Achievements');
+  }
+
+  void spawnMultiball() {
+    // Spawn 2 extra balls from current ball position
+    for (int i = 0; i < 2; i++) {
+      final extraBall = Ball(paddle: paddle, gameRef: this);
+      extraBall.position = ball.position.clone();
+      extraBall.speed = ball.speed;
+      extraBall.isFireball = ball.isFireball;
+      extraBall.isShielded = ball.isShielded;
+      // Give slight angle offsets
+      final angle = (i == 0 ? -0.3 : 0.3) + atan2(ball.velocity.y, ball.velocity.x);
+      extraBall.velocity = Vector2(sin(angle), -cos(angle)) * extraBall.speed;
+      add(extraBall);
+    }
+    playSound('powerup');
+  }
+
+  void startSlowMo() {
+    isSlowMo = true;
+    // Visual overlay effect
+    add(SlowMoOverlay());
+    Future.delayed(const Duration(seconds: 5), () {
+      isSlowMo = false;
+    });
+  }
+
+  void shrinkPaddle() {
+    paddle.shrink();
+    Future.delayed(const Duration(seconds: 6), () {
+      paddle.restore();
+    });
   }
 }
 

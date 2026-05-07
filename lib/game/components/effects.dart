@@ -1,16 +1,17 @@
+import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flame/components.dart';
 import '../ball_bounce_game.dart';
 
 /// Floating score popup that appears when enemies are destroyed
-class ScorePopup extends PositionComponent {
+class FloatingScorePopup extends PositionComponent {
   final String text;
   final Color color;
   double _life = 0.8;
   double _vy = -80;
 
-  ScorePopup({
+  FloatingScorePopup({
     required super.position,
     required this.text,
     this.color = const Color(0xFFFFD700),
@@ -173,5 +174,106 @@ class BallPowerUpIndicator extends PositionComponent {
     );
     textPainter.layout();
     textPainter.paint(canvas, Offset(x - textPainter.width / 2, y - textPainter.height / 2));
+  }
+}
+
+/// Slow motion visual overlay
+class SlowMoOverlay extends PositionComponent {
+  double _life = 5.0;
+  double _pulse = 0;
+
+  SlowMoOverlay();
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    _pulse += dt * 3;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 5.0 * 30).round().clamp(0, 30);
+    final paint = Paint()
+      ..color = const Color(0xFF673AB7).withAlpha(alpha);
+    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
+    
+    // Pulsing border
+    final borderAlpha = (sin(_pulse) * 15 + 20).round().clamp(0, 35);
+    final borderPaint = Paint()
+      ..color = const Color(0xFF673AB7).withAlpha(borderAlpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    canvas.drawRect(Rect.fromLTWH(2, 2, 396, 396), borderPaint);
+  }
+}
+/// Gravity well effect for special power-ups
+class GravityWell extends PositionComponent {
+  final double maxAge;
+  double _age = 0;
+  final double strength;
+
+  GravityWell({
+    required Vector2 position,
+    this.maxAge = 3.0,
+    this.strength = 200,
+  });
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = ((1 - _age / maxAge) * 100).round().clamp(0, 100);
+    final radius = 30 + sin(_age * 4) * 10;
+    
+    final paint = Paint()
+      ..color = const Color(0xFF9C27B0).withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    
+    canvas.drawCircle(Offset.zero, radius, paint);
+    
+    final innerPaint = Paint()
+      ..color = const Color(0xFFE91E63).withAlpha(alpha ~/ 2)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(Offset.zero, radius * 0.6, innerPaint);
+  }
+}
+
+/// Magnet field visual effect
+class MagnetField extends PositionComponent {
+  double _age = 0;
+  final double maxAge;
+
+  MagnetField({
+    required Vector2 position,
+    this.maxAge = 5.0,
+  });
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = ((1 - _age / maxAge) * 60).round().clamp(0, 60);
+    final radius = 20 + sin(_age * 5) * 5;
+    
+    final paint = Paint()
+      ..color = const Color(0xFFE91E63).withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    
+    canvas.drawCircle(Offset.zero, radius, paint);
   }
 }
