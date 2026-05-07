@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
-import '../game/game.dart';
+import '../game/ball_bounce_game.dart';
 import 'settings_screen.dart';
 import 'achievements_screen.dart';
 
 class HomeScreen extends StatefulWidget {
-  final BallBounceBlitzGame game;
+  final BallBounceGame game;
   const HomeScreen({super.key, required this.game});
 
   @override

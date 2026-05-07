@@ -34,16 +34,18 @@ class PauseScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
               _menuButton('▶ Resume', () {
-                game.overlays.remove('Pause');
+                game.resumeGame();
               }),
               const SizedBox(height: 16),
               _menuButton('🔄 Restart', () {
                 game.overlays.remove('Pause');
-                game.resetGame();
+                game.startGame();
               }),
               const SizedBox(height: 16),
               _menuButton('🏠 Main Menu', () {
                 game.overlays.remove('Pause');
+                game.overlays.remove('Hud');
+                game.resetGame();
                 game.overlays.add('MainMenu');
               }),
             ],

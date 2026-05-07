@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
-import '../game/game.dart';
+import '../game/ball_bounce_game.dart';
 import '../services/achievement_service.dart';
 
 class AchievementsScreen extends StatefulWidget {
-  final BallBounceBlitzGame game;
+  final BallBounceGame game;
   const AchievementsScreen({super.key, required this.game});
 
   @override

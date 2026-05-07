@@ -130,11 +130,13 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     if (isGameOver || isPaused) return;
     isPaused = true;
     overlays.add('Pause');
+    overlays.remove('Hud');
   }
 
   void resumeGame() {
     isPaused = false;
     overlays.remove('Pause');
+    overlays.add('Hud');
   }
 
   void startGame() {
@@ -164,6 +166,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     comboSystem.reset();
     ball.reset();
 
+    overlays.add('Hud');
     _checkBossWave();
     _showWaveAnnouncement();
     _onWaveStarted();
@@ -423,6 +426,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   void gameOver() {
     isGameOver = true;
+    overlays.remove('Hud');
     _saveHighScoreIfNeeded();
     playSound('gameover');
     overlays.add('GameOver');

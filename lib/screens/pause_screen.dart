@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../game/game.dart';
+import '../game/ball_bounce_game.dart';
 
 class PauseScreen extends StatelessWidget {
-  final BallBounceBlitzGame game;
+  final BallBounceGame game;
   const PauseScreen({super.key, required this.game});
 
   @override

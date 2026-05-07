@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import '../game/game.dart';
+import '../game/ball_bounce_game.dart';
 
 class SettingsScreen extends StatelessWidget {
-  final BallBounceBlitzGame game;
+  final BallBounceGame game;
   const SettingsScreen({super.key, required this.game});
 
   @override
