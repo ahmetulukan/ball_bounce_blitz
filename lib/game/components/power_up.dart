@@ -1,7 +1,8 @@
+import 'dart:math';
 import 'dart:ui';
-import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flutter/material.dart' show Colors;
 import '../ball_bounce_game.dart';
 
 enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet }

@@ -22,6 +22,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
   double speed = baseSpeed;
   bool isFireball = false;
   bool isShielded = false;
+  bool isMagnetized = false;
   double _shieldAngle = 0;
   double _bounceScale = 1.0; // for bounce animation
   double _trailTimer = 0;
@@ -58,6 +59,19 @@ class Ball extends CircleComponent with CollisionCallbacks {
     // Shield rotation
     if (isShielded) {
       _shieldAngle += dt * 4;
+    }
+
+    // Magnet effect: attract nearby power-ups
+    if (isMagnetized) {
+      final powerUps = gameRef.children.whereType<PowerUp>().toList();
+      for (final pu in powerUps) {
+        final diff = ball.position - pu.position;
+        final dist = diff.length;
+        if (dist > 0 && dist < 100) {
+          final attract = diff.normalized() * 300 * dt / dist;
+          pu.position += attract;
+        }
+      }
     }
 
     // Ball trail
@@ -266,6 +280,9 @@ class Ball extends CircleComponent with CollisionCallbacks {
           speed = (speed / 1.3).clamp(baseSpeed, baseSpeed * 2);
           velocity = velocity.normalized() * speed;
         });
+        break;
+      case PowerUpType.magnet:
+        gameRef.startMagnetEffect();
         break;
       case PowerUpType.extraLife:
         gameRef.lives += 1;

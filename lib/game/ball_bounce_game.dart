@@ -16,6 +16,7 @@ import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
 import 'components/effects.dart';
+import 'components/chain_lightning.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
@@ -366,6 +367,15 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
         enemy.destroy();
       }
     }
+  }
+
+  void startMagnetEffect() {
+    ball.isMagnetized = true;
+    // Visual effect: attract nearby power-ups
+    add(MagnetField(position: ball.position.clone(), life: 5.0));
+    Future.delayed(const Duration(seconds: 5), () {
+      ball.isMagnetized = false;
+    });
   }
 
   @override
