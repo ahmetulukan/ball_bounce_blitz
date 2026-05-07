@@ -1,5 +1,6 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
 
 /// Chain lightning effect that connects enemies during fireball attacks

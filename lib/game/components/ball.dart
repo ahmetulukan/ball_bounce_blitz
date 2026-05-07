@@ -65,7 +65,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
     if (isMagnetized) {
       final powerUps = gameRef.children.whereType<PowerUp>().toList();
       for (final pu in powerUps) {
-        final diff = ball.position - pu.position;
+        final diff = position - pu.position;
         final dist = diff.length;
         if (dist > 0 && dist < 100) {
           final attract = diff.normalized() * 300 * dt / dist;

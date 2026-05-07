@@ -14,10 +14,11 @@ import 'components/background_stars.dart';
 import 'components/screen_shake.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
-import 'components/achievement_popup.dart';
-import 'components/effects.dart';
+import 'components/achievement_popup.dart' hide ScorePopup;
+import 'components/effects.dart' hide ScorePopup;
 import 'components/chain_lightning.dart';
 import 'systems/spawn_system.dart';
+import 'systems/score_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';
@@ -309,7 +310,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     // Score popup
     add(ScorePopup(
       position: enemy.position.clone() + Vector2(0, -20),
-      text: '+${enemy.points}',
+      score: enemy.points,
       color: const Color(0xFFFFD700),
     ));
 
@@ -441,6 +442,14 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   }
 
   bool get isBossWave => _bossWave;
+
+  Future<int> loadHighScore() async {
+    return _gameState.getHighScore();
+  }
+
+  void restart() {
+    resetGame();
+  }
 
   Vector2 get shakeOffset => screenShake.offset;
 
