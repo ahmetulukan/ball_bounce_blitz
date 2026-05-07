@@ -16,6 +16,7 @@ class Paddle extends PositionComponent {
   double _currentWidthScale = 1.0;
   double _targetWidthScale = 1.0;
   double _baseWidth = paddleWidth;
+  bool isMagnetized = false;
 
   Paddle() : super(
     position: Vector2(200, 350),

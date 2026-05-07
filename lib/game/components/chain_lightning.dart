@@ -2,6 +2,8 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flame/components.dart';
+import 'package:flutter/painting.dart';
+import 'package:flutter/material.dart' show Colors;
 
 /// Chain lightning effect that connects enemies during fireball attacks
 class ChainLightning extends PositionComponent {
