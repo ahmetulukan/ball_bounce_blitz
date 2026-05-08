@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../ball_bounce_game.dart';
 
 class GameOverScreen extends StatelessWidget {
   final int score;

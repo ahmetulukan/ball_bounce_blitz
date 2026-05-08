@@ -157,17 +157,6 @@ class Enemy extends PositionComponent with CollisionCallbacks {
     _shieldTimer = duration;
   }
 
-  @override
-  void update(double dt) {
-    super.update(dt);
-    if (_isDestroyed) return;
-    
-    if (_shieldActive) {
-      _shieldTimer -= dt;
-      if (_shieldTimer <= 0) _shieldActive = false;
-    }
-  }
-
   static Color getColor(EnemyColorType color) {
     switch (color) {
       case EnemyColorType.red:

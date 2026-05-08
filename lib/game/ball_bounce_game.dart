@@ -8,7 +8,6 @@ import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/power_up.dart';
-import 'components/particles/explosion_particle.dart';
 import 'components/particles/enhanced_particles.dart';
 // enhanced particles imported when needed
 import 'components/background_stars.dart';
@@ -18,7 +17,6 @@ import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
 import 'systems/spawn_system.dart';
-import 'systems/score_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';

@@ -24,7 +24,13 @@ class BallBounceApp extends StatelessWidget {
       home: GameWidget<BallBounceGame>.controlled(
         gameFactory: () => BallBounceGame(),
         overlayBuilderMap: {
-          'GameOver': (context, game) => GameOverScreen(game: game),
+          'GameOver': (context, game) => GameOverScreen(
+            score: game.score,
+            highScore: game.highScore,
+            wave: game.wave,
+            enemiesDestroyed: game.totalEnemiesDestroyed,
+            onRestart: () => game.restart(),
+          ),
           'Hud': (context, game) => HudWidget(game: game),
           'MainMenu': (context, game) => MainMenuScreen(game: game),
           'Pause': (context, game) => PauseScreen(game: game),

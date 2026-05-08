@@ -3,7 +3,6 @@ import 'dart:math';
 import 'package:flutter/material.dart' show Colors;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'particles/explosion_particle.dart';
 import '../ball_bounce_game.dart';
 
 enum BarrierType { horizontal, vertical, angled, moving }
