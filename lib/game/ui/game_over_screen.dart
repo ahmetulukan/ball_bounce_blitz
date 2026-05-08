@@ -2,13 +2,24 @@ import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 
 class GameOverScreen extends StatelessWidget {
-  final BallBounceGame game;
+  final int score;
+  final int highScore;
+  final int wave;
+  final int enemiesDestroyed;
+  final VoidCallback onRestart;
 
-  const GameOverScreen({super.key, required this.game});
+  const GameOverScreen({
+    super.key,
+    required this.score,
+    required this.highScore,
+    required this.wave,
+    required this.enemiesDestroyed,
+    required this.onRestart,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isNewHighScore = game.score >= game.highScore && game.score > 0;
+    final isNewHighScore = score >= highScore && score > 0;
     return Container(
       decoration: const BoxDecoration(
         gradient: LinearGradient(
@@ -77,7 +88,7 @@ class GameOverScreen extends StatelessWidget {
               ] else ...[
                 const SizedBox(height: 4),
                 Text(
-                  '${game.highScore - game.score} points away',
+                  '${highScore - score} points away',
                   style: TextStyle(
                     color: Colors.white.withAlpha(120),
                     fontSize: 13,
@@ -102,42 +113,19 @@ class GameOverScreen extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    _statRow('🏆 Score', '${game.score}', Colors.amber),
+                    _statRow('🏆 Score', '$score', Colors.amber),
                     const Divider(color: Colors.white12, height: 16),
-                    _statRow('👑 Best', '${game.highScore}', Colors.grey),
+                    _statRow('👑 Best', '$highScore', Colors.grey),
                     const Divider(color: Colors.white12, height: 16),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        _statItem('🌊 Wave', '${game.wave}'),
-                        _statItem('💀 Enemies', '${game.totalEnemiesDestroyed}'),
-                        _statItem('🔥 Max Combo', 'x${game.comboSystem.maxCombo}'),
+                        _statItem('🌊 Wave', '$wave'),
+                        _statItem('💀 Enemies', '$enemiesDestroyed'),
+                        _statItem('🔥 Max Combo', 'x3'),
                       ],
                     ),
-                    const Divider(color: Colors.white12, height: 16),
-                    _statRow(
-                      '⚡ Combo Bonus',
-                      'x${game.comboSystem.multiplier.toStringAsFixed(1)}',
-                      Colors.orange,
-                    ),
                   ],
-                ),
-              ),
-              
-              // Difficulty indicator
-              const SizedBox(height: 12),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                decoration: BoxDecoration(
-                  color: Colors.white.withAlpha(15),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  'Mode: ${game.gameState.settings.difficultyName}',
-                  style: TextStyle(
-                    color: Colors.white.withAlpha(150),
-                    fontSize: 12,
-                  ),
                 ),
               ),
               
@@ -153,11 +141,7 @@ class GameOverScreen extends StatelessWidget {
                         borderRadius: BorderRadius.circular(25),
                       ),
                     ),
-                    onPressed: () {
-                      game.overlays.remove('GameOver');
-                      game.resetGame();
-                      game.startGame();
-                    },
+                    onPressed: onRestart,
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -184,8 +168,7 @@ class GameOverScreen extends StatelessWidget {
                       ),
                     ),
                     onPressed: () {
-                      game.overlays.remove('GameOver');
-                      game.overlays.add('MainMenu');
+                      // Return to menu handled by game
                     },
                     child: const Row(
                       mainAxisSize: MainAxisSize.min,

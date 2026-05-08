@@ -5,86 +5,237 @@ class GameOverScreen extends StatelessWidget {
   final int highScore;
   final int wave;
   final int enemiesDestroyed;
-  final VoidCallback? onRestart;
+  final VoidCallback onRestart;
+
   const GameOverScreen({
     super.key,
     required this.score,
-    this.highScore = 0,
-    this.wave = 1,
-    this.enemiesDestroyed = 0,
-    this.onRestart,
+    required this.highScore,
+    required this.wave,
+    required this.enemiesDestroyed,
+    required this.onRestart,
   });
-
-  bool get isNewHighScore => score >= highScore && score > 0;
 
   @override
   Widget build(BuildContext context) {
+    final isNewHighScore = score >= highScore && score > 0;
     return Container(
-      color: Colors.black87,
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF1a1a2e), Color(0xFF16213e)],
+        ),
+      ),
       child: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text('GAME OVER', style: TextStyle(color: Color(0xFFE91E63), fontSize: 48, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 12),
-            Text('Score: $score', style: const TextStyle(color: Colors.white, fontSize: 32)),
-            const SizedBox(height: 8),
-            if (isNewHighScore)
-              const Text('🏆 NEW HIGH SCORE!', style: TextStyle(color: Color(0xFFFFEB3B), fontSize: 22, fontWeight: FontWeight.bold))
-            else
-              Text('Best: $highScore', style: const TextStyle(color: Colors.white54, fontSize: 20)),
-            const SizedBox(height: 16),
-            // Stats row
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _StatChip(label: 'WAVE', value: '$wave', icon: '🌊', color: const Color(0xFF00BCD4)),
-                const SizedBox(width: 16),
-                _StatChip(label: 'ENEMIES', value: '$enemiesDestroyed', icon: '💥', color: const Color(0xFFE91E63)),
-              ],
+        child: Container(
+          padding: const EdgeInsets.all(32),
+          decoration: BoxDecoration(
+            color: Colors.black87,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(
+              color: isNewHighScore ? const Color(0xFFFFD700) : Colors.red,
+              width: 2,
             ),
-            const SizedBox(height: 40),
-            ElevatedButton(
-              onPressed: onRestart ?? () {},
-              style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFFFEB3B),
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+            boxShadow: [
+              BoxShadow(
+                color: (isNewHighScore ? const Color(0xFFFFD700) : Colors.red)
+                    .withAlpha(80),
+                blurRadius: 24,
+                spreadRadius: 4,
               ),
-              child: const Text('RESTART', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            ),
-          ],
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                '💀 GAME OVER',
+                style: TextStyle(
+                  color: Colors.red,
+                  fontSize: 36,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 2,
+                ),
+              ),
+              if (isNewHighScore) ...[
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFFFFD700), Color(0xFFFF8C00)],
+                    ),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text('🎉', style: TextStyle(fontSize: 16)),
+                      SizedBox(width: 6),
+                      Text(
+                        'NEW HIGH SCORE!',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 16,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ] else ...[
+                const SizedBox(height: 4),
+                Text(
+                  '${highScore - score} points away',
+                  style: TextStyle(
+                    color: Colors.white.withAlpha(120),
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+              const SizedBox(height: 24),
+              
+              // Stats grid
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      Colors.white.withAlpha(15),
+                      Colors.white.withAlpha(5),
+                    ],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Column(
+                  children: [
+                    _statRow('🏆 Score', '$score', Colors.amber),
+                    const Divider(color: Colors.white12, height: 16),
+                    _statRow('👑 Best', '$highScore', Colors.grey),
+                    const Divider(color: Colors.white12, height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _statItem('🌊 Wave', '$wave'),
+                        _statItem('💀 Enemies', '$enemiesDestroyed'),
+                        _statItem('🔥 Max Combo', 'x3'),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+              
+              const SizedBox(height: 32),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFFF5722),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    onPressed: onRestart,
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🔄', style: TextStyle(fontSize: 18)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Retry',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.blueGrey,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(25),
+                      ),
+                    ),
+                    onPressed: () {
+                      // Return to menu - handled by calling code
+                    },
+                    child: const Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text('🏠', style: TextStyle(fontSize: 18)),
+                        SizedBox(width: 8),
+                        Text(
+                          'Menu',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
-}
 
-class _StatChip extends StatelessWidget {
-  final String label;
-  final String value;
-  final String icon;
-  final Color color;
+  Widget _statRow(String label, String value, Color valueColor) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            color: Colors.white70,
+            fontSize: 18,
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            color: valueColor,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ],
+    );
+  }
 
-  const _StatChip({required this.label, required this.value, required this.icon, required this.color});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      decoration: BoxDecoration(
-        color: color.withAlpha(30),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withAlpha(100)),
-      ),
-      child: Column(
-        children: [
-          Text(icon, style: const TextStyle(fontSize: 20)),
-          const SizedBox(height: 2),
-          Text(value, style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.bold)),
-          Text(label, style: TextStyle(color: color.withAlpha(180), fontSize: 10)),
-        ],
-      ),
+  Widget _statItem(String label, String value) {
+    return Column(
+      children: [
+        Text(
+          value,
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 18,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        Text(
+          label,
+          style: TextStyle(
+            color: Colors.white.withAlpha(120),
+            fontSize: 11,
+          ),
+        ),
+      ],
     );
   }
 }
