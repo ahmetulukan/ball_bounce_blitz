@@ -12,10 +12,10 @@ import 'components/particles/explosion_particle.dart';
 // enhanced particles imported when needed
 import 'components/background_stars.dart';
 import 'components/screen_shake.dart';
+import 'components/effects.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
-import 'components/achievement_popup.dart' ;
-import 'components/effects.dart' ;
+import 'components/achievement_popup.dart';
 import 'systems/spawn_system.dart';
 import 'systems/score_system.dart';
 import 'systems/combo_system.dart';
@@ -308,6 +308,14 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
       count: 8,
     ));
     screenShake.shake(intensity: 4, duration: 0.15);
+
+    // Screen flash for big combos
+    if (comboSystem.currentCombo >= 10) {
+      add(ScreenFlash(
+        duration: 0.1,
+        color: const Color(0xFFFFFFFF),
+      ));
+    }
 
     // Score popup
     add(FloatingScorePopup(

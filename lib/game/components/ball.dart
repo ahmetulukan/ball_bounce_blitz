@@ -10,6 +10,7 @@ import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
 import 'chain_lightning.dart';
+import 'effects.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -155,9 +156,22 @@ class Ball extends CircleComponent with CollisionCallbacks {
       velocity = bounceDir * speed;
       _applyBounceEffect();
       
+      // Add hit marker burst
+      gameRef.add(HitMarkerBurst(
+        position: other.position.clone(),
+        color: Enemy.getColor(other.color),
+        rays: 6,
+      ));
+      
       if (destroyed) {
         gameRef.comboSystem.onEnemyDestroyed(other);
         gameRef.playSound('hit');
+        
+        // Add shockwave ring for big hits
+        gameRef.add(ShockwaveRing(
+          position: other.position.clone(),
+          color: Enemy.getColor(other.color),
+        ));
         
         // Chain lightning on fireball combo
         if (isFireball && gameRef.comboSystem.currentCombo >= 3) {

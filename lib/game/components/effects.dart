@@ -277,3 +277,100 @@ class MagnetField extends PositionComponent {
     canvas.drawCircle(Offset.zero, radius, paint);
   }
 }
+
+/// Screen flash on big hits
+class ScreenFlash extends Component {
+  final double duration;
+  final Color color;
+  double _elapsed = 0;
+
+  ScreenFlash({
+    this.duration = 0.15,
+    this.color = const Color(0xFFFFFFFF),
+  });
+
+  @override
+  void update(double dt) {
+    _elapsed += dt;
+    if (_elapsed >= duration) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = ((1 - _elapsed / duration) * 0.35).round().clamp(0, 255);
+    final paint = Paint()..color = color.withAlpha(alpha);
+    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 600), paint);
+  }
+}
+
+/// Shockwave ring expanding from explosion
+class ShockwaveRing extends PositionComponent {
+  double _radius = 0;
+  final double maxRadius;
+  final double speed;
+  final Color color;
+
+  ShockwaveRing({
+    required super.position,
+    this.maxRadius = 120,
+    this.speed = 300,
+    this.color = const Color(0xFFFFD700),
+  }) : super(anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _radius += speed * dt;
+    if (_radius >= maxRadius) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final life = 1 - (_radius / maxRadius);
+    final alpha = (life * 200).round().clamp(0, 255);
+    final paint = Paint()
+      ..color = color.withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = (3 * life).clamp(0.5, 3);
+    canvas.drawCircle(Offset.zero, _radius, paint);
+  }
+}
+
+/// Hit marker burst effect
+class HitMarkerBurst extends PositionComponent {
+  double _life = 0.3;
+  final Color color;
+  final int rays;
+
+  HitMarkerBurst({
+    required super.position,
+    this.color = const Color(0xFFFFFFFF),
+    this.rays = 8,
+  }) : super(anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 0.3 * 255).round().clamp(0, 255);
+    final paint = Paint()
+      ..color = color.withAlpha(alpha)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    
+    for (int i = 0; i < rays; i++) {
+      final angle = (i / rays) * 2 * pi;
+      final len = 10 + (1 - _life / 0.3) * 15;
+      canvas.drawLine(
+        Offset.zero,
+        Offset(cos(angle) * len, sin(angle) * len),
+        paint,
+      );
+    }
+  }
+}
