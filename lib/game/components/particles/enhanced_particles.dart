@@ -1,6 +1,8 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import '../enemy.dart';
 
 /// Spark particle for quick flashes
 class SparkParticle extends PositionComponent {
@@ -328,5 +330,133 @@ class MagnetField extends PositionComponent {
       ..strokeWidth = 2;
     
     canvas.drawCircle(Offset.zero, radius, paint);
+  }
+}
+
+/// Ghost trail effect for fast-moving ball
+class GhostTrail extends PositionComponent {
+  final Color color;
+  double _life = 0.3;
+
+  GhostTrail({
+    required Vector2 position,
+    required this.color,
+  }) : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 0.3 * 150).round().clamp(0, 150);
+    final paint = Paint()..color = color.withAlpha(alpha);
+    canvas.drawCircle(Offset.zero, 10, paint);
+  }
+}
+
+/// Laser beam projectile
+class LaserBeam extends PositionComponent with CollisionCallbacks {
+  final double _speed = 600;
+  bool _hit = false;
+
+  LaserBeam({required Vector2 position}) : super(position: position, anchor: Anchor.center);
+
+  @override
+  Future<void> onLoad() async {
+    await super.onLoad();
+    add(RectangleHitbox()..collisionType = CollisionType.active);
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    position.y -= _speed * dt;
+    if (position.y < -20 || _hit) {
+      removeFromParent();
+    }
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) async {
+    if (_hit) return;
+    if (other is Enemy) {
+      _hit = true;
+      other.destroy();
+      removeFromParent();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    // Laser glow
+    final glowPaint = Paint()
+      ..color = const Color(0xFF00FF00).withAlpha(100)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawRect(Rect.fromLTWH(-3, 0, 6, 30), glowPaint);
+    
+    // Core beam
+    final paint = Paint()..color = const Color(0xFF00FF00);
+    canvas.drawRect(Rect.fromLTWH(-2, 0, 4, 30), paint);
+    
+    // Bright center
+    final corePaint = Paint()..color = const Color(0xFFFFFFFF);
+    canvas.drawRect(Rect.fromLTWH(-1, 0, 2, 30), corePaint);
+  }
+}
+
+/// Star burst for achievements
+class StarBurst extends PositionComponent {
+  final double life;
+  final Color color;
+  double _age = 0;
+
+  StarBurst({
+    required Vector2 position,
+    this.life = 0.8,
+    this.color = const Color(0xFFFFD700),
+  }) : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= life) {
+      removeFromParent();
+    }
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final t = (_age / life).clamp(0.0, 1.0);
+    final alpha = (1.0 - t);
+    final scale = 1.0 + t * 2;
+
+    // Draw 8-pointed star
+    final path = Path();
+    for (int i = 0; i < 16; i++) {
+      final angle = (i * pi / 8) - pi / 2;
+      final r = (i.isEven) ? 15 * scale : 6 * scale;
+      final x = cos(angle) * r;
+      final y = sin(angle) * r;
+      if (i == 0) {
+        path.moveTo(x, y);
+      } else {
+        path.lineTo(x, y);
+      }
+    }
+    path.close();
+
+    final paint = Paint()..color = color.withAlpha((alpha * 255).round());
+    canvas.drawPath(path, paint);
+
+    // Glow
+    final glowPaint = Paint()
+      ..color = color.withAlpha((alpha * 100).round())
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawPath(path, glowPaint);
   }
 }

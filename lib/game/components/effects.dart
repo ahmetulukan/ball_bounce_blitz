@@ -136,7 +136,7 @@ class BallPowerUpIndicator extends PositionComponent {
   final Color color;
   final String icon;
   double _phase = 0;
-  double _orbitRadius = 18;
+  final double _orbitRadius = 18;
 
   BallPowerUpIndicator({
     required this.color,
@@ -206,75 +206,6 @@ class SlowMoOverlay extends PositionComponent {
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4;
     canvas.drawRect(Rect.fromLTWH(2, 2, 396, 396), borderPaint);
-  }
-}
-/// Gravity well effect for special power-ups
-class GravityWell extends PositionComponent {
-  final double maxAge;
-  double _age = 0;
-  final double strength;
-
-  GravityWell({
-    required Vector2 position,
-    this.maxAge = 3.0,
-    this.strength = 200,
-  });
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _age += dt;
-    if (_age >= maxAge) removeFromParent();
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final alpha = ((1 - _age / maxAge) * 100).round().clamp(0, 100);
-    final radius = 30 + sin(_age * 4) * 10;
-    
-    final paint = Paint()
-      ..color = const Color(0xFF9C27B0).withAlpha(alpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    
-    canvas.drawCircle(Offset.zero, radius, paint);
-    
-    final innerPaint = Paint()
-      ..color = const Color(0xFFE91E63).withAlpha(alpha ~/ 2)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    canvas.drawCircle(Offset.zero, radius * 0.6, innerPaint);
-  }
-}
-
-/// Magnet field visual effect
-class MagnetField extends PositionComponent {
-  double _age = 0;
-  final double maxAge;
-
-  MagnetField({
-    required Vector2 position,
-    this.maxAge = 5.0,
-  });
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _age += dt;
-    if (_age >= maxAge) removeFromParent();
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final alpha = ((1 - _age / maxAge) * 60).round().clamp(0, 60);
-    final radius = 20 + sin(_age * 5) * 5;
-    
-    final paint = Paint()
-      ..color = const Color(0xFFE91E63).withAlpha(alpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2;
-    
-    canvas.drawCircle(Offset.zero, radius, paint);
   }
 }
 

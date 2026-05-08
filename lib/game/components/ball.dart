@@ -9,6 +9,7 @@ import 'power_up.dart';
 import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
+import 'particles/enhanced_particles.dart';
 import 'chain_lightning.dart';
 import 'effects.dart';
 import '../ball_bounce_game.dart';
@@ -24,9 +25,12 @@ class Ball extends CircleComponent with CollisionCallbacks {
   bool isFireball = false;
   bool isShielded = false;
   bool isMagnetized = false;
+  bool hasLaser = false;
   double _shieldAngle = 0;
-  double _bounceScale = 1.0; // for bounce animation
+  double _bounceScale = 1.0;
   double _trailTimer = 0;
+  double _laserTimer = 0;
+  static const double _laserInterval = 0.5;
 
   Ball({required this.paddle, required this.gameRef}) : super(
     radius: ballRadius,
@@ -82,6 +86,25 @@ class Ball extends CircleComponent with CollisionCallbacks {
       _spawnTrail();
     }
 
+    // Ghost trail for fireball/laser
+    if (isFireball || hasLaser) {
+      if (_trailTimer >= 0.02) {
+        gameRef.add(GhostTrail(
+          position: position.clone(),
+          color: isFireball ? const Color(0xFFFF5722) : const Color(0xFF00FF00),
+        ));
+      }
+    }
+
+    // Laser firing
+    if (hasLaser) {
+      _laserTimer += dt;
+      if (_laserTimer >= _laserInterval) {
+        _laserTimer = 0;
+        _fireLaser();
+      }
+    }
+
     if (position.x - ballRadius <= 0) {
       position.x = ballRadius;
       velocity.x = velocity.x.abs();
@@ -122,7 +145,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
   void _applyBounceEffect() {
     _bounceScale = 1.3;
-    // Spawn small particle burst on wall bounce
     if (isFireball) {
       gameRef.add(ExplosionEffect(
         position: position.clone(),
@@ -131,6 +153,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
         speed: 80,
       ));
     }
+  }
+
+  void _fireLaser() {
+    final laser = LaserBeam(position: Vector2(position.x, position.y - ballRadius));
+    gameRef.add(laser);
   }
 
   @override
@@ -151,12 +178,10 @@ class Ball extends CircleComponent with CollisionCallbacks {
     if (other is Enemy) {
       final destroyed = other.takeHit();
       
-      // Bounce ball away from enemy
       final bounceDir = (position - other.position).normalized();
       velocity = bounceDir * speed;
       _applyBounceEffect();
       
-      // Add hit marker burst
       gameRef.add(HitMarkerBurst(
         position: other.position.clone(),
         color: Enemy.getColor(other.color),
@@ -167,18 +192,20 @@ class Ball extends CircleComponent with CollisionCallbacks {
         gameRef.comboSystem.onEnemyDestroyed(other);
         gameRef.playSound('hit');
         
-        // Add shockwave ring for big hits
         gameRef.add(ShockwaveRing(
           position: other.position.clone(),
           color: Enemy.getColor(other.color),
         ));
         
-        // Chain lightning on fireball combo
         if (isFireball && gameRef.comboSystem.currentCombo >= 3) {
           _spawnChainLightningEffect(other.position);
         }
+        
+        // Star burst on critical
+        if (gameRef.comboSystem.currentCombo >= 5) {
+          gameRef.add(StarBurst(position: other.position.clone()));
+        }
       } else {
-        // Heavy enemy hit but not destroyed - smaller effect
         gameRef.add(ExplosionEffect(
           position: other.position.clone(),
           color: Enemy.getColor(other.color),
@@ -201,21 +228,17 @@ class Ball extends CircleComponent with CollisionCallbacks {
     }
 
     if (other is Barrier) {
-      // Bounce off barrier
       final relPos = position - other.position;
       if (relPos.y.abs() > other.size.x / 2) {
-        // Vertical barrier hit
         velocity.y = -velocity.y;
         position.y = other.position.y + (velocity.y > 0 ? -1 : 1) * (ballRadius + other.size.y / 2);
       } else {
-        // Horizontal barrier hit
         velocity.x = -velocity.x;
         position.x = other.position.x + (velocity.x > 0 ? -1 : 1) * (ballRadius + other.size.x / 2);
       }
       _applyBounceEffect();
       gameRef.playSound('bounce');
       
-      // Barrier hit effect
       gameRef.add(ExplosionEffect(
         position: position.clone(),
         color: const Color(0xFF00BCD4),
@@ -227,7 +250,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
 
   @override
   void render(Canvas canvas) {
-    // Shield ring effect
     if (isShielded) {
       final shieldPaint = Paint()
         ..color = const Color(0xFF03A9F4).withAlpha(180)
@@ -235,7 +257,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
         ..strokeWidth = 2;
       canvas.drawCircle(Offset.zero, ballRadius + 6, shieldPaint);
       
-      // Rotating shield arcs
       for (int i = 0; i < 3; i++) {
         final arcAngle = _shieldAngle + (i * 2 * pi / 3);
         final arcPaint = Paint()
@@ -253,7 +274,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
       }
     }
     
-    // Fireball glow
     if (isFireball) {
       final glowPaint = Paint()
         ..color = const Color(0xFFFF5722).withAlpha(100)
@@ -261,11 +281,21 @@ class Ball extends CircleComponent with CollisionCallbacks {
       canvas.drawCircle(Offset.zero, ballRadius + 4, glowPaint);
     }
 
-    // Main ball
-    final ballPaint = Paint()..color = isFireball ? const Color(0xFFFF5722) : const Color(0xFFFFFFFF);
+    // Laser ball glow
+    if (hasLaser) {
+      final glowPaint = Paint()
+        ..color = const Color(0xFF00FF00).withAlpha(100)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(Offset.zero, ballRadius + 3, glowPaint);
+    }
+
+    final ballPaint = Paint()..color = isFireball 
+        ? const Color(0xFFFF5722) 
+        : hasLaser 
+            ? const Color(0xFF00FF00) 
+            : const Color(0xFFFFFFFF);
     canvas.drawCircle(Offset.zero, ballRadius * _bounceScale, ballPaint);
     
-    // Inner highlight
     final highlightPaint = Paint()..color = Colors.white.withAlpha(180);
     canvas.drawCircle(Offset(-ballRadius * 0.3, -ballRadius * 0.3), ballRadius * 0.3, highlightPaint);
   }
@@ -310,22 +340,25 @@ class Ball extends CircleComponent with CollisionCallbacks {
       case PowerUpType.shrink:
         gameRef.shrinkPaddle();
         break;
+      case PowerUpType.laser:
+        hasLaser = true;
+        Future.delayed(const Duration(seconds: 4), () {
+          hasLaser = false;
+        });
+        break;
     }
   }
 
   void _spawnChainLightningEffect(Vector2 hitPos) {
-    // Find nearby enemies and create lightning chains
     final enemies = gameRef.children.whereType<Enemy>().toList();
     if (enemies.length < 2) return;
     
-    // Sort by distance from hit
     enemies.sort((a, b) {
       final da = (a.position - hitPos).length;
       final db = (b.position - hitPos).length;
       return da.compareTo(db);
     });
     
-    // Create chain to nearest 2 enemies
     final chainTargets = enemies.take(2).toList();
     for (final target in chainTargets) {
       gameRef.add(ChainLightning(
@@ -336,7 +369,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
       ));
     }
     
-    // Show critical hit if chain is strong
     if (chainTargets.length >= 2) {
       gameRef.add(CriticalHitText(
         position: position.clone(),
@@ -349,6 +381,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
     position = Vector2(200, 200);
     isFireball = false;
     isShielded = false;
+    hasLaser = false;
     speed = baseSpeed;
     _bounceScale = 1.0;
     _startMoving();
