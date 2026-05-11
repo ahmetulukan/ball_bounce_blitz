@@ -13,6 +13,7 @@ class SpawnSystem extends Component {
   int _difficultyLevel = 1;
   bool _bossWave = false;
   bool _bossSpawned = false;
+  bool challengeHeavyEnemies = false;
   late BallBounceGame gameRef;
 
   void setGame(BallBounceGame game) {
@@ -88,6 +89,7 @@ class SpawnSystem extends Component {
   }
 
   void _spawnPowerUp() {
+    if (gameRef.challengeNoPowerUps) return;
     final x = 30.0 + _random.nextDouble() * 340;
     final types = PowerUpType.values;
     final type = types[_random.nextInt(types.length)];

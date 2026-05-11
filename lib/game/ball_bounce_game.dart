@@ -50,6 +50,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   bool _noDamageThisWave = false;
   bool _bossWave = false;
   double challengePointsMultiplier = 1.0;
+  bool challengeNoPowerUps = false;
+  bool challengeHeavyEnemies = false;
 
   bool isGameOver = false;
   bool isPaused = false;

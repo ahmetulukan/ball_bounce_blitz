@@ -119,7 +119,8 @@ class ChallengeModifier {
       description: '🚫 Power-ups disabled',
       icon: '🚫',
       onApply: (game, apply) {
-        // Power-ups controlled via powerUpTimer in SpawnSystem
+        // Power-ups controlled via challengeNoPowerUps flag
+        game.challengeNoPowerUps = apply;
       },
     ),
     ChallengeModifier(
@@ -128,7 +129,8 @@ class ChallengeModifier {
       description: '🛡️ Enemies need 2 hits',
       icon: '🛡️',
       onApply: (game, apply) {
-        // Handled via wave difficulty
+        // Handled via challengeHeavyEnemies flag in BallBounceGame
+        game.challengeHeavyEnemies = apply;
       },
     ),
     ChallengeModifier(

@@ -314,7 +314,10 @@ class EnemyFactory {
     EnemyBehavior behavior = EnemyBehavior.normal;
     int hitCount = 1;
     
-    if (wave >= 3) {
+    // Challenge mode: all enemies need 2 hits
+    if (game.challengeHeavyEnemies) {
+      hitCount = 2;
+    } else if (wave >= 3) {
       final roll = _random.nextDouble();
       if (roll < 0.12) {
         behavior = EnemyBehavior.heavy;
