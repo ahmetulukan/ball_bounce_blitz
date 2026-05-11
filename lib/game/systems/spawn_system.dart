@@ -60,6 +60,25 @@ class SpawnSystem extends Component {
     }
   }
 
+  /// Wave-based spawning: spawns enemies based on wave progress.
+  /// Returns actual number of enemies spawned (may be 0 during boss waves).
+  int spawnWaveEnemies(int wave) {
+    if (_bossWave) return 0;
+
+    // Determine spawn count based on wave
+    final baseCount = 1 + (wave ~/ 3);
+    final spawnCount = baseCount.clamp(1, 4);
+
+    for (int i = 0; i < spawnCount; i++) {
+      Future.delayed(Duration(milliseconds: i * 300), () {
+        if (!gameRef.isGameOver && !_bossWave) {
+          _spawnEnemy();
+        }
+      });
+    }
+    return spawnCount;
+  }
+
   void _spawnEnemy() {
     final x = 30.0 + _random.nextDouble() * 340;
     final enemy = EnemyFactory.create(x, _difficultyLevel, gameRef);
@@ -106,6 +125,10 @@ class SpawnSystem extends Component {
   }
 
   void onWaveChanged(int wave) {
+    _difficultyLevel = wave;
+    // Adjust spawn interval as waves progress
+    _spawnInterval = (2.0 - (wave * 0.08)).clamp(0.5, 2.0);
+
     if (wave > 0 && wave % 5 == 0) {
       _bossWave = true;
       _bossSpawned = false;
