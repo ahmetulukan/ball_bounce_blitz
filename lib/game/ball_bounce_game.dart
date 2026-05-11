@@ -9,6 +9,7 @@ import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/power_up.dart';
 import 'components/particles/enhanced_particles.dart';
+import 'components/particles/explosion_particle.dart';
 // enhanced particles imported when needed
 import 'components/background_stars.dart';
 import 'components/screen_shake.dart';
