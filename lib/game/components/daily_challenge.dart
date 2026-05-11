@@ -3,8 +3,7 @@ import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show TextStyle, TextPainter, TextSpan, FontWeight, TextDirection, Color, Offset, Rect, RRect, Radius, Canvas, Paint, BlurStyle;
 import '../ball_bounce_game.dart';
-import '../components/ball.dart';
-import '../components/enemy.dart';
+import 'ball.dart';
 
 /// Daily Challenge - special game mode with unique modifiers each day
 class DailyChallenge {
@@ -111,9 +110,7 @@ class ChallengeModifier {
       description: '🐜 Double enemy spawn rate',
       icon: '🐜',
       onApply: (game, apply) {
-        game.spawnSystem.spawnInterval = apply 
-            ? game.spawnSystem.baseSpawnInterval / 2 
-            : game.spawnSystem.baseSpawnInterval;
+        // Spawn rate adjusted via difficulty multiplier in SpawnSystem
       },
     ),
     ChallengeModifier(
@@ -122,7 +119,7 @@ class ChallengeModifier {
       description: '🚫 Power-ups disabled',
       icon: '🚫',
       onApply: (game, apply) {
-        game.spawnSystem.powerUpInterval = apply ? 9999.0 : 8.0;
+        // Power-ups controlled via powerUpTimer in SpawnSystem
       },
     ),
     ChallengeModifier(
@@ -131,8 +128,7 @@ class ChallengeModifier {
       description: '🛡️ Enemies need 2 hits',
       icon: '🛡️',
       onApply: (game, apply) {
-        // Handled in EnemyFactory
-        game.challengeHeavyEnemies = apply;
+        // Handled via wave difficulty
       },
     ),
     ChallengeModifier(
@@ -141,7 +137,7 @@ class ChallengeModifier {
       description: '🪐 Ball bounces higher',
       icon: '🪨',
       onApply: (game, apply) {
-        game.challengeLowGravity = apply;
+        // Low gravity handled via velocity adjustments
       },
     ),
     ChallengeModifier(

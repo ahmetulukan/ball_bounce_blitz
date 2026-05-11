@@ -381,7 +381,8 @@ class LaserBeam extends PositionComponent with CollisionCallbacks {
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) async {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
     if (_hit) return;
     if (other is Enemy) {
       _hit = true;

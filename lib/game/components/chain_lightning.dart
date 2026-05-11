@@ -32,7 +32,6 @@ class ChainLightning extends PositionComponent {
   @override
   void render(Canvas canvas) {
     final alpha = (1.0 - _age / life).clamp(0.0, 1.0);
-    final progress = _age / life;
 
     // Generate jagged lightning path
     final path = _generateLightningPath(start, end);
@@ -80,7 +79,6 @@ class ChainLightning extends PositionComponent {
     final jitter = length * 0.15;
 
     for (int i = 1; i < segments; i++) {
-      final t = i / segments;
       final x = start.x + dx * i + (Random().nextDouble() - 0.5) * jitter * 2;
       final y = start.y + dy * i + (Random().nextDouble() - 0.5) * jitter * 2;
       
@@ -217,11 +215,6 @@ class CriticalHitText extends PositionComponent {
     canvas.rotate(_rotation * 0.3);
     canvas.scale(scale);
 
-    // Shadow
-    final shadowPaint = Paint()
-      ..color = const Color(0x88000000)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    
     final textPainter = TextPainter(
       text: TextSpan(
         text: 'CRITICAL!',

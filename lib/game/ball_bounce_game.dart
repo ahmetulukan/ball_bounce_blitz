@@ -49,6 +49,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   int _livesAtWaveStart = 3;
   bool _noDamageThisWave = false;
   bool _bossWave = false;
+  double challengePointsMultiplier = 1.0;
 
   bool isGameOver = false;
   bool isPaused = false;
@@ -296,7 +297,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   }
 
   void onEnemyDestroyed(Enemy enemy) {
-    score += enemy.points;
+    score += (enemy.points * challengePointsMultiplier).round();
     hitCount++;
     activeEnemies--;
     totalEnemiesDestroyed++;
