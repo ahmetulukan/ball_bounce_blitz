@@ -37,6 +37,17 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   double _teleportPhase = 0;
   double opacity = 1.0;
 
+  // Phase tracking for behavior changes
+  int _currentPhase = 0;
+  static const int _maxPhases = 3;
+  double _phaseTransitionTimer = 0;
+
+  // Shield and barrier states
+  bool _hasShield = false;
+  double _shieldRotation = 0;
+  int _shieldHits = 0;
+  static const int _shieldMaxHits = 5;
+
   BossEnemy({
     required this.wave,
     this.health = 10,
@@ -54,7 +65,38 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     add(CircleHitbox());
+<<<<<<< HEAD
     gameRef.enemyManager.registerBoss(this);
+=======
+
+    // Boss gets shield at certain health thresholds
+    if (wave >= 5 && health > 5) {
+      _activateShield();
+    }
+  }
+
+  void _activateShield() {
+    _hasShield = true;
+    _shieldHits = 0;
+    _shieldRotation = 0;
+
+    // Visual shield activation effect
+    gameRef.add(BossShieldActivation(
+      position: position.clone(),
+      radius: _bossSize / 2 + 20,
+    ));
+  }
+
+  void _deactivateShield() {
+    _hasShield = false;
+    _shieldHits = 0;
+
+    // Shield shatter effect
+    gameRef.add(ShieldShatterEffect(
+      position: position.clone(),
+      radius: _bossSize / 2 + 20,
+    ));
+>>>>>>> 4dfc01c (feat: Add combo multiplier popup, shockwave effect, streak fire, power-up burst, and wave clear shockwave)
   }
 
   @override
@@ -65,9 +107,22 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
     _phase += dt * 2;
     _attackTimer += dt;
     _teleportTimer += dt;
+    _phaseTransitionTimer += dt;
+    _shieldRotation += dt * 2;
+
+    // Phase transitions every 10 seconds or at health thresholds
+    if (_phaseTransitionTimer >= 10 && _currentPhase < _maxPhases) {
+      _advancePhase();
+    }
+
+    // Health-based phase change
+    final healthRatio = health / maxHealth;
+    if (healthRatio <= 0.3 && _currentPhase < _maxPhases - 1) {
+      _advancePhase();
+    }
 
     // Teleport check
-    if (_teleportTimer >= _teleportInterval && !_isTeleporting && !_isCharging) {
+    if (_teleportTimer >= _teleportInterval && !_isTeleporting && !_isCharging && _currentPhase >= 1) {
       _startTeleport();
     }
 
@@ -98,12 +153,14 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
     // Gentle hover
     position.y = 60 + sin(_phase) * 8;
 
-    // Horizontal drift
-    position.x += sin(_phase * 0.7) * 40 * dt;
+    // Horizontal drift - gets faster in later phases
+    final driftSpeed = 40 + (_currentPhase * 15);
+    position.x += sin(_phase * 0.7) * driftSpeed * dt;
     position.x = position.x.clamp(_bossSize / 2, 400 - _bossSize / 2);
 
-    // Attack patterns
-    if (_attackTimer >= _attackInterval) {
+    // Attack patterns - get more aggressive in later phases
+    final attackIntervalMod = _currentPhase == 0 ? 1.0 : (_currentPhase == 1 ? 0.75 : 0.5);
+    if (_attackTimer >= _attackInterval * attackIntervalMod) {
       _attackTimer = 0;
       _chooseAttack();
     }
@@ -115,155 +172,187 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
       // Keep in bounds
       position.x = position.x.clamp(_bossSize / 2, 400 - _bossSize / 2);
       position.y = position.y.clamp(_bossSize / 2, 200);
-      
+
       if (_chargeTimer >= 1.0) {
         _isCharging = false;
         _chargeTimer = 0;
       }
     }
+
+    // Update homing projectiles
+    for (final projectile in _homingProjectiles) {
+      if (!projectile.isRemoved) {
+        projectile.update(dt);
+      }
+    }
+    _homingProjectiles.removeWhere((p) => p.isRemoved);
+  }
+
+  void _advancePhase() {
+    _currentPhase++;
+    _phaseTransitionTimer = 0;
+
+    // Activate shield in phase 2+
+    if (_currentPhase >= 2 && !_hasShield && health > maxHealth * 0.3) {
+      _activateShield();
+    }
+
+    // Boss speeds up
+    speed = speed * 1.2;
+
+    // Screen shake to signal phase change
+    gameRef.screenShake.shake(intensity: 8, duration: 0.5);
+
+    // Phase transition flash
+    gameRef.add(BossPhaseTransition(
+      position: position.clone(),
+      phase: _currentPhase,
+    ));
   }
 
   void _startTeleport() {
     _isTeleporting = true;
     _teleportPhase = 0;
-    // Spawn warning effect
-    gameRef.add(ExplosionEffect(
+
+    // Spawn teleport particles
+    gameRef.add(TeleportParticles(
       position: position.clone(),
-      color: const Color(0xFF9C27B0),
-      count: 8,
-      speed: 100,
+      count: 12,
     ));
-    gameRef.screenShake.shake(intensity: 2, duration: 0.1);
   }
 
   void _chooseAttack() {
     _attackCount++;
-    // Choose from 5 attack patterns based on wave
-    final pattern = _attackCount % 5;
-    switch (pattern) {
-      case 0:
-        _attackShoot();
-        break;
-      case 1:
-        _attackSweep();
-        break;
-      case 2:
-        _startCharge();
-        break;
-      case 3:
-        _attackSpiral();
-        break;
-      case 4:
-        _attackHoming();
-        break;
+
+    // More attack variety in later phases
+    if (_currentPhase == 0) {
+      // Phase 1: Simple horizontal shot
+      _shootHorizontal();
+    } else if (_currentPhase == 1) {
+      // Phase 2: Spread shot
+      final attacks = [_shootHorizontal, _shootSpread, _spawnMinion];
+      attacks[Random().nextInt(attacks.length)]();
+    } else {
+      // Phase 3: Mix of all attacks
+      final attacks = [_shootHorizontal, _shootSpread, _spawnMinion, _chargeAttack];
+      attacks[Random().nextInt(attacks.length)]();
     }
   }
 
-  void _attackShoot() {
-    // Spread shot - 5 projectiles in a fan
-    for (int i = 0; i < 5; i++) {
-      final angle = -0.5 + (i * 0.25);
-      final vel = Vector2(sin(angle) * 80, cos(angle) * 120);
-      final p = BossProjectile(
-        position: position.clone(),
+  void _shootHorizontal() {
+    final projectile = BossProjectile(
+      position: Vector2(position.x, position.y + _bossSize / 2),
+      velocity: Vector2(0, 120),
+      size: 12,
+    );
+    projectile.gameRef = gameRef;
+    _homingProjectiles.add(projectile);
+    gameRef.add(projectile);
+  }
+
+  void _shootSpread() {
+    final angles = [-0.5, -0.25, 0, 0.25, 0.5];
+    for (final angle in angles) {
+      final vel = Vector2(sin(angle) * 100, cos(angle) * 120);
+      final projectile = BossProjectile(
+        position: Vector2(position.x, position.y + _bossSize / 2),
         velocity: vel,
-      )..gameRef = gameRef;
-      gameRef.add(p);
+        size: 10,
+      );
+      projectile.gameRef = gameRef;
+      _homingProjectiles.add(projectile);
+      gameRef.add(projectile);
     }
   }
 
-  void _attackSpiral() {
-    // Spiral pattern - 8 projectiles around boss
-    for (int i = 0; i < 8; i++) {
-      final angle = _phase + (i * pi / 4);
-      final vel = Vector2(cos(angle) * 60, sin(angle) * 40 + 80);
-      final p = BossProjectile(
-        position: position.clone(),
-        velocity: vel,
-      )..gameRef = gameRef;
-      gameRef.add(p);
+  void _spawnMinion() {
+    // Spawn a mini enemy from boss position
+    if (gameRef.children.whereType<Enemy>().length < 5) {
+      final random = Random();
+      final enemy = Enemy(
+        type: EnemyType.values[random.nextInt(EnemyType.values.length)],
+        color: EnemyColorType.purple,
+        speed: Enemy.baseSpeed * 1.5,
+        points: 15,
+        behavior: EnemyBehavior.fast,
+        hitCount: 1,
+      );
+      enemy.gameRef = gameRef;
+      enemy.position = Vector2(position.x + (random.nextDouble() - 0.5) * 40, position.y + _bossSize / 2);
+      gameRef.add(enemy);
     }
   }
 
-  void _attackHoming() {
-    // Spawn a slow homing missile
-    final p = BossProjectile(
-      position: position.clone(),
-      velocity: Vector2(0, 30),
-      isHoming: true,
-    )..gameRef = gameRef;
-    gameRef.add(p);
-  }
+  void _chargeAttack() {
+    if (_isCharging) return;
 
-  void _attackSweep() {
-    // Quick side-to-side movement with projectiles
-    final dir = position.x > 200 ? -1.0 : 1.0;
-    position.x += dir * 100;
-    
-    // Spawn projectiles during sweep
-    for (int i = 0; i < 3; i++) {
-      Future.delayed(Duration(milliseconds: i * 150), () {
-        if (!isDefeated) {
-          final p = BossProjectile(
-            position: position.clone(),
-            velocity: Vector2(Random().nextDouble() * 60 - 30, 100),
-          )..gameRef = gameRef;
-          gameRef.add(p);
-        }
-      });
-    }
-  }
-
-  void _startCharge() {
+    // Charge towards ball
+    final ballPos = gameRef.ball?.position ?? Vector2(200, 300);
+    _chargeDir = (ballPos - position).normalized();
+    _chargeDir.y = _chargeDir.y.abs(); // Always charge downward
     _isCharging = true;
     _chargeTimer = 0;
-    // Charge downward
-    _chargeDir = Vector2(0, 1);
-    
-    // Warning effect
-    gameRef.screenShake.shake(intensity: 3, duration: 0.2);
-  }
-
-  void takeDamage(int amount) {
-    health -= amount;
-    if (health < 0) health = 0;
-    
-    // Visual feedback
-    _flashDamage();
-  }
-
-  double _damageFlash = 0;
-  void _flashDamage() {
-    _damageFlash = 1.0;
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) async {
     super.onCollision(intersectionPoints, other);
-    if (other is! Ball) return;
-    if (!isActive) return;
 
-    takeDamage(1);
-    gameRef.screenShake.shake(intensity: 3, duration: 0.1);
-    gameRef.playSound('hit');
+    if (other is Ball) {
+      // Check shield first
+      if (_hasShield) {
+        _shieldHits++;
+        if (_shieldHits >= _shieldMaxHits) {
+          _deactivateShield();
+        }
+        // Bounce ball
+        final bounceDir = (other.position - position).normalized();
+        other.velocity = bounceDir * other.speed * 0.8;
+        gameRef.playSound('bounce');
+        return;
+      }
 
-    if (isDefeated) {
-      isActive = false;
+      // Normal hit
+      _takeDamage();
+      gameRef.screenShake.shake(intensity: 4, duration: 0.1);
+      gameRef.add(ExplosionEffect(
+        position: other.position.clone(),
+        color: const Color(0xFF00BCD4),
+        count: 6,
+        speed: 100,
+      ));
+
+      // Bounce ball
+      final bounceDir = (other.position - position).normalized();
+      other.velocity = bounceDir * other.speed;
+    }
+  }
+
+  void _takeDamage() {
+    health--;
+    if (health <= 0) {
       _onDefeated();
     }
   }
 
   void _onDefeated() {
+    isActive = false;
+
     // Massive explosion
-    for (int i = 0; i < 8; i++) {
-      gameRef.add(ExplosionEffect(
-        position: position.clone() + Vector2(
-          (Random().nextDouble() - 0.5) * 100,
-          (Random().nextDouble() - 0.5) * 80,
-        ),
-        count: 15,
-        speed: 180,
-      ));
+    for (int i = 0; i < 3; i++) {
+      Future.delayed(Duration(milliseconds: i * 100), () {
+        if (!isRemoved) {
+          gameRef.add(ExplosionEffect(
+            position: position.clone() + Vector2(
+              (Random().nextDouble() - 0.5) * 40,
+              (Random().nextDouble() - 0.5) * 40,
+            ),
+            color: const Color(0xFFFFD700),
+            count: 15,
+            speed: 150,
+          ));
+        }
+      });
     }
     gameRef.screenShake.shake(intensity: 15, duration: 0.6);
     gameRef.score += 250 * wave;
@@ -279,140 +368,275 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
 
   @override
   void render(Canvas canvas) {
-    final pulse = sin(_phase * 2) * 4;
-    final bodyColor = _isCharging
-        ? const Color(0xFFFF4444)
-        : _damageFlash > 0
-            ? Color.lerp(const Color(0xFF9C27B0), Colors.white, _damageFlash)!
-            : const Color(0xFF9C27B0);
+    if (opacity <= 0) return;
 
-    // Damage flash decay
-    _damageFlash *= 0.85;
-    if (_damageFlash < 0.01) _damageFlash = 0;
+    canvas.save();
+    canvas.globalAlpha = opacity;
 
-    // Teleport effect
-    if (_isTeleporting) {
-      final alpha = _teleportPhase < pi 
-          ? (1.0 - _teleportPhase / pi).clamp(0.0, 1.0)
-          : ((_teleportPhase - pi) / pi).clamp(0.0, 1.0);
-      
-      final glowPaint = Paint()
-        ..color = const Color(0xFF9C27B0).withAlpha((alpha * 150).round())
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
-      canvas.drawRRect(
-        RRect.fromRectAndRadius(
-          Rect.fromCenter(center: Offset.zero, width: _bossSize + 24, height: _bossSize + 24),
-          const Radius.circular(16),
-        ),
-        glowPaint,
+    // Boss body based on wave/phase
+    final bossColor = _getBossColor();
+
+    // Outer glow
+    final glowPaint = Paint()
+      ..color = bossColor.withAlpha(100)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    canvas.drawCircle(Offset.zero, _bossSize / 2 + 8, glowPaint);
+
+    // Main body
+    final bodyPaint = Paint()..color = bossColor;
+    canvas.drawCircle(Offset.zero, _bossSize / 2, bodyPaint);
+
+    // Inner pattern (phase-dependent)
+    _renderBossPattern(canvas, bossColor);
+
+    // Shield visualization
+    if (_hasShield) {
+      _renderShield(canvas);
+    }
+
+    // Health bar above boss
+    _renderHealthBar(canvas);
+
+    // Phase indicator
+    if (_currentPhase > 0) {
+      _renderPhaseIndicator(canvas);
+    }
+
+    // Eye/face
+    _renderBossFace(canvas, bossColor);
+
+    canvas.restore();
+  }
+
+  Color _getBossColor() {
+    switch (_currentPhase) {
+      case 0:
+        return const Color(0xFF9C27B0); // Purple
+      case 1:
+        return const Color(0xFFE91E63); // Pink
+      case 2:
+        return const Color(0xFFFF5722); // Orange
+      default:
+        return const Color(0xFF9C27B0);
+    }
+  }
+
+  void _renderBossPattern(Canvas canvas, Color baseColor) {
+    final patternPaint = Paint()
+      ..color = Colors.white.withAlpha(60)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+
+    // Concentric rings that pulse
+    final pulse = sin(_phase * 2) * 3;
+    for (int i = 1; i <= 3; i++) {
+      final radius = (_bossSize / 2 - 10) * (i / 3) + pulse * (i / 3);
+      canvas.drawCircle(Offset.zero, radius, patternPaint);
+    }
+
+    // Angular segments in later phases
+    if (_currentPhase >= 1) {
+      final segmentPaint = Paint()
+        ..color = baseColor.withAlpha(100)
+        ..style = PaintingStyle.fill;
+
+      for (int i = 0; i < 4; i++) {
+        final angle = (_phase * 0.5) + (i * pi / 2);
+        final path = Path();
+        path.moveTo(0, 0);
+        path.lineTo(cos(angle) * _bossSize / 2, sin(angle) * _bossSize / 2);
+        path.lineTo(cos(angle + 0.3) * _bossSize / 2, sin(angle + 0.3) * _bossSize / 2);
+        path.close();
+        canvas.drawPath(path, segmentPaint);
+      }
+    }
+  }
+
+  void _renderShield(Canvas canvas) {
+    _shieldRotation += 0.02;
+    final shieldPaint = Paint()
+      ..color = const Color(0xFF00BCD4).withAlpha(150)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+
+    final shieldRadius = _bossSize / 2 + 15;
+    canvas.drawCircle(Offset.zero, shieldRadius, shieldPaint);
+
+    // Rotating shield segments
+    for (int i = 0; i < 4; i++) {
+      final startAngle = _shieldRotation + (i * pi / 2);
+      final arcPaint = Paint()
+        ..color = const Color(0xFF00BCD4).withAlpha(200)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 6
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: shieldRadius),
+        startAngle,
+        pi / 3,
+        false,
+        arcPaint,
       );
     }
 
-    // Glow
-    final glowPaint = Paint()
-      ..color = bodyColor.withAlpha(100)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 16);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: _bossSize + 16, height: _bossSize + 16),
-        const Radius.circular(16),
-      ),
-      glowPaint,
+    // Shield health indicator
+    final remainingRatio = (_shieldMaxHits - _shieldHits) / _shieldMaxHits;
+    final healthArcPaint = Paint()
+      ..color = const Color(0xFF00FF00).withAlpha(180)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3;
+    canvas.drawArc(
+      Rect.fromCircle(center: Offset.zero, radius: shieldRadius + 5),
+      0,
+      2 * pi * remainingRatio,
+      false,
+      healthArcPaint,
     );
+  }
 
-    // Body
-    final bodyPaint = Paint()..color = bodyColor;
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: _bossSize, height: _bossSize),
-        const Radius.circular(12),
-      ),
-      bodyPaint,
-    );
-
-    // Core with pulsing
-    final corePaint = Paint()..color = const Color(0xFFE91E63);
-    canvas.drawCircle(Offset.zero, 20 + pulse, corePaint);
-
-    // Eye that follows ball direction
-    final ballPos = gameRef.ball.position;
-    final lookDir = (ballPos - position).normalized();
-    final eyeOffset = lookDir * 3;
-    final eyePaint = Paint()..color = const Color(0xFFFFEB3B);
-    canvas.drawCircle(Offset(eyeOffset.x, -8 + eyeOffset.y), 12, eyePaint);
-    final pupilPaint = Paint()..color = const Color(0xFF000000);
-    canvas.drawCircle(Offset(eyeOffset.x * 1.5, -8 + eyeOffset.y * 1.5), 6, pupilPaint);
-
-    // Crown spikes with animation
-    final spikePaint = Paint()..color = const Color(0xFFFFD700);
-    for (int i = 0; i < 3; i++) {
-      final sx = -36.0 + i * 36.0;
-      final spikeHeight = 20 + sin(_phase * 3 + i) * 5;
-      final path = Path()
-        ..moveTo(sx, -_bossSize / 2)
-        ..lineTo(sx + 15, -_bossSize / 2 - spikeHeight - pulse)
-        ..lineTo(sx + 30, -_bossSize / 2);
-      canvas.drawPath(path, spikePaint);
-    }
-
-    // Health bar with segments
-    final barW = _bossSize;
-    final barH = 8.0;
-    final barY = _bossSize / 2 + 12;
+  void _renderHealthBar(Canvas canvas) {
+    final barWidth = _bossSize + 20;
+    final barHeight = 8;
+    final barY = -_bossSize / 2 - 20;
 
     // Background
-    final bgPaint = Paint()
-      ..color = const Color(0xFF222222)
-      ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(-barW / 2, barY, barW, barH), bgPaint);
+    final bgPaint = Paint()..color = Colors.black54;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-barWidth / 2, barY, barWidth, barHeight),
+        const Radius.circular(4),
+      ),
+      bgPaint,
+    );
 
-    // Health segments
-    final segmentCount = maxHealth;
-    final segmentW = barW / segmentCount - 1;
-    for (int i = 0; i < health; i++) {
-      final hpRatio = health / maxHealth;
-      final hpColor = hpRatio > 0.5
-          ? const Color(0xFF4CAF50)
-          : hpRatio > 0.25
-              ? const Color(0xFFFFEB3B)
-              : const Color(0xFFFF4444);
-      final hpPaint = Paint()..color = hpColor;
-      canvas.drawRect(
-        Rect.fromLTWH(-barW / 2 + i * (segmentW + 1), barY, segmentW, barH),
-        hpPaint,
-      );
+    // Health fill
+    final healthRatio = health / maxHealth;
+    Color healthColor;
+    if (healthRatio > 0.6) {
+      healthColor = const Color(0xFF4CAF50);
+    } else if (healthRatio > 0.3) {
+      healthColor = const Color(0xFFFFEB3B);
+    } else {
+      healthColor = const Color(0xFFFF5722);
     }
 
-    // Attack indicator
-    if (_isCharging) {
-      final warningPaint = Paint()
-        ..color = const Color(0xFFFF0000).withAlpha(100)
-        ..style = PaintingStyle.fill;
-      canvas.drawRect(
-        Rect.fromLTWH(-barW / 2, size.y / 2, barW, 400 - size.y / 2),
-        warningPaint,
-      );
+    final healthPaint = Paint()..color = healthColor;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-barWidth / 2, barY, barWidth * healthRatio, barHeight),
+        const Radius.circular(4),
+      ),
+      healthPaint,
+    );
+
+    // Border
+    final borderPaint = Paint()
+      ..color = Colors.white.withAlpha(100)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(-barWidth / 2, barY, barWidth, barHeight),
+        const Radius.circular(4),
+      ),
+      borderPaint,
+    );
+  }
+
+  void _renderPhaseIndicator(Canvas canvas) {
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '⚡' * _currentPhase,
+        style: TextStyle(
+          color: const Color(0xFFFFD700).withAlpha(180),
+          fontSize: 12,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, _bossSize / 2 + 5));
+  }
+
+  void _renderBossFace(Canvas canvas, Color baseColor) {
+    // Angry eyes
+    final eyeY = -5.0;
+    final eyeSpacing = 15.0;
+    final eyeSize = 8.0;
+
+    // Eye whites
+    final eyeWhitePaint = Paint()..color = Colors.white;
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(-eyeSpacing, eyeY), width: eyeSize * 1.5, height: eyeSize),
+      eyeWhitePaint,
+    );
+    canvas.drawOval(
+      Rect.fromCenter(center: Offset(eyeSpacing, eyeY), width: eyeSize * 1.5, height: eyeSize),
+      eyeWhitePaint,
+    );
+
+    // Pupils (follow ball)
+    Vector2 pupilOffset = Vector2(0, 0);
+    if (gameRef.ball != null) {
+      final diff = gameRef.ball!.position - position;
+      pupilOffset = diff.normalized() * 2;
+    }
+    final pupilPaint = Paint()..color = Colors.black;
+    canvas.drawCircle(Offset(-eyeSpacing + pupilOffset.x, eyeY + pupilOffset.y), 4, pupilPaint);
+    canvas.drawCircle(Offset(eyeSpacing + pupilOffset.x, eyeY + pupilOffset.y), 4, pupilPaint);
+
+    // Angry eyebrows
+    final browPaint = Paint()
+      ..color = baseColor.withAlpha(255)
+      ..strokeWidth = 3
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(
+      Offset(-eyeSpacing - 8, eyeY - 10),
+      Offset(-eyeSpacing + 5, eyeY - 6),
+      browPaint,
+    );
+    canvas.drawLine(
+      Offset(eyeSpacing + 8, eyeY - 10),
+      Offset(eyeSpacing - 5, eyeY - 6),
+      browPaint,
+    );
+
+    // Mouth
+    if (_currentPhase >= 2 || healthRatio <= 0.3) {
+      // Angry mouth
+      final mouthPaint = Paint()
+        ..color = Colors.black
+        ..strokeWidth = 3
+        ..style = PaintingStyle.stroke;
+      final mouthPath = Path();
+      mouthPath.moveTo(-10, 10);
+      mouthPath.quadraticBezierTo(0, 5, 10, 10);
+      canvas.drawPath(mouthPath, mouthPaint);
+    } else {
+      // Neutral mouth
+      final mouthPaint = Paint()
+        ..color = Colors.black
+        ..strokeWidth = 2;
+      canvas.drawLine(Offset(-8, 10), Offset(8, 10), mouthPaint);
     }
   }
 }
 
-class BossProjectile extends CircleComponent with CollisionCallbacks {
-  static const double projectileRadius = 10;
-  Vector2 velocity;
-  double _life = 5.0;
+/// Boss projectile that tracks player
+class BossProjectile extends PositionComponent with CollisionCallbacks {
   late BallBounceGame gameRef;
-  bool isHoming = false;
-  double _homingStrength = 0;
-  double _trailTimer = 0;
-  static const double _trailInterval = 0.04;
+  Vector2 velocity;
+  final double size;
+  bool isRemoved = false;
+  static const double homingStrength = 50;
 
   BossProjectile({
     required Vector2 position,
     required this.velocity,
-    this.isHoming = false,
+    this.size = 12,
   }) : super(
-          radius: projectileRadius,
           position: position,
+          size: Vector2(size, size),
           anchor: Anchor.center,
         );
 
@@ -425,89 +649,71 @@ class BossProjectile extends CircleComponent with CollisionCallbacks {
   @override
   void update(double dt) {
     super.update(dt);
-    
-    // Homing behavior
-    if (isHoming && gameRef.isPaused == false) {
-      final toBall = (gameRef.ball.position - position).normalized();
-      final t = _homingStrength.clamp(0.0, 0.5);
-      final vn = velocity.normalized();
-      final nd = vn + (toBall - vn) * t;
-      velocity = Vector2(nd.x.clamp(-1.0, 1.0), nd.y.clamp(-1.0, 1.0)).normalized() * velocity.length;
-      _homingStrength += dt * 0.3;
+
+    // Slight homing towards ball
+    if (gameRef.ball != null) {
+      final diff = gameRef.ball!.position - position;
+      if (diff.length > 0) {
+        final homing = diff.normalized() * homingStrength * dt;
+        velocity += homing;
+        // Cap speed
+        if (velocity.length > 200) {
+          velocity = velocity.normalized() * 200;
+        }
+      }
     }
-    
+
     position += velocity * dt;
-    _life -= dt;
 
-    // Spawn trail particles
-    _trailTimer += dt;
-    if (_trailTimer >= _trailInterval) {
-      _trailTimer = 0;
-      final trailColor = isHoming ? const Color(0xFFFF00FF) : const Color(0xFFFF4444);
-      gameRef.add(_BossProjectileTrail(
-        position: position.clone(),
-        color: trailColor,
-      ));
-    }
-
-    if (_life <= 0 || position.y > 450 || position.x < -20 || position.x > 420) {
+    // Remove if off screen
+    if (position.y > 450 || position.x < -20 || position.x > 420) {
+      isRemoved = true;
       removeFromParent();
     }
   }
 
   @override
-  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) async {
     super.onCollision(intersectionPoints, other);
+
     if (other is Ball) {
       gameRef.loseLife();
+      isRemoved = true;
+      removeFromParent();
+    }
+
+    if (other is Paddle) {
+      gameRef.loseLife();
+      isRemoved = true;
       removeFromParent();
     }
   }
 
   @override
   void render(Canvas canvas) {
-    // Trail effect
-    final trailPaint = Paint()
-      ..color = const Color(0xFFFF4444).withAlpha(80)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4);
-    canvas.drawCircle(Offset(-velocity.x * 0.02, -velocity.y * 0.02), projectileRadius * 0.8, trailPaint);
-
     // Glow
     final glowPaint = Paint()
-      ..color = const Color(0xFFFF4444).withAlpha(120)
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
-    canvas.drawCircle(Offset.zero, projectileRadius + 4, glowPaint);
+      ..color = const Color(0xFFFF5722).withAlpha(100)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+    canvas.drawCircle(Offset.zero, size / 2 + 4, glowPaint);
 
-    // Main body
-    final paint = Paint()..color = isHoming ? const Color(0xFFFF00FF) : const Color(0xFFFF4444);
-    canvas.drawCircle(Offset.zero, projectileRadius, paint);
-    
-    // Inner core
-    final corePaint = Paint()..color = Colors.white;
-    canvas.drawCircle(Offset.zero, projectileRadius * 0.4, corePaint);
-    
-    // Homing indicator
-    if (isHoming) {
-      final ringPaint = Paint()
-        ..color = const Color(0xFFFFFFFF).withAlpha(150)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.5;
-      canvas.drawCircle(Offset.zero, projectileRadius + 4 + sin(_life * 10) * 2, ringPaint);
-    }
+    // Core
+    final corePaint = Paint()..color = const Color(0xFFFF5722);
+    canvas.drawCircle(Offset.zero, size / 2, corePaint);
+
+    // Highlight
+    final highlightPaint = Paint()..color = Colors.white.withAlpha(150);
+    canvas.drawCircle(Offset(-size / 4, -size / 4), size / 4, highlightPaint);
   }
 }
 
-/// Trail particle spawned by boss projectiles
-class _BossProjectileTrail extends PositionComponent {
-  final Color color;
-  double _life = 0.25;
-  static const double _maxLife = 0.25;
+/// Boss phase transition visual
+class BossPhaseTransition extends PositionComponent {
+  final int phase;
+  double _life = 0.8;
 
-  _BossProjectileTrail({required Vector2 position, required this.color}) : super(
-    position: position,
-    size: Vector2(6, 6),
-    anchor: Anchor.center,
-  );
+  BossPhaseTransition({required Vector2 position, required this.phase})
+      : super(position: position, anchor: Anchor.center);
 
   @override
   void update(double dt) {
@@ -518,8 +724,134 @@ class _BossProjectileTrail extends PositionComponent {
 
   @override
   void render(Canvas canvas) {
-    final alpha = (_life / _maxLife * 180).round().clamp(0, 180);
-    final paint = Paint()..color = color.withAlpha(alpha);
-    canvas.drawCircle(Offset.zero, 3 * (_life / _maxLife), paint);
+    final alpha = (_life / 0.8 * 255).round().clamp(0, 255);
+    final radius = (0.8 - _life) / 0.8 * 100;
+
+    final ringPaint = Paint()
+      ..color = const Color(0xFFFFD700).withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    canvas.drawCircle(Offset.zero, radius, ringPaint);
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '⚡ PHASE ${phase + 1}',
+        style: TextStyle(
+          color: const Color(0xFFFFD700).withAlpha(alpha),
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+  }
+}
+
+/// Shield activation burst
+class BossShieldActivation extends PositionComponent {
+  final double radius;
+  double _life = 0.5;
+
+  BossShieldActivation({required Vector2 position, required this.radius})
+      : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 0.5 * 255).round().clamp(0, 255);
+
+    final ringPaint = Paint()
+      ..color = const Color(0xFF00BCD4).withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 6;
+    canvas.drawCircle(Offset.zero, radius * (1 + (0.5 - _life) * 0.5), ringPaint);
+  }
+}
+
+/// Shield shatter particles
+class ShieldShatterEffect extends PositionComponent {
+  final double radius;
+  final Random _random = Random();
+  double _life = 0.6;
+  List<Vector2> _shards = [];
+
+  ShieldShatterEffect({required Vector2 position, required this.radius})
+      : super(position: position, anchor: Anchor.center) {
+    for (int i = 0; i < 8; i++) {
+      final angle = _random.nextDouble() * 2 * pi;
+      _shards.add(Vector2(cos(angle), sin(angle)) * (_random.nextDouble() * 100 + 50));
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 0.6 * 255).round().clamp(0, 255);
+
+    for (final shard in _shards) {
+      final pos = shard * (1 - _life / 0.6);
+      final paint = Paint()
+        ..color = const Color(0xFF00BCD4).withAlpha(alpha)
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round;
+      canvas.drawLine(Offset.zero, Offset(pos.x, pos.y), paint);
+    }
+  }
+}
+
+/// Teleport particle effect
+class TeleportParticles extends PositionComponent {
+  final int count;
+  final Random _random = Random();
+  double _life = 0.4;
+  late List<Vector2> velocities;
+  late List<double> sizes;
+
+  TeleportParticles({required Vector2 position, required this.count})
+      : super(position: position, anchor: Anchor.center);
+
+  @override
+  Future<void> onLoad() async {
+    velocities = [];
+    sizes = [];
+    for (int i = 0; i < count; i++) {
+      final angle = _random.nextDouble() * 2 * pi;
+      final speed = _random.nextDouble() * 100 + 50;
+      velocities.add(Vector2(cos(angle) * speed, sin(angle) * speed));
+      sizes.add(_random.nextDouble() * 4 + 2);
+    }
+  }
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 0.4 * 255).round().clamp(0, 255);
+
+    for (int i = 0; i < count; i++) {
+      final pos = velocities[i] * (1 - _life / 0.4);
+      final paint = Paint()
+        ..color = const Color(0xFF9C27B0).withAlpha(alpha);
+      canvas.drawCircle(Offset(pos.x, pos.y), sizes[i], paint);
+    }
   }
 }

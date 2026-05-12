@@ -141,6 +141,15 @@ class Ball extends CircleComponent with CollisionCallbacks {
       particleRadius: isFireball ? 5 : 3,
     );
     gameRef.add(trail);
+    
+    // Add extra fire streak for fireball mode
+    if (isFireball) {
+      gameRef.add(StreakFire(
+        position: position.clone(),
+        baseColor: const Color(0xFFFF5722),
+        size: 10,
+      ));
+    }
   }
 
   void _applyBounceEffect() {
@@ -222,6 +231,12 @@ class Ball extends CircleComponent with CollisionCallbacks {
     }
 
     if (other is PowerUp) {
+      // Collection burst effect
+      gameRef.add(PowerUpBurst(
+        pos: other.position.clone(),
+        color: PowerUp.getColor(other.type),
+      ));
+      
       gameRef.collectPowerUp(other.type);
       gameRef.playSound('powerup');
       other.removeFromParent();
@@ -372,7 +387,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
     if (chainTargets.length >= 2) {
       gameRef.add(CriticalHitText(
         position: position.clone(),
-        life: 0.6,
       ));
     }
   }

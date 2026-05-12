@@ -17,6 +17,7 @@ import 'components/effects.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
+import 'components/daily_challenge.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'services/game_state_service.dart';
@@ -32,6 +33,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late ScreenShake screenShake;
   late BarrierSpawner barrierSpawner;
   late EnemyManager enemyManager;
+  late DailyChallengeManager dailyChallengeManager;
   late GameStateService _gameState;
   late AchievementService _achievements;
   GameStateService get gameState => _gameState;
@@ -93,6 +95,10 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     add(barrierSpawner);
     enemyManager = EnemyManager();
     add(enemyManager);
+
+    dailyChallengeManager = DailyChallengeManager();
+    dailyChallengeManager.setGameRef(this);
+    add(dailyChallengeManager);
   }
 
   @override
@@ -175,6 +181,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     spawnSystem.onWaveChanged(wave);
     comboSystem.reset();
     ball.reset();
+    dailyChallengeManager.reset();
 
     overlays.add('Hud');
     _checkBossWave();
@@ -208,6 +215,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     spawnSystem.reset();
     comboSystem.reset();
     ball.reset();
+    dailyChallengeManager.reset();
   }
 
   void _checkBossWave() {
@@ -301,6 +309,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   void _showWaveClear() {
     add(WaveClearText(position: Vector2(200, 200)));
+    add(ShockwaveEffect(position: Vector2(200, 200), color: const Color(0xFF4CAF50)));
   }
 
   void onEnemyDestroyed(Enemy enemy) {
@@ -331,6 +340,14 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
       text: '${enemy.points}',
       color: const Color(0xFFFFD700),
     ));
+
+    // Combo multiplier popup
+    if (comboSystem.currentCombo >= 3) {
+      add(ComboMultiplierPopup(
+        position: enemy.position.clone() + Vector2(0, -40),
+        combo: comboSystem.currentCombo,
+      ));
+    }
 
     _checkAchievements();
 

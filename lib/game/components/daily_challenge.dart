@@ -1,261 +1,350 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
-import 'package:flutter/material.dart' show TextStyle, TextPainter, TextSpan, FontWeight, TextDirection, Color, Offset, Rect, RRect, Radius, Canvas, Paint, BlurStyle;
+import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../ball_bounce_game.dart';
-import 'ball.dart';
 
-/// Daily Challenge - special game mode with unique modifiers each day
 class DailyChallenge {
-  final int daySeed;
+  final String id;
   final String title;
   final String description;
-  final List<ChallengeModifier> modifiers;
-  bool completed = false;
-  int bestScore = 0;
+  final int targetScore;
+  final int targetWave;
+  final bool noPowerUps;
+  final bool heavyEnemies;
+  final bool fastMode;
+  final int maxLives;
+  final String rewardIcon;
 
-  DailyChallenge({
-    required this.daySeed,
+  const DailyChallenge({
+    required this.id,
     required this.title,
     required this.description,
-    required this.modifiers,
+    required this.targetScore,
+    required this.targetWave,
+    this.noPowerUps = false,
+    this.heavyEnemies = false,
+    this.fastMode = false,
+    this.maxLives = 1,
+    this.rewardIcon = '🏆',
   });
 
-  static DailyChallenge generate(int seed) {
+  static DailyChallenge forToday() {
+    final now = DateTime.now();
+    final seed = now.year * 10000 + now.month * 100 + now.day;
     final random = Random(seed);
-    final modifierPool = ChallengeModifier.allModifiers;
-    final numModifiers = 2 + random.nextInt(2); // 2-3 modifiers
-    final selectedModifiers = <ChallengeModifier>[];
 
-    for (int i = 0; i < numModifiers; i++) {
-      selectedModifiers.add(modifierPool[random.nextInt(modifierPool.length)]);
-    }
-
-    final titles = [
-      'Speed Demon',
-      'Gravity Well',
-      'Tiny Target',
-      'Fire Storm',
-      'Shield Breaker',
-      'Rapid Fire',
-      'One Life',
-      'Giant Slayer',
+    final challenges = [
+      const DailyChallenge(
+        id: 'marathon',
+        title: 'Marathon Mode',
+        description: 'Reach Wave 10 with only 1 life!',
+        targetScore: 5000,
+        targetWave: 10,
+        maxLives: 1,
+        rewardIcon: '🏃',
+      ),
+      const DailyChallenge(
+        id: 'glass_cannon',
+        title: 'Glass Cannon',
+        description: 'Score 3000 pts using only fireball power-ups',
+        targetScore: 3000,
+        targetWave: 5,
+        noPowerUps: true,
+        heavyEnemies: true,
+        maxLives: 2,
+        rewardIcon: '💎',
+      ),
+      const DailyChallenge(
+        id: 'speed_demon',
+        title: 'Speed Demon',
+        description: 'Survive 3 minutes with fast enemies only!',
+        targetScore: 4000,
+        targetWave: 7,
+        fastMode: true,
+        maxLives: 2,
+        rewardIcon: '⚡',
+      ),
+      const DailyChallenge(
+        id: 'precision',
+        title: 'Precision Master',
+        description: 'Reach Wave 5 without losing any life',
+        targetScore: 2000,
+        targetWave: 5,
+        maxLives: 3,
+        rewardIcon: '🎯',
+      ),
+      const DailyChallenge(
+        id: 'beast_mode',
+        title: 'Beast Mode',
+        description: 'All enemies need 2 hits - survive Wave 8!',
+        targetScore: 6000,
+        targetWave: 8,
+        heavyEnemies: true,
+        maxLives: 3,
+        rewardIcon: '🔥',
+      ),
+      const DailyChallenge(
+        id: 'collector',
+        title: 'Power Collector',
+        description: 'Collect 20 power-ups and reach Wave 6',
+        targetScore: 3500,
+        targetWave: 6,
+        maxLives: 3,
+        rewardIcon: '📦',
+      ),
     ];
 
-    return DailyChallenge(
-      daySeed: seed,
-      title: titles[random.nextInt(titles.length)],
-      description: _buildDescription(selectedModifiers),
-      modifiers: selectedModifiers,
-    );
+    return challenges[random.nextInt(challenges.length)];
+  }
+}
+
+class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
+  DailyChallenge? _todayChallenge;
+  bool _completedToday = false;
+  bool _claimedToday = false;
+  static const String _prefKeyCompleted = 'daily_completed';
+  static const String _prefKeyClaimed = 'daily_claimed';
+  static const String _prefKeyDate = 'daily_date';
+  int _powerUpsCollected = 0;
+
+  @override
+  Future<void> onLoad() async {
+    await _loadStatus();
+    _todayChallenge = DailyChallenge.forToday();
   }
 
-  static String _buildDescription(List<ChallengeModifier> mods) {
-    return mods.map((m) => m.description).join(' • ');
+  Future<void> _loadStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final today = _todayDateString();
+      final savedDate = prefs.getString(_prefKeyDate) ?? '';
+
+      if (savedDate != today) {
+        // New day, reset
+        await prefs.setString(_prefKeyDate, today);
+        await prefs.setBool(_prefKeyCompleted, false);
+        await prefs.setBool(_prefKeyClaimed, false);
+        _completedToday = false;
+        _claimedToday = false;
+      } else {
+        _completedToday = prefs.getBool(_prefKeyCompleted) ?? false;
+        _claimedToday = prefs.getBool(_prefKeyClaimed) ?? false;
+      }
+    } catch (_) {}
   }
 
-  int get todaySeed {
+  String _todayDateString() {
     final now = DateTime.now();
-    return now.year * 10000 + now.month * 100 + now.day;
+    return '${now.year}-${now.month}-${now.day}';
+  }
+
+  DailyChallenge? get todayChallenge => _todayChallenge;
+  bool get isCompleted => _completedToday;
+  bool get isClaimed => _claimedToday;
+
+  void onPowerUpCollected() {
+    _powerUpsCollected++;
+  }
+
+  void checkCompletion() {
+    if (_completedToday || _todayChallenge == null) return;
+
+    final game = gameRef;
+    if (game.wave >= _todayChallenge!.targetWave &&
+        game.score >= _todayChallenge!.targetScore) {
+      _completedToday = true;
+      _saveStatus();
+    }
+  }
+
+  Future<void> claimReward() async {
+    if (!_completedToday || _claimedToday) return;
+    _claimedToday = true;
+    await _saveStatus();
+
+    // Give reward - extra high score bonus or cosmetic
+    gameRef.score += 500; // Bonus points
+  }
+
+  Future<void> _saveStatus() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool(_prefKeyCompleted, _completedToday);
+      await prefs.setBool(_prefKeyClaimed, _claimedToday);
+    } catch (_) {}
+  }
+
+  void reset() {
+    _powerUpsCollected = 0;
+    if (_todayChallenge != null) {
+      // Apply challenge modifiers
+      gameRef.challengeNoPowerUps = _todayChallenge!.noPowerUps;
+      gameRef.challengeHeavyEnemies = _todayChallenge!.heavyEnemies;
+    }
   }
 }
 
-class ChallengeModifier {
-  final String id;
-  final String name;
-  final String description;
-  final String icon;
-  final void Function(BallBounceGame game, bool apply) onApply;
+/// Daily challenge button in HUD
+class DailyChallengeButton extends PositionComponent {
+  late BallBounceGame game;
+  double _pulse = 0;
 
-  ChallengeModifier({
-    required this.id,
-    required this.name,
-    required this.description,
-    required this.icon,
-    required this.onApply,
-  });
+  DailyChallengeButton({required Vector2 position})
+      : super(position: position, size: Vector2(44, 44), anchor: Anchor.center);
 
-  static final List<ChallengeModifier> allModifiers = [
-    ChallengeModifier(
-      id: 'fast_ball',
-      name: 'Fast Ball',
-      description: '⚡ Ball moves 50% faster',
-      icon: '⚡',
-      onApply: (game, apply) {
-        if (apply) {
-          game.ball.speed = Ball.baseSpeed * 1.5;
-          game.ball.velocity = game.ball.velocity.normalized() * game.ball.speed;
-        } else {
-          game.ball.speed = Ball.baseSpeed;
-          game.ball.velocity = game.ball.velocity.normalized() * game.ball.speed;
-        }
-      },
-    ),
-    ChallengeModifier(
-      id: 'tiny_paddle',
-      name: 'Tiny Paddle',
-      description: '🎯 Paddle is 50% smaller',
-      icon: '🎯',
-      onApply: (game, apply) {
-        if (apply) {
-          game.paddle.shrink();
-        } else {
-          game.paddle.restore();
-        }
-      },
-    ),
-    ChallengeModifier(
-      id: 'multi_enemies',
-      name: 'Enemy Swarm',
-      description: '🐜 Double enemy spawn rate',
-      icon: '🐜',
-      onApply: (game, apply) {
-        // Spawn rate adjusted via difficulty multiplier in SpawnSystem
-      },
-    ),
-    ChallengeModifier(
-      id: 'no_powerups',
-      name: 'No Power-ups',
-      description: '🚫 Power-ups disabled',
-      icon: '🚫',
-      onApply: (game, apply) {
-        // Power-ups controlled via challengeNoPowerUps flag
-        game.challengeNoPowerUps = apply;
-      },
-    ),
-    ChallengeModifier(
-      id: 'heavy_enemies',
-      name: 'Armored',
-      description: '🛡️ Enemies need 2 hits',
-      icon: '🛡️',
-      onApply: (game, apply) {
-        // Handled via challengeHeavyEnemies flag in BallBounceGame
-        game.challengeHeavyEnemies = apply;
-      },
-    ),
-    ChallengeModifier(
-      id: 'low_gravity',
-      name: 'Low Gravity',
-      description: '🪐 Ball bounces higher',
-      icon: '🪨',
-      onApply: (game, apply) {
-        // Low gravity handled via velocity adjustments
-      },
-    ),
-    ChallengeModifier(
-      id: 'one_life',
-      name: 'One Life',
-      description: '💀 Only 1 life!',
-      icon: '💀',
-      onApply: (game, apply) {
-        if (apply) game.lives = 1;
-      },
-    ),
-    ChallengeModifier(
-      id: 'points_boost',
-      name: 'Double Points',
-      description: '💰 2x score multiplier',
-      icon: '💰',
-      onApply: (game, apply) {
-        game.challengePointsMultiplier = apply ? 2.0 : 1.0;
-      },
-    ),
-  ];
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _pulse += dt * 3;
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final challenge = gameRef.dailyChallengeManager.todayChallenge;
+    if (challenge == null) return;
+
+    final completed = gameRef.dailyChallengeManager.isCompleted;
+    final claimed = gameRef.dailyChallengeManager.isClaimed;
+
+    // Pulse effect for incomplete
+    final scale = completed ? 1.0 : (1.0 + sin(_pulse) * 0.1);
+
+    // Background
+    final bgColor = completed
+        ? (claimed ? const Color(0xFF4CAF50) : const Color(0xFFFF9800))
+        : const Color(0xFF1a1a2e);
+    final borderColor = completed
+        ? Colors.white
+        : const Color(0xFFFF9800);
+
+    final bgPaint = Paint()..color = bgColor;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: 40 * scale,
+          height: 40 * scale,
+        ),
+        const Radius.circular(10),
+      ),
+      bgPaint,
+    );
+
+    final borderPaint = Paint()
+      ..color = borderColor.withAlpha(200)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2;
+    canvas.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromCenter(
+          center: Offset.zero,
+          width: 40 * scale,
+          height: 40 * scale,
+        ),
+        const Radius.circular(10),
+      ),
+      borderPaint,
+    );
+
+    // Icon
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: challenge.rewardIcon,
+        style: TextStyle(fontSize: 20 * scale),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
+
+    // Checkmark if claimed
+    if (claimed && completed) {
+      final checkPaint = Paint()
+        ..color = Colors.white
+        ..strokeWidth = 2;
+      canvas.drawLine(
+        Offset(-8, 0),
+        Offset(-2, 6),
+        checkPaint,
+      );
+      canvas.drawLine(
+        Offset(-2, 6),
+        Offset(8, -6),
+        checkPaint,
+      );
+    }
+  }
 }
 
-/// Challenge completion popup
-class ChallengeCompletePopup extends PositionComponent {
-  final int score;
-  final bool isNewBest;
-  double _life = 4.0;
-  double _scale = 0.5;
+/// Challenge completion celebration
+class ChallengeCompleteEffect extends PositionComponent {
+  double _life = 2.0;
+  double _phase = 0;
 
-  ChallengeCompletePopup({
-    required super.position,
-    required this.score,
-    required this.isNewBest,
-  }) : super(anchor: Anchor.center);
+  ChallengeCompleteEffect() : super(anchor: Anchor.center);
 
   @override
   void update(double dt) {
     super.update(dt);
     _life -= dt;
-    _scale = 0.5 + (1.0 - (_life / 4.0)) * 0.5;
+    _phase += dt * 5;
     if (_life <= 0) removeFromParent();
   }
 
   @override
   void render(Canvas canvas) {
-    final alpha = (_life / 4.0 * 255).round().clamp(0, 255);
-    
+    final alpha = (_life / 2.0 * 255).round().clamp(0, 255);
+    final scale = 1.0 + (1.0 - _life / 2.0) * 0.5;
+
     // Glow
     final glowPaint = Paint()
       ..color = const Color(0xFFFFD700).withAlpha(alpha ~/ 2)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: 200 * _scale, height: 120 * _scale),
-        Radius.circular(16 * _scale),
-      ),
-      glowPaint,
-    );
+    canvas.drawCircle(Offset.zero, 80 * scale, glowPaint);
 
-    // Background
-    final bgPaint = Paint()
-      ..color = const Color(0xFF1A1A2E).withAlpha(alpha);
-    canvas.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromCenter(center: Offset.zero, width: 200 * _scale, height: 120 * _scale),
-        Radius.circular(16 * _scale),
-      ),
-      bgPaint,
-    );
+    // Border ring
+    final ringPaint = Paint()
+      ..color = const Color(0xFFFFD700).withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    canvas.drawCircle(Offset.zero, 60 * scale, ringPaint);
 
-    // Title
-    final titlePainter = TextPainter(
+    // Text
+    final textPainter = TextPainter(
       text: TextSpan(
-        text: '🏆 CHALLENGE COMPLETE!',
+        text: '🎉 CHALLENGE\nCOMPLETE!',
         style: TextStyle(
           color: const Color(0xFFFFD700).withAlpha(alpha),
-          fontSize: 12 * _scale,
+          fontSize: 18 * scale,
           fontWeight: FontWeight.bold,
+          height: 1.4,
         ),
       ),
       textDirection: TextDirection.ltr,
+      textAlign: TextAlign.center,
     );
-    titlePainter.layout();
-    titlePainter.paint(canvas, Offset(-titlePainter.width / 2, -40 * _scale));
-
-    // Score
-    final scorePainter = TextPainter(
-      text: TextSpan(
-        text: '$score',
-        style: TextStyle(
-          color: const Color(0xFFFFFFFF).withAlpha(alpha),
-          fontSize: 28 * _scale,
-          fontWeight: FontWeight.bold,
-        ),
-      ),
-      textDirection: TextDirection.ltr,
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
     );
-    scorePainter.layout();
-    scorePainter.paint(canvas, Offset(-scorePainter.width / 2, -5 * _scale));
 
-    // New best indicator
-    if (isNewBest) {
-      final bestPainter = TextPainter(
-        text: TextSpan(
-          text: '⭐ NEW BEST!',
-          style: TextStyle(
-            color: const Color(0xFFFF9800).withAlpha(alpha),
-            fontSize: 10 * _scale,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        textDirection: TextDirection.ltr,
-      );
-      bestPainter.layout();
-      bestPainter.paint(canvas, Offset(-bestPainter.width / 2, 30 * _scale));
+    // Sparkles
+    for (int i = 0; i < 8; i++) {
+      final angle = _phase + (i * pi / 4);
+      final dist = 40 + sin(_phase * 2 + i) * 20;
+      final x = cos(angle) * dist;
+      final y = sin(angle) * dist;
+
+      final sparklePaint = Paint()
+        ..color = const Color(0xFFFFFFFF).withAlpha(alpha);
+      canvas.drawCircle(Offset(x, y), 3, sparklePaint);
     }
   }
 }
