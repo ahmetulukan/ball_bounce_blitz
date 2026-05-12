@@ -54,6 +54,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     add(CircleHitbox());
+    gameRef.enemyManager.registerBoss(this);
   }
 
   @override
@@ -266,6 +267,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
     }
     gameRef.screenShake.shake(intensity: 15, duration: 0.6);
     gameRef.score += 250 * wave;
+    gameRef.enemyManager.unregisterBoss(this);
     gameRef.onBossDestroyed();
     gameRef.playSound('gameover');
     

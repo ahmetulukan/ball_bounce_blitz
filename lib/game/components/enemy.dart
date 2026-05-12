@@ -48,6 +48,10 @@ class Enemy extends PositionComponent with CollisionCallbacks {
     if (behavior == EnemyBehavior.zigzag) {
       _zigzagPhase = Random().nextDouble() * 2 * pi;
     }
+    // Register with EnemyManager if available
+    if (gameRef.enemyManager != null) {
+      gameRef.enemyManager.registerEnemy(this);
+    }
   }
 
   @override
@@ -83,6 +87,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
 
     if (position.y > 430) {
       gameRef.loseLife();
+      _isDestroyed = true;
       removeFromParent();
     }
   }
@@ -118,6 +123,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
       _spawnSplitEnemies();
     }
 
+    gameRef.enemyManager.unregisterEnemy(this);
     gameRef.onEnemyDestroyed(this);
     removeFromParent();
   }
@@ -138,6 +144,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
       mini.gameRef = gameRef;
       mini.position = Vector2(position.x + offsetX, position.y);
       gameRef.add(mini);
+      // Enemy will self-register via onLoad
     }
   }
 

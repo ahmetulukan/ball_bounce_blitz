@@ -31,6 +31,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late ComboSystem comboSystem;
   late ScreenShake screenShake;
   late BarrierSpawner barrierSpawner;
+  late EnemyManager enemyManager;
   late GameStateService _gameState;
   late AchievementService _achievements;
   GameStateService get gameState => _gameState;
@@ -90,6 +91,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     barrierSpawner = BarrierSpawner();
     barrierSpawner.setGame(this);
     add(barrierSpawner);
+    enemyManager = EnemyManager();
+    add(enemyManager);
   }
 
   @override
@@ -167,6 +170,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     children.whereType<AchievementPopup>().toList().forEach(remove);
     children.whereType<Barrier>().toList().forEach(remove);
     barrierSpawner.reset();
+    enemyManager.clearAll();
     spawnSystem.reset();
     spawnSystem.onWaveChanged(wave);
     comboSystem.reset();
@@ -200,6 +204,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     children.whereType<AchievementPopup>().toList().forEach(remove);
     children.whereType<Barrier>().toList().forEach(remove);
     barrierSpawner.reset();
+    enemyManager.clearAll();
     spawnSystem.reset();
     comboSystem.reset();
     ball.reset();
@@ -301,7 +306,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   void onEnemyDestroyed(Enemy enemy) {
     score += (enemy.points * challengePointsMultiplier).round();
     hitCount++;
-    activeEnemies--;
+    enemyManager.unregisterEnemy(enemy);
     totalEnemiesDestroyed++;
     playSound('hit');
 
@@ -366,6 +371,10 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   Future<void> onBossDestroyed() async {
     final a = await _achievements.tryUnlock(Achievement.bossSlayer);
     if (a != null) _queueAchievement(a);
+    final bosses = children.whereType<BossEnemy>().toList();
+    if (bosses.isNotEmpty) {
+      enemyManager.unregisterBoss(bosses.first);
+    }
   }
 
   Future<void> collectPowerUp(PowerUpType type) async {
