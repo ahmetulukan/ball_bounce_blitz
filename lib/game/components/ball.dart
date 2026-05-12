@@ -9,8 +9,8 @@ import 'power_up.dart';
 import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
-import 'particles/enhanced_particles.dart';
-import 'chain_lightning.dart';
+import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam, CriticalHitText;
+import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
 import '../ball_bounce_game.dart';
 
@@ -147,7 +147,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
       gameRef.add(StreakFire(
         position: position.clone(),
         baseColor: const Color(0xFFFF5722),
-        size: 10,
+        particleSize: 10,
       ));
     }
   }

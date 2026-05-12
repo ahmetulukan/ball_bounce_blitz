@@ -1,10 +1,13 @@
 import 'dart:math';
 import 'dart:ui';
-import 'package:flutter/material.dart' show Colors;
+import 'package:flutter/material.dart' show Colors, TextStyle;
+import 'package:flutter/widgets.dart' show TextPainter, TextSpan, TextDirection;
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'particles/explosion_particle.dart';
 import 'ball.dart';
+import 'paddle.dart';
+import 'enemy.dart';
 import '../ball_bounce_game.dart';
 
 class BossEnemy extends PositionComponent with CollisionCallbacks {
@@ -65,9 +68,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   Future<void> onLoad() async {
     await super.onLoad();
     add(CircleHitbox());
-<<<<<<< HEAD
     gameRef.enemyManager.registerBoss(this);
-=======
 
     // Boss gets shield at certain health thresholds
     if (wave >= 5 && health > 5) {
@@ -96,7 +97,6 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
       position: position.clone(),
       radius: _bossSize / 2 + 20,
     ));
->>>>>>> 4dfc01c (feat: Add combo multiplier popup, shockwave effect, streak fire, power-up burst, and wave clear shockwave)
   }
 
   @override
@@ -243,7 +243,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
     final projectile = BossProjectile(
       position: Vector2(position.x, position.y + _bossSize / 2),
       velocity: Vector2(0, 120),
-      size: 12,
+      projectileSize: 12,
     );
     projectile.gameRef = gameRef;
     _homingProjectiles.add(projectile);
@@ -257,7 +257,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
       final projectile = BossProjectile(
         position: Vector2(position.x, position.y + _bossSize / 2),
         velocity: vel,
-        size: 10,
+        projectileSize: 10,
       );
       projectile.gameRef = gameRef;
       _homingProjectiles.add(projectile);
@@ -370,9 +370,6 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   void render(Canvas canvas) {
     if (opacity <= 0) return;
 
-    canvas.save();
-    canvas.globalAlpha = opacity;
-
     // Boss body based on wave/phase
     final bossColor = _getBossColor();
 
@@ -404,8 +401,6 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
 
     // Eye/face
     _renderBossFace(canvas, bossColor);
-
-    canvas.restore();
   }
 
   Color _getBossColor() {
@@ -495,8 +490,8 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   }
 
   void _renderHealthBar(Canvas canvas) {
-    final barWidth = _bossSize + 20;
-    final barHeight = 8;
+    final double barWidth = _bossSize + 20;
+    final double barHeight = 8;
     final barY = -_bossSize / 2 - 20;
 
     // Background
@@ -559,6 +554,7 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
   }
 
   void _renderBossFace(Canvas canvas, Color baseColor) {
+    final healthRatio = health / maxHealth;
     // Angry eyes
     final eyeY = -5.0;
     final eyeSpacing = 15.0;
@@ -626,17 +622,17 @@ class BossEnemy extends PositionComponent with CollisionCallbacks {
 class BossProjectile extends PositionComponent with CollisionCallbacks {
   late BallBounceGame gameRef;
   Vector2 velocity;
-  final double size;
+  final double projectileSize;
   bool isRemoved = false;
   static const double homingStrength = 50;
 
   BossProjectile({
     required Vector2 position,
     required this.velocity,
-    this.size = 12,
+    this.projectileSize = 12,
   }) : super(
           position: position,
-          size: Vector2(size, size),
+          size: Vector2(projectileSize, projectileSize),
           anchor: Anchor.center,
         );
 
@@ -691,19 +687,20 @@ class BossProjectile extends PositionComponent with CollisionCallbacks {
 
   @override
   void render(Canvas canvas) {
+    final radius = size.x / 2;
     // Glow
     final glowPaint = Paint()
       ..color = const Color(0xFFFF5722).withAlpha(100)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
-    canvas.drawCircle(Offset.zero, size / 2 + 4, glowPaint);
+    canvas.drawCircle(Offset.zero, radius + 4, glowPaint);
 
     // Core
     final corePaint = Paint()..color = const Color(0xFFFF5722);
-    canvas.drawCircle(Offset.zero, size / 2, corePaint);
+    canvas.drawCircle(Offset.zero, radius, corePaint);
 
     // Highlight
     final highlightPaint = Paint()..color = Colors.white.withAlpha(150);
-    canvas.drawCircle(Offset(-size / 4, -size / 4), size / 4, highlightPaint);
+    canvas.drawCircle(Offset(-radius / 2, -radius / 2), radius / 2, highlightPaint);
   }
 }
 

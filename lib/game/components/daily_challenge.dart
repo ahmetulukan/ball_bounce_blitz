@@ -2,9 +2,23 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../ball_bounce_game.dart';
+
+/// Represents a single modifier applied during a daily challenge
+class ChallengeModifier {
+  final String icon;
+  final String description;
+  final void Function(FlameGame game, bool enable) onApply;
+
+  const ChallengeModifier({
+    required this.icon,
+    required this.description,
+    required this.onApply,
+  });
+}
 
 class DailyChallenge {
   final String id;
@@ -30,6 +44,53 @@ class DailyChallenge {
     this.maxLives = 1,
     this.rewardIcon = '🏆',
   });
+
+  /// Generate a challenge from a seed (for the screen)
+  static DailyChallenge generate(int seed) {
+    final random = Random(seed);
+    return _allChallenges[random.nextInt(_allChallenges.length)];
+  }
+
+  /// Get all available modifiers based on this challenge's properties
+  List<ChallengeModifier> get modifiers {
+    final mods = <ChallengeModifier>[];
+    if (noPowerUps) {
+      mods.add(ChallengeModifier(
+        icon: '🚫',
+        description: 'No Power-ups',
+        onApply: (game, enable) {},
+      ));
+    }
+    if (heavyEnemies) {
+      mods.add(ChallengeModifier(
+        icon: '💪',
+        description: 'Heavy Enemies (2 hits)',
+        onApply: (game, enable) {},
+      ));
+    }
+    if (fastMode) {
+      mods.add(ChallengeModifier(
+        icon: '⚡',
+        description: 'Fast Enemies',
+        onApply: (game, enable) {},
+      ));
+    }
+    if (maxLives == 1) {
+      mods.add(ChallengeModifier(
+        icon: '❤️',
+        description: 'Only 1 Life',
+        onApply: (game, enable) {},
+      ));
+    }
+    if (mods.isEmpty) {
+      mods.add(ChallengeModifier(
+        icon: '🎯',
+        description: 'Standard Challenge',
+        onApply: (game, enable) {},
+      ));
+    }
+    return mods;
+  }
 
   static DailyChallenge forToday() {
     final now = DateTime.now();
@@ -99,6 +160,67 @@ class DailyChallenge {
 
     return challenges[random.nextInt(challenges.length)];
   }
+
+  static List<DailyChallenge> get _allChallenges => const [
+    DailyChallenge(
+      id: 'marathon',
+      title: 'Marathon Mode',
+      description: 'Reach Wave 10 with only 1 life!',
+      targetScore: 5000,
+      targetWave: 10,
+      maxLives: 1,
+      rewardIcon: '🏃',
+    ),
+    DailyChallenge(
+      id: 'glass_cannon',
+      title: 'Glass Cannon',
+      description: 'Score 3000 pts using only fireball power-ups',
+      targetScore: 3000,
+      targetWave: 5,
+      noPowerUps: true,
+      heavyEnemies: true,
+      maxLives: 2,
+      rewardIcon: '💎',
+    ),
+    DailyChallenge(
+      id: 'speed_demon',
+      title: 'Speed Demon',
+      description: 'Survive 3 minutes with fast enemies only!',
+      targetScore: 4000,
+      targetWave: 7,
+      fastMode: true,
+      maxLives: 2,
+      rewardIcon: '⚡',
+    ),
+    DailyChallenge(
+      id: 'precision',
+      title: 'Precision Master',
+      description: 'Reach Wave 5 without losing any life',
+      targetScore: 2000,
+      targetWave: 5,
+      maxLives: 3,
+      rewardIcon: '🎯',
+    ),
+    DailyChallenge(
+      id: 'beast_mode',
+      title: 'Beast Mode',
+      description: 'All enemies need 2 hits - survive Wave 8!',
+      targetScore: 6000,
+      targetWave: 8,
+      heavyEnemies: true,
+      maxLives: 3,
+      rewardIcon: '🔥',
+    ),
+    DailyChallenge(
+      id: 'collector',
+      title: 'Power Collector',
+      description: 'Collect 20 power-ups and reach Wave 6',
+      targetScore: 3500,
+      targetWave: 6,
+      maxLives: 3,
+      rewardIcon: '📦',
+    ),
+  ];
 }
 
 class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
@@ -188,8 +310,7 @@ class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
 }
 
 /// Daily challenge button in HUD
-class DailyChallengeButton extends PositionComponent {
-  late BallBounceGame game;
+class DailyChallengeButton extends PositionComponent with HasGameRef<BallBounceGame> {
   double _pulse = 0;
 
   DailyChallengeButton({required Vector2 position})

@@ -8,7 +8,7 @@ import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/power_up.dart';
-import 'components/particles/enhanced_particles.dart';
+import 'components/particles/enhanced_particles.dart' hide MagnetField;
 import 'components/particles/explosion_particle.dart';
 // enhanced particles imported when needed
 import 'components/background_stars.dart';
@@ -20,6 +20,7 @@ import 'components/achievement_popup.dart';
 import 'components/daily_challenge.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
+import 'systems/enemy_manager.dart';
 import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';
 // achievements overlay
@@ -97,7 +98,6 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     add(enemyManager);
 
     dailyChallengeManager = DailyChallengeManager();
-    dailyChallengeManager.setGameRef(this);
     add(dailyChallengeManager);
   }
 

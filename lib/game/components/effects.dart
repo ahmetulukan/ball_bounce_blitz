@@ -436,7 +436,7 @@ class LaserBeam extends PositionComponent with HasGameRef<BallBounceGame> {
   @override
   void render(Canvas canvas) {
     final alpha = (_life / 0.15 * 255).round().clamp(0, 255);
-    final width = 400; // screen width
+    final double width = 400; // screen width
 
     // Glow
     final glowPaint = Paint()
@@ -569,12 +569,12 @@ class ShockwaveEffect extends Component {
 class StreakFire extends PositionComponent {
   final Color baseColor;
   double _life = 0.4;
-  final double size;
+  final double particleSize;
 
   StreakFire({
     required Vector2 position,
     required this.baseColor,
-    this.size = 12,
+    this.particleSize = 12,
   }) : super(position: position, anchor: Anchor.center);
 
   @override
@@ -587,13 +587,13 @@ class StreakFire extends PositionComponent {
   @override
   void render(Canvas canvas) {
     final alpha = (_life / 0.4 * 120).round().clamp(0, 120);
-    final radius = size * (_life / 0.4);
+    final radius = particleSize * (_life / 0.4);
 
     final paint = Paint()..color = baseColor.withAlpha(alpha);
     canvas.drawCircle(Offset.zero, radius, paint);
 
     // Bright core
-    final corePaint = Paint()..color = Colors.white.withAlpha((alpha * 0.6).round());
+    final corePaint = Paint()..color = const Color(0xFFFFFFFF).withAlpha((alpha * 0.6).round());
     canvas.drawCircle(Offset.zero, radius * 0.4, corePaint);
   }
 }
