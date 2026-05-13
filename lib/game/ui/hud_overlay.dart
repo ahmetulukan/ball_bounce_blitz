@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 import '../components/ball.dart';
+import '../components/charge_shot.dart';
 import '../systems/combo_system.dart';
 
 class HudOverlay extends StatefulWidget {
@@ -15,12 +16,15 @@ class HudOverlay extends StatefulWidget {
 
 class _HudOverlayState extends State<HudOverlay> {
   Timer? _timer;
+  double _chargeLevel = 0;
 
   @override
   void initState() {
     super.initState();
-    _timer = Timer.periodic(const Duration(milliseconds: 100), (_) {
-      if (mounted) setState(() {});
+    _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (mounted) setState(() {
+        _chargeLevel = widget.game.chargeShot.chargeLevel;
+      });
     });
   }
 
@@ -55,7 +59,7 @@ class _HudOverlayState extends State<HudOverlay> {
           ),
           // Center: Wave
           _waveChip(),
-          // Right: Lives + Power-up indicators
+          // Right: Lives + Power-up indicators + Charge
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
             mainAxisSize: MainAxisSize.min,
@@ -63,6 +67,10 @@ class _HudOverlayState extends State<HudOverlay> {
               _livesRow(),
               const SizedBox(height: 6),
               _powerUpIndicators(),
+              if (_chargeLevel > 0.05) ...[
+                const SizedBox(height: 6),
+                _chargeIndicator(),
+              ],
             ],
           ),
         ],
@@ -222,6 +230,56 @@ class _HudOverlayState extends State<HudOverlay> {
         border: Border.all(color: Colors.white24),
       ),
       child: Text(icon, style: const TextStyle(fontSize: 12)),
+    );
+  }
+
+  Widget _chargeIndicator() {
+    final pct = _chargeLevel;
+    final color = pct > 0.8
+        ? const Color(0xFFE91E63)
+        : pct > 0.4
+            ? const Color(0xFFFF9800)
+            : const Color(0xFF4CAF50);
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withAlpha(180),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: color, width: 1.5),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            pct > 0.8 ? Icons.flash_on : Icons.bolt,
+            color: Colors.white,
+            size: 14,
+          ),
+          const SizedBox(width: 4),
+          SizedBox(
+            width: 60,
+            height: 6,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(3),
+              child: LinearProgressIndicator(
+                value: pct,
+                backgroundColor: Colors.white24,
+                valueColor: AlwaysStoppedAnimation(color),
+              ),
+            ),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '${(pct * 100).round()}%',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 10,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

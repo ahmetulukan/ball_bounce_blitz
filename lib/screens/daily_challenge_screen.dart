@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flame/game.dart';
 import '../game/ball_bounce_game.dart';
 import '../game/components/daily_challenge.dart';
+import 'game_screen.dart';
 
 class DailyChallengeScreen extends StatefulWidget {
   const DailyChallengeScreen({super.key});
@@ -273,20 +274,6 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
           challenge: _challenge,
         ),
       ),
-    );
-  }
-}
-
-class GameScreen extends StatelessWidget {
-  final FlameGame game;
-  final DailyChallenge? challenge;
-
-  const GameScreen({super.key, required this.game, this.challenge});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      body: GameWidget(game: game),
     );
   }
 }

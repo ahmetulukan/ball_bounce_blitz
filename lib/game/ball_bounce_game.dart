@@ -31,6 +31,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late SpawnSystem spawnSystem;
   late BackgroundStars backgroundStars;
   late ComboSystem comboSystem;
+  late ChargeShotSystem chargeShotSystem;
   late ScreenShake screenShake;
   late BarrierSpawner barrierSpawner;
   late EnemyManager enemyManager;
@@ -79,6 +80,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     spawnSystem.setGame(this);
     comboSystem = ComboSystem();
     comboSystem.setGame(this);
+    chargeShotSystem = ChargeShotSystem();
     screenShake = ScreenShake();
     backgroundStars = BackgroundStars();
     paddle = Paddle();
@@ -90,6 +92,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     add(ball);
     add(spawnSystem);
     add(comboSystem);
+    add(chargeShotSystem);
     add(screenShake);
     barrierSpawner = BarrierSpawner();
     barrierSpawner.setGame(this);
@@ -481,6 +484,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   }
 
   bool get isBossWave => _bossWave;
+
+  ChargeShotSystem get chargeShot => chargeShotSystem;
 
   Future<int> loadHighScore() async {
     return _gameState.getHighScore();
