@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 
 /// Charge shot mechanic - hold to charge shot power
-class ChargeShotSystem extends Component with HasGameRef<BallBounceGame> {
+class ChargeShotSystem extends Component with HasGameReference<BallBounceGame> {
   bool _isCharging = false;
   double _chargeLevel = 0; // 0 to 1
   static const double maxCharge = 1.5; // seconds to full charge
@@ -19,17 +19,17 @@ class ChargeShotSystem extends Component with HasGameRef<BallBounceGame> {
   void update(double dt) {
     super.update(dt);
 
-    if (_isCharging && gameRef.ball != null) {
+    if (_isCharging && game.ball != null) {
       _chargeTimer += dt;
       _chargeLevel = (_chargeTimer / maxCharge).clamp(0.0, 1.0);
 
       // Visual feedback on paddle
-      gameRef.paddle.chargeLevel = _chargeLevel;
+      game.paddle.chargeLevel = _chargeLevel;
     }
   }
 
   void startCharging() {
-    if (gameRef.isPaused || gameRef.isGameOver) return;
+    if (game.isPaused || game.isGameOver) return;
     _isCharging = true;
     _chargeTimer = 0;
     _chargeLevel = 0;
@@ -39,37 +39,37 @@ class ChargeShotSystem extends Component with HasGameRef<BallBounceGame> {
     if (!_isCharging) return;
     _isCharging = false;
 
-    if (_chargeLevel > 0.3 && gameRef.ball != null) {
+    if (_chargeLevel > 0.3 && game.ball != null) {
       // Fire a charged shot - speed boost based on charge
       final speedBoost = 1.0 + _chargeLevel * 0.8;
-      final currentSpeed = gameRef.ball.speed;
-      gameRef.ball.speed = (currentSpeed * speedBoost).clamp(currentSpeed, currentSpeed * 1.8);
-      gameRef.ball.velocity = gameRef.ball.velocity.normalized() * gameRef.ball.speed;
+      final currentSpeed = game.ball.speed;
+      game.ball.speed = (currentSpeed * speedBoost).clamp(currentSpeed, currentSpeed * 1.8);
+      game.ball.velocity = game.ball.velocity.normalized() * game.ball.speed;
 
       // Visual burst
-      gameRef.add(ChargeShotFlash(
-        position: gameRef.ball.position.clone(),
+      game.add(ChargeShotFlash(
+        position: game.ball.position.clone(),
         intensity: _chargeLevel,
       ));
 
       // Screen shake on full charge
       if (_chargeLevel > 0.8) {
-        gameRef.screenShake.shake(intensity: 6 * _chargeLevel, duration: 0.2);
+        game.screenShake.shake(intensity: 6 * _chargeLevel, duration: 0.2);
       }
 
-      gameRef.playSound('powerup');
+      game.playSound('powerup');
     }
 
     _chargeTimer = 0;
     _chargeLevel = 0;
-    gameRef.paddle.chargeLevel = 0;
+    game.paddle.chargeLevel = 0;
   }
 
   void cancelCharge() {
     _isCharging = false;
     _chargeTimer = 0;
     _chargeLevel = 0;
-    gameRef.paddle.chargeLevel = 0;
+    game.paddle.chargeLevel = 0;
   }
 }
 
@@ -107,7 +107,7 @@ class ChargeShotFlash extends PositionComponent {
 }
 
 /// Target indicator showing predicted ball trajectory
-class TargetIndicator extends PositionComponent with HasGameRef<BallBounceGame> {
+class TargetIndicator extends PositionComponent with HasGameReference<BallBounceGame> {
   final int segments;
   final double maxLength;
   double _opacity = 0;
@@ -121,13 +121,13 @@ class TargetIndicator extends PositionComponent with HasGameRef<BallBounceGame> 
   void update(double dt) {
     super.update(dt);
 
-    if (gameRef.ball == null || gameRef.isPaused || gameRef.isGameOver) {
+    if (game.ball == null || game.isPaused || game.isGameOver) {
       _opacity = 0;
       return;
     }
 
     // Only show when ball is moving down (about to bounce on paddle)
-    final ball = gameRef.ball!;
+    final ball = game.ball!;
     if (ball.velocity.y > 0) {
       _opacity = (_opacity + dt * 3).clamp(0, 0.6);
     } else {
@@ -137,10 +137,10 @@ class TargetIndicator extends PositionComponent with HasGameRef<BallBounceGame> 
 
   @override
   void render(Canvas canvas) {
-    if (_opacity < 0.01 || gameRef.ball == null) return;
+    if (_opacity < 0.01 || game.ball == null) return;
 
-    final ball = gameRef.ball!;
-    final paddle = gameRef.paddle;
+    final ball = game.ball!;
+    final paddle = game.paddle;
 
     // Predict bounce point on paddle
     final predictedY = paddle.position.y - 15; // paddle top
@@ -163,7 +163,7 @@ class TargetIndicator extends PositionComponent with HasGameRef<BallBounceGame> 
           ..color = const Color(0xFF00BCD4).withAlpha(alpha)
           ..maskFilter = MaskFilter.blur(BlurStyle.normal, 3);
         canvas.drawCircle(
-          Offset(pos.x - gameRef.size.x / 2, pos.y - gameRef.size.y / 2),
+          Offset(pos.x - game.size.x / 2, pos.y - game.size.y / 2),
           3 - i * 0.4,
           dotPaint,
         );

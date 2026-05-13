@@ -17,6 +17,7 @@ import 'components/effects.dart';
 import 'components/boss_enemy.dart';
 import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
+import 'components/charge_shot.dart';
 import 'components/daily_challenge.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';

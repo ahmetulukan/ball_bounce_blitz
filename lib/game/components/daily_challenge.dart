@@ -223,7 +223,7 @@ class DailyChallenge {
   ];
 }
 
-class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
+class DailyChallengeManager extends Component with HasGameReference<BallBounceGame> {
   DailyChallenge? _todayChallenge;
   bool _completedToday = false;
   bool _claimedToday = false;
@@ -274,7 +274,6 @@ class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
   void checkCompletion() {
     if (_completedToday || _todayChallenge == null) return;
 
-    final game = gameRef;
     if (game.wave >= _todayChallenge!.targetWave &&
         game.score >= _todayChallenge!.targetScore) {
       _completedToday = true;
@@ -288,7 +287,7 @@ class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
     await _saveStatus();
 
     // Give reward - extra high score bonus or cosmetic
-    gameRef.score += 500; // Bonus points
+    game.score += 500; // Bonus points
   }
 
   Future<void> _saveStatus() async {
@@ -303,14 +302,14 @@ class DailyChallengeManager extends Component with HasGameRef<BallBounceGame> {
     _powerUpsCollected = 0;
     if (_todayChallenge != null) {
       // Apply challenge modifiers
-      gameRef.challengeNoPowerUps = _todayChallenge!.noPowerUps;
-      gameRef.challengeHeavyEnemies = _todayChallenge!.heavyEnemies;
+      game.challengeNoPowerUps = _todayChallenge!.noPowerUps;
+      game.challengeHeavyEnemies = _todayChallenge!.heavyEnemies;
     }
   }
 }
 
 /// Daily challenge button in HUD
-class DailyChallengeButton extends PositionComponent with HasGameRef<BallBounceGame> {
+class DailyChallengeButton extends PositionComponent with HasGameReference<BallBounceGame> {
   double _pulse = 0;
 
   DailyChallengeButton({required Vector2 position})
@@ -324,11 +323,11 @@ class DailyChallengeButton extends PositionComponent with HasGameRef<BallBounceG
 
   @override
   void render(Canvas canvas) {
-    final challenge = gameRef.dailyChallengeManager.todayChallenge;
+    final challenge = game.dailyChallengeManager.todayChallenge;
     if (challenge == null) return;
 
-    final completed = gameRef.dailyChallengeManager.isCompleted;
-    final claimed = gameRef.dailyChallengeManager.isClaimed;
+    final completed = game.dailyChallengeManager.isCompleted;
+    final claimed = game.dailyChallengeManager.isClaimed;
 
     // Pulse effect for incomplete
     final scale = completed ? 1.0 : (1.0 + sin(_pulse) * 0.1);

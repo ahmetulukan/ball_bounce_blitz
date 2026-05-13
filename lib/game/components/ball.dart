@@ -9,7 +9,7 @@ import 'power_up.dart';
 import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
-import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam, CriticalHitText;
+import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
 import '../ball_bounce_game.dart';

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../game/ball_bounce_game.dart';
-import '../../services/audio_manager.dart';
 
 class SettingsScreen extends StatefulWidget {
   final BallBounceGame game;
@@ -76,23 +75,19 @@ class _SettingsScreenState extends State<SettingsScreen> {
           _sectionTitle('🔊 Audio'),
           _switchTile('Music', 'Background music', Icons.music_note, _musicEnabled, (v) {
             setState(() => _musicEnabled = v);
-            AudioManager.setMusicEnabled(v);
             SharedPreferences.getInstance().then((p) => p.setBool('music_enabled', v));
           }),
           _sliderTile('Music Volume', _musicVolume, (v) {
             setState(() => _musicVolume = v);
-            AudioManager.setMusicVolume(v);
             SharedPreferences.getInstance().then((p) => p.setDouble('music_volume', v));
           }),
           const SizedBox(height: 8),
           _switchTile('Sound Effects', 'Game sounds', Icons.volume_up, _sfxEnabled, (v) {
             setState(() => _sfxEnabled = v);
-            AudioManager.setSfxEnabled(v);
             SharedPreferences.getInstance().then((p) => p.setBool('sfx_enabled', v));
           }),
           _sliderTile('SFX Volume', _sfxVolume, (v) {
             setState(() => _sfxVolume = v);
-            AudioManager.setSfxVolume(v);
             SharedPreferences.getInstance().then((p) => p.setDouble('sfx_volume', v));
           }),
 
@@ -116,8 +111,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           // Gameplay Section
           _sectionTitle('🎮 Gameplay'),
           _infoTile('High Score', '🏆 ${widget.game.highScore}', Icons.emoji_events),
-          _infoTile('Total Games', '🎯 ${widget.game.gameState.getGamesPlayed()}', Icons.games),
-          _infoTile('Total Score', '💰 ${widget.game.gameState.getTotalScore()}', Icons.monetization_on),
+          _infoTile('Total Games', '🎯 ${widget.game.gameState.gamesPlayed}', Icons.games),
+          _infoTile('Total Score', '💰 ${widget.game.gameState.totalScore}', Icons.monetization_on),
 
           const SizedBox(height: 24),
           // Controls Info
@@ -272,9 +267,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
 }
 
 class _controlRow extends StatelessWidget {
-  final String key;
-  final String action;
-  const _controlRow(this.key, this.action);
+  final String keyLabel;
+  final String actionLabel;
+  const _controlRow(this.keyLabel, this.actionLabel);
 
   @override
   Widget build(BuildContext context) {
@@ -287,12 +282,12 @@ class _controlRow extends StatelessWidget {
             borderRadius: BorderRadius.circular(4),
           ),
           child: Text(
-            key,
+            keyLabel,
             style: const TextStyle(color: Color(0xFF00BCD4), fontSize: 12, fontWeight: FontWeight.bold),
           ),
         ),
         const SizedBox(width: 12),
-        Text(action, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+        Text(actionLabel, style: const TextStyle(color: Colors.white54, fontSize: 12)),
       ],
     );
   }

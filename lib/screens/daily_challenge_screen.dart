@@ -262,17 +262,14 @@ class _DailyChallengeScreenState extends State<DailyChallengeScreen> {
   void _startChallenge(BuildContext context) {
     // Apply modifiers to game
     final game = BallBounceGame();
-    
+
     for (final mod in _challenge.modifiers) {
       mod.onApply(game, true);
     }
 
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(
-        builder: (context) => GameScreen(
-          game: game,
-          challenge: _challenge,
-        ),
+        builder: (context) => GameScreen(),
       ),
     );
   }
