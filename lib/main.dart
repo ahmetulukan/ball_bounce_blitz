@@ -7,14 +7,24 @@ import 'game/ui/main_menu_screen.dart';
 import 'game/ui/pause_screen.dart';
 import 'game/ui/wave_announcement.dart';
 import 'game/ui/achievements_overlay.dart';
+import '../screens/tournament_screen.dart';
+import '../screens/leaderboard_screen.dart';
+import '../../services/leaderboard_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  runApp(const BallBounceApp());
+
+  // Initialize leaderboard service
+  final leaderboard = LeaderboardService();
+  await leaderboard.init();
+
+  runApp(BallBounceApp(leaderboard: leaderboard));
 }
 
 class BallBounceApp extends StatelessWidget {
-  const BallBounceApp({super.key});
+  final LeaderboardService leaderboard;
+
+  const BallBounceApp({super.key, required this.leaderboard});
 
   @override
   Widget build(BuildContext context) {
@@ -43,6 +53,11 @@ class BallBounceApp extends StatelessWidget {
             child: AchievementsListWidget(
               onClose: () => game.overlays.remove('Achievements'),
             ),
+          ),
+          'Tournament': (context, game) => TournamentScreen(game: game),
+          'Leaderboard': (context, game) => LeaderboardScreen(
+            game: game,
+            leaderboard: leaderboard,
           ),
         },
         initialActiveOverlays: const ['MainMenu'],

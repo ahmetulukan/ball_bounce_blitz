@@ -21,6 +21,7 @@ import 'components/daily_challenge.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'systems/enemy_manager.dart';
+import 'systems/tournament_system.dart';
 import 'services/game_state_service.dart';
 import '../../services/achievement_service.dart';
 // achievements overlay
@@ -36,6 +37,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late BarrierSpawner barrierSpawner;
   late EnemyManager enemyManager;
   late DailyChallengeManager dailyChallengeManager;
+  late TournamentManager tournamentManager;
   late GameStateService _gameState;
   late AchievementService _achievements;
   GameStateService get gameState => _gameState;
@@ -102,6 +104,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
     dailyChallengeManager = DailyChallengeManager();
     add(dailyChallengeManager);
+    tournamentManager = TournamentManager();
+    tournamentManager.setGame(this);
+    add(tournamentManager);
   }
 
   @override
