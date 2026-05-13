@@ -7,6 +7,8 @@ import 'package:flutter/widgets.dart';
 import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
+import 'components/enemy_projectile.dart';
+import 'components/particles/rainbow_particle.dart' hide MagnetField;
 import 'components/power_up.dart';
 import 'components/particles/enhanced_particles.dart' hide MagnetField;
 import 'components/particles/explosion_particle.dart';
@@ -148,6 +150,10 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     try {
       FlameAudio.play('$name.mp3', volume: 0.5);
     } catch (_) {}
+  }
+
+  void triggerScreenFlash(Color color, double duration) {
+    add(ScreenFlashOverlay(color: color, maxAge: duration));
   }
 
   void togglePause() {
@@ -319,6 +325,11 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   void _showWaveClear() {
     add(WaveClearText(position: Vector2(200, 200)));
     add(ShockwaveEffect(position: Vector2(200, 200), color: const Color(0xFF4CAF50)));
+
+    // Wave bonus
+    final bonus = 50 * wave;
+    score += bonus;
+    add(WaveBonusText(position: Vector2(200, 160), wave: wave));
   }
 
   void onEnemyDestroyed(Enemy enemy) {
@@ -337,10 +348,12 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
     // Screen flash for big combos
     if (comboSystem.currentCombo >= 10) {
-      add(ScreenFlash(
-        duration: 0.1,
-        color: const Color(0xFFFFFFFF),
-      ));
+      add(ScreenFlashOverlay(color: const Color(0xFFFFFFFF), maxAge: 0.1));
+    }
+
+    // Rainbow explosion for combo milestones
+    if (comboSystem.currentCombo == 10 || comboSystem.currentCombo == 20 || comboSystem.currentCombo == 30) {
+      RainbowExplosion.spawn(this, enemy.position.clone(), comboSystem.currentCombo);
     }
 
     // Score popup

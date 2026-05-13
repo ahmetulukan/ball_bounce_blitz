@@ -4,12 +4,13 @@ import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
+import 'enemy_projectile.dart';
 
 enum EnemyType { square, circle, triangle, diamond, hexagon }
 enum EnemyColorType { red, green, purple, gold }
 
 // Enemy behavior types
-enum EnemyBehavior { normal, zigzag, fast, heavy, splitting }
+enum EnemyBehavior { normal, zigzag, fast, heavy, splitting, shooting }
 
 class Enemy extends PositionComponent with CollisionCallbacks {
   static const double enemySize = 30;
@@ -27,6 +28,7 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   double _zigzagPhase = 0;
   double _initialX = 0;
   double _pulsePhase = 0;
+  double _shootTimer = 0;
 
   Enemy({
     required this.type,
@@ -80,6 +82,18 @@ class Enemy extends PositionComponent with CollisionCallbacks {
       case EnemyBehavior.splitting:
         position.y += speed * 1.2 * dt;
         break;
+      case EnemyBehavior.shooting:
+        position.y += speed * 0.9 * dt;
+        break;
+    }
+
+    // Shooting enemies shoot projectiles
+    if (behavior == EnemyBehavior.shooting) {
+      _shootTimer += dt;
+      if (_shootTimer >= 2.5) {
+        _shootTimer = 0;
+        _shootAtPaddle();
+      }
     }
 
     // Soft push away from other enemies
@@ -162,6 +176,21 @@ class Enemy extends PositionComponent with CollisionCallbacks {
   void activateShield(double duration) {
     _shieldActive = true;
     _shieldTimer = duration;
+  }
+
+  void _shootAtPaddle() {
+    if (gameRef.isGameOver || gameRef.isPaused) return;
+
+    final paddlePos = gameRef.paddle.position;
+    final dx = paddlePos.x - position.x;
+    final dy = paddlePos.y - position.y;
+    final angle = atan2(dy, dx);
+
+    final proj = EnemyProjectile(
+      position: position.clone(),
+      angle: angle,
+    );
+    gameRef.add(proj);
   }
 
   static Color getColor(EnemyColorType color) {
@@ -303,6 +332,16 @@ class Enemy extends PositionComponent with CollisionCallbacks {
           ..style = PaintingStyle.stroke;
         canvas.drawCircle(Offset.zero, enemySize / 2 + 6, outlinePaint);
         break;
+      case EnemyBehavior.shooting:
+        final indicatorPaint = Paint()
+          ..color = const Color(0xFFFF5722).withAlpha((150 + sin(_pulsePhase * 3) * 100).round().clamp(0, 255))
+          ..strokeWidth = 2
+          ..style = PaintingStyle.stroke;
+        canvas.drawCircle(Offset.zero, enemySize / 2 + 5, indicatorPaint);
+        // Draw crosshair
+        canvas.drawLine(Offset(-4, 0), Offset(4, 0), indicatorPaint);
+        canvas.drawLine(Offset(0, -4), Offset(0, 4), indicatorPaint);
+        break;
       default:
         break;
     }
@@ -345,6 +384,11 @@ class EnemyFactory {
       } else if (roll < 0.35) {
         behavior = EnemyBehavior.splitting;
       }
+    }
+
+    // Shooting enemies from wave 4+
+    if (wave >= 4 && behavior == EnemyBehavior.normal && _random.nextDouble() < 0.15) {
+      behavior = EnemyBehavior.shooting;
     }
 
     double baseEnemySpeed = Enemy.baseSpeed + (wave * 25);
