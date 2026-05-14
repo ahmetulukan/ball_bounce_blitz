@@ -2,7 +2,9 @@ import 'dart:math';
 import 'dart:ui';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors, TextStyle;
+import 'package:flutter/widgets.dart' show TextPainter, TextSpan, TextDirection;
 import '../ball_bounce_game.dart';
+import 'enemy.dart';
 
 enum WaveFormation { line, v_shape, circle, zigzag, cluster }
 
@@ -38,7 +40,7 @@ class WaveFormations {
     for (int i = 0; i < count; i++) {
       final offset = (i - mid).abs();
       final x = centerX + (i - mid) * 50;
-      final y = -30 - offset * 40;
+      final y = -30.0 - offset * 40;
       positions.add(Vector2(x, y));
     }
     return positions;
@@ -60,7 +62,7 @@ class WaveFormations {
     final positions = <Vector2>[];
     for (int i = 0; i < count; i++) {
       final x = centerX + (i.isEven ? -1 : 1) * 60 + (i % 3) * 30;
-      final y = -30 - i * 35;
+      final y = -30.0 - i * 35;
       positions.add(Vector2(x, y));
     }
     return positions;

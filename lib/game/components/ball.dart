@@ -12,7 +12,7 @@ import 'particles/trail_particle.dart';
 import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
-import 'extended_power_ups.dart';
+import 'extended_power_ups.dart' hide PowerUpType;
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {

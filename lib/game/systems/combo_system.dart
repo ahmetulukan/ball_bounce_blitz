@@ -1,6 +1,6 @@
 import 'dart:ui';
 import 'package:flame/components.dart';
-import 'package:flutter/widgets.dart' show TextPainter, TextSpan, TextDirection;
+import 'package:flutter/widgets.dart' show TextPainter, TextSpan, TextDirection, TextStyle;
 import 'package:flutter/material.dart' show Colors;
 import '../ball_bounce_game.dart';
 import '../components/enemy.dart';
@@ -87,7 +87,7 @@ class ComboSystem extends Component {
     final result = await service.tryUnlock(ach);
     if (result != null) {
       // Queue achievement popup
-      gameRef.add(AchievementPopup(
+      gameRef.add(ComboPopup(
         title: ach.title,
         description: ach.description,
         icon: ach.icon,
@@ -131,13 +131,13 @@ class ComboSystem extends Component {
 }
 
 // AchievementPopup import for combo system
-class AchievementPopup extends PositionComponent {
+class ComboPopup extends PositionComponent {
   final String title;
   final String description;
   final String icon;
   double life = 2.5;
 
-  AchievementPopup({
+  ComboPopup({
     required this.title,
     required this.description,
     required this.icon,
