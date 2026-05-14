@@ -66,6 +66,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   bool isGameOver = false;
   bool isPaused = false;
   bool isSlowMo = false;
+  bool isFreezeTime = false;
+  double _freezeFactor = 0.25;
   double gameSpeed = 1.0;
 
   final Set<LogicalKeyboardKey> _keysDown = {};
@@ -550,6 +552,20 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     Future.delayed(const Duration(seconds: 6), () {
       paddle.restore();
     });
+  }
+  
+  void applyFreezeEffect(double dt) {
+    // Freeze time: slow down all enemies by reducing their effective speed
+    // The actual slowdown happens in enemy update via this flag
+    isFreezeTime = true;
+  }
+  
+  void clearFreezeEffect() {
+    isFreezeTime = false;
+  }
+  
+  double getFreezeFactor() {
+    return isFreezeTime ? _freezeFactor : 1.0;
   }
 }
 

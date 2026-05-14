@@ -12,6 +12,7 @@ import 'particles/trail_particle.dart';
 import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
+import 'extended_power_ups.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -26,6 +27,8 @@ class Ball extends CircleComponent with CollisionCallbacks {
   bool isShielded = false;
   bool isMagnetized = false;
   bool hasLaser = false;
+  bool hasEnergyShield = false;
+  bool isFreezeTimeActive = false;
   double _shieldAngle = 0;
   double _bounceScale = 1.0;
   double _trailTimer = 0;
@@ -103,6 +106,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
         _laserTimer = 0;
         _fireLaser();
       }
+    }
+    
+    // Freeze time - slow down enemies
+    if (isFreezeTimeActive) {
+      _updateFreezeTime(dt);
     }
 
     if (position.x - ballRadius <= 0) {
@@ -303,6 +311,11 @@ class Ball extends CircleComponent with CollisionCallbacks {
         ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
       canvas.drawCircle(Offset.zero, ballRadius + 3, glowPaint);
     }
+    
+    // Energy shield visualization (separate from basic shield)
+    if (hasEnergyShield) {
+      _renderEnergyShield(canvas);
+    }
 
     final ballPaint = Paint()..color = isFireball 
         ? const Color(0xFFFF5722) 
@@ -313,6 +326,37 @@ class Ball extends CircleComponent with CollisionCallbacks {
     
     final highlightPaint = Paint()..color = Colors.white.withAlpha(180);
     canvas.drawCircle(Offset(-ballRadius * 0.3, -ballRadius * 0.3), ballRadius * 0.3, highlightPaint);
+  }
+
+  void _renderEnergyShield(Canvas canvas) {
+    final angle = _shieldAngle;
+    final outerPaint = Paint()
+      ..color = const Color(0xFF00E5FF).withAlpha(180)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2.5;
+    canvas.drawCircle(Offset.zero, ballRadius + 10, outerPaint);
+    
+    // Rotating arc segments
+    for (int i = 0; i < 3; i++) {
+      final arcAngle = angle + (i * 2 * pi / 3);
+      final arcPaint = Paint()
+        ..color = const Color(0xFF00FFFF)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round;
+      canvas.drawArc(
+        Rect.fromCircle(center: Offset.zero, radius: ballRadius + 12),
+        arcAngle,
+        pi / 2,
+        false,
+        arcPaint,
+      );
+    }
+  }
+  
+  void _updateFreezeTime(double dt) {
+    // Freeze time affects enemy speed in enemy_manager or through gameRef
+    gameRef.applyFreezeEffect(dt);
   }
 
   void applyPowerUp(PowerUpType type) {
@@ -361,7 +405,37 @@ class Ball extends CircleComponent with CollisionCallbacks {
           hasLaser = false;
         });
         break;
+      case PowerUpType.energyShield:
+        _activateEnergyShield();
+        break;
+      case PowerUpType.freezeTime:
+        _activateFreezeTime();
+        break;
     }
+  }
+  
+  void _activateEnergyShield() {
+    hasEnergyShield = true;
+    // Add visual effect component to game
+    final shieldEffect = EnergyShieldEffect();
+    shieldEffect.gameRef = gameRef;
+    shieldEffect.position = position.clone();
+    gameRef.add(shieldEffect);
+    Future.delayed(const Duration(seconds: 4), () {
+      hasEnergyShield = false;
+    });
+  }
+  
+  void _activateFreezeTime() {
+    isFreezeTimeActive = true;
+    // Add visual freeze effect
+    final freezeEffect = FreezeTimeEffect();
+    freezeEffect.gameRef = gameRef;
+    gameRef.add(freezeEffect);
+    Future.delayed(const Duration(seconds: 3), () {
+      isFreezeTimeActive = false;
+      gameRef.clearFreezeEffect();
+    });
   }
 
   void _spawnChainLightningEffect(Vector2 hitPos) {

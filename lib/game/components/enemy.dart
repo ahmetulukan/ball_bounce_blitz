@@ -63,31 +63,35 @@ class Enemy extends PositionComponent with CollisionCallbacks {
     
     _pulsePhase += dt * 4;
     
+    // Apply freeze time slowdown if active
+    final freezeFactor = gameRef.getFreezeFactor();
+    final effectiveDt = dt * freezeFactor;
+    
     // Apply behavior-specific movement
     switch (behavior) {
       case EnemyBehavior.normal:
-        position.y += speed * dt;
+        position.y += speed * effectiveDt;
         break;
       case EnemyBehavior.zigzag:
-        position.y += speed * dt;
-        _zigzagPhase += dt * 3;
+        position.y += speed * effectiveDt;
+        _zigzagPhase += dt * 3; // Animation not slowed
         position.x = _initialX + sin(_zigzagPhase) * 50;
         break;
       case EnemyBehavior.fast:
-        position.y += speed * 1.8 * dt;
+        position.y += speed * 1.8 * effectiveDt;
         break;
       case EnemyBehavior.heavy:
-        position.y += speed * 0.7 * dt;
+        position.y += speed * 0.7 * effectiveDt;
         break;
       case EnemyBehavior.splitting:
-        position.y += speed * 1.2 * dt;
+        position.y += speed * 1.2 * effectiveDt;
         break;
       case EnemyBehavior.shooting:
-        position.y += speed * 0.9 * dt;
+        position.y += speed * 0.9 * effectiveDt;
         break;
     }
 
-    // Shooting enemies shoot projectiles
+    // Shooting enemies shoot projectiles (not slowed)
     if (behavior == EnemyBehavior.shooting) {
       _shootTimer += dt;
       if (_shootTimer >= 2.5) {
