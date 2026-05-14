@@ -6,6 +6,7 @@ class GameOverScreen extends StatelessWidget {
   final int wave;
   final int enemiesDestroyed;
   final VoidCallback onRestart;
+  final int maxCombo;
 
   const GameOverScreen({
     super.key,
@@ -14,6 +15,7 @@ class GameOverScreen extends StatelessWidget {
     required this.wave,
     required this.enemiesDestroyed,
     required this.onRestart,
+    this.maxCombo = 0,
   });
 
   @override
@@ -121,7 +123,7 @@ class GameOverScreen extends StatelessWidget {
                       children: [
                         _statItem('🌊 Wave', '$wave'),
                         _statItem('💀 Enemies', '$enemiesDestroyed'),
-                        _statItem('🔥 Max Combo', 'x3'),
+                        _statItem('🔥 Max Combo', 'x$maxCombo'),
                       ],
                     ),
                   ],

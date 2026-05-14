@@ -39,6 +39,7 @@ class BallBounceApp extends StatelessWidget {
             highScore: game.highScore,
             wave: game.wave,
             enemiesDestroyed: game.totalEnemiesDestroyed,
+            maxCombo: game.comboSystem.maxCombo,
             onRestart: () => game.restart(),
           ),
           'Hud': (context, game) => HudWidget(game: game),

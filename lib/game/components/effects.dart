@@ -78,7 +78,9 @@ class ComboFlash extends Component {
     final paint = Paint()
       ..color = Color(0xFFFF9800).withAlpha(alpha)
       ..style = PaintingStyle.fill;
-    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
+    // Use full game canvas size instead of hardcoded 400x400
+    final gameSize = gameRef.size;
+    canvas.drawRect(Rect.fromLTWH(0, 0, gameSize.x, gameSize.y), paint);
   }
 }
 

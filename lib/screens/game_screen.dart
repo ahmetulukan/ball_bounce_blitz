@@ -41,6 +41,7 @@ class GameScreen extends StatelessWidget {
                   highScore: gg.highScore,
                   wave: gg.wave,
                   enemiesDestroyed: gg.totalEnemiesDestroyed,
+                  maxCombo: gg.comboSystem.maxCombo,
                   onRestart: () {
                     gg.overlays.remove('GameOver');
                     gg.startGame();
