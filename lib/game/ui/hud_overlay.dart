@@ -210,8 +210,20 @@ class _HudOverlayState extends State<HudOverlay> {
     if (ball.isShielded) {
       indicators.add(_powerUpBadge('🛡️'));
     }
+    if (ball.hasEnergyShield) {
+      indicators.add(_powerUpBadge('🔵'));
+    }
+    if (ball.isFreezeTimeActive) {
+      indicators.add(_powerUpBadge('❄️'));
+    }
     if (ball.speed > Ball.baseSpeed * 1.1) {
       indicators.add(_powerUpBadge('⚡'));
+    }
+    if (ball.hasLaser) {
+      indicators.add(_powerUpBadge('⚔️'));
+    }
+    if (ball.isMagnetized) {
+      indicators.add(_powerUpBadge('🧲'));
     }
 
     if (indicators.isEmpty) return const SizedBox.shrink();

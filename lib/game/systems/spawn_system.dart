@@ -91,8 +91,42 @@ class SpawnSystem extends Component {
   void _spawnPowerUp() {
     if (gameRef.challengeNoPowerUps) return;
     final x = 30.0 + _random.nextDouble() * 340;
-    final types = PowerUpType.values;
-    final type = types[_random.nextInt(types.length)];
+    
+    // Filter power-ups based on wave to make newer ones rarer early on
+    final allTypes = PowerUpType.values;
+    List<PowerUpType> availableTypes;
+    
+    if (gameRef.wave < 3) {
+      // Early game: basic power-ups only
+      availableTypes = [
+        PowerUpType.fireball,
+        PowerUpType.explosive,
+        PowerUpType.shield,
+        PowerUpType.speedUp,
+        PowerUpType.extraLife,
+        PowerUpType.magnet,
+        PowerUpType.multiball,
+      ];
+    } else if (gameRef.wave < 6) {
+      // Mid game: add more
+      availableTypes = [
+        PowerUpType.fireball,
+        PowerUpType.explosive,
+        PowerUpType.shield,
+        PowerUpType.speedUp,
+        PowerUpType.extraLife,
+        PowerUpType.magnet,
+        PowerUpType.multiball,
+        PowerUpType.slowmo,
+        PowerUpType.shrink,
+        PowerUpType.laser,
+      ];
+    } else {
+      // Late game: all power-ups
+      availableTypes = allTypes;
+    }
+    
+    final type = availableTypes[_random.nextInt(availableTypes.length)];
     final powerUp = PowerUp.spawn(type, x);
     powerUp.gameRef = gameRef;
     gameRef.add(powerUp);

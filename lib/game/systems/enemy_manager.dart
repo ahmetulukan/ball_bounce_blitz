@@ -117,3 +117,10 @@ class EnemyManager extends Component with HasGameReference<BallBounceGame> {
   bool get hasActiveThreats => 
       _activeEnemies.isNotEmpty || _activeBosses.isNotEmpty;
 }
+
+/// Extension to provide freeze factor to enemies
+extension EnemyFreezeExtension on EnemyManager {
+  double getFreezeFactor(BallBounceGame game) {
+    return game.getFreezeFactor();
+  }
+}

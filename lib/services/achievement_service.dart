@@ -12,7 +12,11 @@ enum Achievement {
   score5000('High Roller', 'Reach 5000 points', '💰'),
   enemyHunter('Enemy Hunter', 'Destroy 50 enemies', '🎮'),
   noDamage('Flawless', 'Clear a wave without taking damage', '✨'),
-  powerUpCollector('Collector', 'Collect 10 power-ups', '📦');
+  powerUpCollector('Collector', 'Collect 10 power-ups', '📦'),
+  criticalMaster('Critical Master', 'Land 10 critical hits', '💫'),
+  powerUpConnoisseur('Power Connoisseur', 'Use all 12 power-up types', '🧪'),
+  perfectCombo('Perfect Combo', 'Reach a 20-hit combo', '💎'),
+  chainReaction('Chain Reaction', 'Destroy 5 enemies with chain lightning', '⚡');
 
   final String title;
   final String description;

@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 import '../ball_bounce_game.dart';
 
-enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet, multiball, slowmo, shrink, laser }
+enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet, multiball, slowmo, shrink, laser, energyShield, freezeTime }
 
 class PowerUp extends PositionComponent with CollisionCallbacks {
   static const double powerUpSize = 25;
@@ -65,6 +65,10 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
         return const Color(0xFF8BC34A);
       case PowerUpType.laser:
         return const Color(0xFF00FF00);
+      case PowerUpType.energyShield:
+        return const Color(0xFF00E5FF);
+      case PowerUpType.freezeTime:
+        return const Color(0xFF81D4FA);
     }
   }
 
@@ -90,6 +94,10 @@ class PowerUp extends PositionComponent with CollisionCallbacks {
         return '🔬';
       case PowerUpType.laser:
         return '⚔️';
+      case PowerUpType.energyShield:
+        return '🔵';
+      case PowerUpType.freezeTime:
+        return '❄️';
     }
   }
 

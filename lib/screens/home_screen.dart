@@ -152,9 +152,12 @@ class _HomeScreenState extends State<HomeScreen> {
               const SizedBox(height: 8),
               _tutRow('⚡', 'Speed - Ball speeds up'),
               _tutRow('🛡️', 'Shield - Extra life'),
+              _tutRow('🔵', 'Energy Shield - Rotating protection'),
+              _tutRow('❄️', 'Freeze Time - Slows all enemies'),
               _tutRow('✖3', 'Multi-Ball - Spawn 2 extra balls'),
               _tutRow('🔻', 'Shrink - Narrow enemies'),
               _tutRow('🧲', 'Magnet - Ball follows paddle'),
+              _tutRow('⚔️', 'Laser - Auto-fires at enemies'),
               const SizedBox(height: 20),
               ElevatedButton(
                 onPressed: () => setState(() => _showTutorial = false),
