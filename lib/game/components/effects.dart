@@ -599,3 +599,201 @@ class StreakFire extends PositionComponent {
     canvas.drawCircle(Offset.zero, radius * 0.4, corePaint);
   }
 }
+/// Energy shield effect that orbits around the ball
+class EnergyShieldEffect extends PositionComponent with HasGameRef<BallBounceGame> {
+  double _age = 0;
+  final double maxAge = 4.0;
+  double _rotation = 0;
+  late Vector2 ballPosition;
+
+  EnergyShieldEffect();
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    _rotation += dt * 6;
+    
+    // Follow the ball
+    final balls = gameRef.children.whereType<Ball>().toList();
+    if (balls.isNotEmpty) {
+      position = balls.first.position.clone();
+    }
+    
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (1 - _age / maxAge) * 180;
+    
+    for (int i = 0; i < 4; i++) {
+      final angle = _rotation + (i * pi / 2);
+      final px = cos(angle) * 18;
+      final py = sin(angle) * 18;
+      
+      // Glow
+      final glowPaint = Paint()
+        ..color = const Color(0xFF00E5FF).withAlpha((alpha * 0.5).round())
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6);
+      canvas.drawCircle(Offset(px, py), 8, glowPaint);
+      
+      // Core
+      final corePaint = Paint()..color = const Color(0xFF00E5FF).withAlpha(alpha.round());
+      canvas.drawCircle(Offset(px, py), 5, corePaint);
+    }
+    
+    // Shield ring
+    final ringPaint = Paint()
+      ..color = const Color(0xFF00E5FF).withAlpha((alpha * 0.6).round())
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5;
+    canvas.drawCircle(Offset.zero, 16, ringPaint);
+  }
+}
+
+/// Freeze time visual effect overlay
+class FreezeTimeEffect extends PositionComponent with HasGameRef<BallBounceGame> {
+  double _age = 0;
+  final double maxAge = 3.0;
+  double _pulse = 0;
+
+  FreezeTimeEffect();
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    _pulse += dt * 4;
+    
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final lifeRatio = 1 - (_age / maxAge);
+    final alpha = lifeRatio * 40;
+    final borderAlpha = (sin(_pulse) * 10 + 15).round().clamp(0, 25);
+    
+    // Screen tint
+    final tintPaint = Paint()
+      ..color = const Color(0xFF81D4FA).withAlpha(alpha.round());
+    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), tintPaint);
+    
+    // Border pulse
+    final borderPaint = Paint()
+      ..color = const Color(0xFF81D4FA).withAlpha(borderAlpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    canvas.drawRect(Rect.fromLTWH(2, 2, 396, 396), borderPaint);
+    
+    // Freeze particles
+    if (gameRef.size.x > 0) {
+      final random = Random();
+      for (int i = 0; i < 8; i++) {
+        final px = random.nextDouble() * 400;
+        final py = random.nextDouble() * 400;
+        final snowAlpha = (alpha * (0.3 + random.nextDouble() * 0.4)).round().clamp(0, 255);
+        final snowPaint = Paint()
+          ..color = const Color(0xFFFFFFFF).withAlpha(snowAlpha);
+        canvas.drawCircle(Offset(px, py), 2 + random.nextDouble() * 2, snowPaint);
+      }
+    }
+  }
+}
+
+/// Score bonus popup for wave clear
+class WaveBonusText extends PositionComponent {
+  final int wave;
+  double _life = 1.2;
+  double _vy = -60;
+
+  WaveBonusText({required Vector2 position, required this.wave}) : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    position.y += _vy * dt;
+    _vy *= 0.97;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 1.2 * 255).round().clamp(0, 255);
+    final scale = 0.6 + (1 - _life / 1.2) * 0.5;
+    
+    final bonus = 50 * wave;
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '+$bonus BONUS',
+        style: TextStyle(
+          color: const Color(0xFF4CAF50).withAlpha(alpha),
+          fontSize: 18 * scale,
+          fontWeight: FontWeight.bold,
+          shadows: const [
+            Shadow(color: Color(0x88000000), blurRadius: 4),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
+  }
+}
+
+/// Screen flash overlay for events
+class ScreenFlashOverlay extends PositionComponent {
+  final Color color;
+  final double maxAge;
+  double _age = 0;
+
+  ScreenFlashOverlay({required this.color, this.maxAge = 0.15});
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = ((1 - _age / maxAge) * 0.25).round().clamp(0, 255);
+    final paint = Paint()..color = color.withAlpha(alpha);
+    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
+  }
+}
+
+/// Slow motion visual overlay (replicated from effects for game use)
+class SlowMoOverlay extends PositionComponent {
+  double _life = 5.0;
+  double _pulse = 0;
+
+  SlowMoOverlay();
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _life -= dt;
+    _pulse += dt * 3;
+    if (_life <= 0) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final alpha = (_life / 5.0 * 30).round().clamp(0, 30);
+    final paint = Paint()
+      ..color = const Color(0xFF673AB7).withAlpha(alpha);
+    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
+    
+    final borderAlpha = (sin(_pulse) * 15 + 20).round().clamp(0, 35);
+    final borderPaint = Paint()
+      ..color = const Color(0xFF673AB7).withAlpha(borderAlpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4;
+    canvas.drawRect(Rect.fromLTWH(2, 2, 396, 396), borderPaint);
+  }
+}
