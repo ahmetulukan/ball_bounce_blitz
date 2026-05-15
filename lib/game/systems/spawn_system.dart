@@ -4,6 +4,7 @@ import '../ball_bounce_game.dart';
 import '../components/enemy.dart';
 import '../components/power_up.dart';
 import '../components/boss_enemy.dart';
+import '../components/wave_formation.dart';
 
 class SpawnSystem extends Component {
   final Random _random = Random();
@@ -16,6 +17,10 @@ class SpawnSystem extends Component {
   bool challengeHeavyEnemies = false;
   late BallBounceGame gameRef;
 
+  // Wave formations
+  double _formationTimer = 0;
+  static const double _formationInterval = 12.0;
+
   void setGame(BallBounceGame game) {
     gameRef = game;
   }
@@ -23,8 +28,8 @@ class SpawnSystem extends Component {
   double get _difficultyMultiplier {
     final diff = gameRef.gameState.settings.difficulty;
     switch (diff) {
-      case 1: return 0.75; // Easy - slower spawn
-      case 3: return 1.3;  // Hard - faster spawn
+      case 1: return 0.75;
+      case 3: return 1.3;
       default: return 1.0;
     }
   }
@@ -43,12 +48,18 @@ class SpawnSystem extends Component {
     super.update(dt);
 
     if (_bossWave) {
-      // Boss wave - don't spawn regular enemies
       return;
     }
 
     _spawnTimer += dt;
     _powerUpTimer += dt;
+    _formationTimer += dt;
+
+    // Check for wave formation spawning
+    if (_formationTimer >= _formationInterval) {
+      _formationTimer = 0;
+      _triggerWaveFormation();
+    }
 
     if (_spawnTimer >= _spawnInterval / _difficultyMultiplier) {
       _spawnTimer = 0;
@@ -62,11 +73,9 @@ class SpawnSystem extends Component {
   }
 
   /// Wave-based spawning: spawns enemies based on wave progress.
-  /// Returns actual number of enemies spawned (may be 0 during boss waves).
   int spawnWaveEnemies(int wave) {
     if (_bossWave) return 0;
 
-    // Determine spawn count based on wave
     final baseCount = 1 + (wave ~/ 3);
     final spawnCount = baseCount.clamp(1, 4);
 
@@ -88,16 +97,41 @@ class SpawnSystem extends Component {
     gameRef.add(enemy);
   }
 
+  void _triggerWaveFormation() {
+    // Only trigger formations after wave 3
+    if (gameRef.wave < 3) return;
+    
+    final formationType = WaveFormation.getRandomFormation(gameRef.wave);
+    
+    Future.delayed(const Duration(milliseconds: 800), () {
+      if (gameRef.isGameOver) return;
+      
+      final formation = WaveFormation(
+        type: formationType,
+        enemyCount: 6 + (gameRef.wave ~/ 2).clamp(0, 4),
+        wave: gameRef.wave,
+        spawnDelay: 150,
+      );
+      formation.setGame(gameRef);
+      
+      // Show formation announcement
+      gameRef.add(FormationAnnouncement(
+        position: Vector2(200, 80),
+        formationType: formationType,
+      ));
+      
+      formation.startSpawning();
+    });
+  }
+
   void _spawnPowerUp() {
     if (gameRef.challengeNoPowerUps) return;
     final x = 30.0 + _random.nextDouble() * 340;
     
-    // Filter power-ups based on wave to make newer ones rarer early on
     final allTypes = PowerUpType.values;
     List<PowerUpType> availableTypes;
     
     if (gameRef.wave < 3) {
-      // Early game: basic power-ups only
       availableTypes = [
         PowerUpType.fireball,
         PowerUpType.explosive,
@@ -108,7 +142,6 @@ class SpawnSystem extends Component {
         PowerUpType.multiball,
       ];
     } else if (gameRef.wave < 6) {
-      // Mid game: add more
       availableTypes = [
         PowerUpType.fireball,
         PowerUpType.explosive,
@@ -122,7 +155,6 @@ class SpawnSystem extends Component {
         PowerUpType.laser,
       ];
     } else {
-      // Late game: all power-ups
       availableTypes = allTypes;
     }
     
@@ -154,16 +186,15 @@ class SpawnSystem extends Component {
     _difficultyLevel++;
     _spawnInterval = (_spawnInterval - 0.15).clamp(0.5, 2.0);
 
-    // Check for boss wave
     if (gameRef.wave > 0 && gameRef.wave % 5 == 0) {
-      _bossWave = true; // Will be cleared when boss is spawned
+      _bossWave = true;
     }
   }
 
   void onWaveChanged(int wave) {
     _difficultyLevel = wave;
-    // Adjust spawn interval as waves progress
     _spawnInterval = (2.0 - (wave * 0.08)).clamp(0.5, 2.0);
+    _formationTimer = 0;
 
     if (wave > 0 && wave % 5 == 0) {
       _bossWave = true;
@@ -181,6 +212,7 @@ class SpawnSystem extends Component {
     _difficultyLevel = 1;
     _bossWave = false;
     _bossSpawned = false;
+    _formationTimer = 0;
   }
 
   bool get isBossWave => _bossWave;

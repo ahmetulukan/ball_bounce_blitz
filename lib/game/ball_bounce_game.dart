@@ -438,8 +438,14 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   void startMagnetEffect() {
     ball.isMagnetized = true;
-    // Visual effect: attract nearby power-ups
-    add(MagnetField(position: ball.position.clone(), maxAge: 5.0));
+    // Add visual orbit attractor to the ball
+    final attractor = MagnetAttractor(
+      position: Vector2.zero(),
+      orbitRadius: 30,
+      orbitSpeed: 4.0,
+      color: const Color(0xFFE91E63),
+    );
+    ball.add(attractor);
     Future.delayed(const Duration(seconds: 5), () {
       ball.isMagnetized = false;
     });

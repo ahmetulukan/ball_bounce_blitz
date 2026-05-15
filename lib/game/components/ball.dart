@@ -13,6 +13,7 @@ import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBe
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
 import 'extended_power_ups.dart' hide PowerUpType;
+import 'magnet_attractor.dart';
 import '../ball_bounce_game.dart';
 
 class Ball extends CircleComponent with CollisionCallbacks {
@@ -29,6 +30,7 @@ class Ball extends CircleComponent with CollisionCallbacks {
   bool hasLaser = false;
   bool hasEnergyShield = false;
   bool isFreezeTimeActive = false;
+  MagnetAttractor? _magnetAttractor;
   double _shieldAngle = 0;
   double _bounceScale = 1.0;
   double _trailTimer = 0;
