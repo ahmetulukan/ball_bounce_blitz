@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../game/ball_bounce_game.dart';
+import 'stats_screen.dart';
 
 class PauseScreen extends StatelessWidget {
   final BallBounceGame game;
@@ -36,6 +37,19 @@ class PauseScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
               ),
               child: const Text('RESTART', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+            ),
+            const SizedBox(height: 16),
+            Builder(
+              builder: (ctx) => ElevatedButton(
+                onPressed: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const StatsScreen())),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1A1A2E),
+                  foregroundColor: const Color(0xFF00BCD4),
+                  side: const BorderSide(color: Color(0xFF00BCD4)),
+                  padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 16),
+                ),
+                child: const Text('📊 STATS', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              ),
             ),
           ],
         ),

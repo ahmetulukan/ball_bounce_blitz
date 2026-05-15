@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../game/ball_bounce_game.dart';
 import 'settings_screen.dart';
 import 'achievements_screen.dart';
+import 'stats_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   final BallBounceGame game;
@@ -108,6 +109,10 @@ class _HomeScreenState extends State<HomeScreen> {
                 TextButton(
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => SettingsScreen(game: widget.game))),
                   child: const Text('⚙️ SETTINGS', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
+                ),
+                TextButton(
+                  onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const StatsScreen())),
+                  child: const Text('📊 STATS', style: TextStyle(color: Color(0xFF00BCD4), fontSize: 14)),
                 ),
                 TextButton(
                   onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (_) => AchievementsScreen(game: widget.game))),

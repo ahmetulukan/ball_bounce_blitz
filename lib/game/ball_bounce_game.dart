@@ -26,6 +26,7 @@ import 'systems/combo_system.dart';
 import 'systems/enemy_manager.dart';
 import 'systems/tournament_system.dart';
 import 'services/game_state_service.dart';
+import 'services/game_stats_service.dart';
 import '../../services/achievement_service.dart';
 // achievements overlay
 
@@ -43,7 +44,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late TournamentManager tournamentManager;
   late GameStateService _gameState;
   late AchievementService _achievements;
+  late GameStatsService _stats;
   GameStateService get gameState => _gameState;
+  GameStatsService get stats => _stats;
   
   final List<_PendingPopup> _popupQueue = [];
   double _popupTimer = 0;
@@ -81,6 +84,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     await _gameState.init();
     _achievements = AchievementService();
     await _achievements.init();
+    _stats = GameStatsService();
+    await _stats.init();
     highScore = _gameState.getHighScore();
 
     spawnSystem = SpawnSystem();
@@ -173,6 +178,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
   void startGame() {
     _gameState.incrementGamesPlayed();
+    _stats.startSession();
     score = 0;
     lives = 3;
     wave = 1;
@@ -353,10 +359,14 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
       add(ScreenFlashOverlay(color: const Color(0xFFFFFFFF), maxAge: 0.1));
     }
 
+    _stats.onEnemyDestroyed();
+
     // Rainbow explosion for combo milestones
     if (comboSystem.currentCombo == 10 || comboSystem.currentCombo == 20 || comboSystem.currentCombo == 30) {
       RainbowExplosion.spawn(this, enemy.position.clone(), comboSystem.currentCombo);
     }
+
+    _stats.onComboChanged(comboSystem.currentCombo);
 
     // Score popup
     add(FloatingScorePopup(
@@ -386,6 +396,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
         _checkBossWave();
         _showWaveAnnouncement();
         _onWaveStarted();
+        _stats.onWaveChanged(wave);
+        _stats.onWaveCleared(wave);
         _checkAchievements();
       }
     } else {
@@ -409,9 +421,10 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     }
   }
 
-  Future<void> onBossDestroyed() async {
+    Future<void> onBossDestroyed() async {
     final a = await _achievements.tryUnlock(Achievement.bossSlayer);
     if (a != null) _queueAchievement(a);
+    _stats.onBossDefeated();
     final bosses = children.whereType<BossEnemy>().toList();
     if (bosses.isNotEmpty) {
       enemyManager.unregisterBoss(bosses.first);
@@ -422,6 +435,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     ball.applyPowerUp(type);
     final a = await _achievements.tryUnlock(Achievement.powerUpCollector);
     if (a != null) _queueAchievement(a);
+    _stats.onPowerUpCollected();
   }
 
   void triggerExplosion(Vector2 position) {
@@ -487,6 +501,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     _noDamageThisWave = false;
     paddle.resetStreak();
     comboSystem.reset();
+    _stats.onDamageTaken();
     playSound('lose');
     
     if (lives <= 0) {
@@ -500,6 +515,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     _saveHighScoreIfNeeded();
     playSound('gameover');
     overlays.add('GameOver');
+    _stats.endSession(score, wave, comboSystem.maxCombo);
   }
 
   void _saveHighScoreIfNeeded() {

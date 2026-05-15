@@ -60,6 +60,7 @@ class GameScreen extends StatelessWidget {
               'Settings': (ctx, game) => SettingsScreen(game: game as BallBounceGame),
               'MainMenu': (ctx, game) => MainMenuScreen(game: game as BallBounceGame),
               'HUD': (ctx, game) => HudOverlay(game: game as BallBounceGame),
+              'Stats': (ctx, game) => const StatsScreen(),
             },
             backgroundBuilder: (_) => Container(color: const Color(0xFF0D0D1A)),
           ),

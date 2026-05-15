@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'stats_screen.dart';
 
 class GameOverScreen extends StatelessWidget {
   final int score;
@@ -185,6 +186,35 @@ class GameOverScreen extends StatelessWidget {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  Builder(
+                    builder: (ctx) => ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: const Color(0xFF1A1A2E),
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          side: const BorderSide(color: Color(0xFF00BCD4)),
+                        ),
+                      ),
+                      onPressed: () => Navigator.push(ctx, MaterialPageRoute(builder: (_) => const StatsScreen())),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text('📊', style: TextStyle(fontSize: 18)),
+                          SizedBox(width: 8),
+                          Text(
+                            'Stats',
+                            style: TextStyle(
+                              color: Color(0xFF00BCD4),
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ],
