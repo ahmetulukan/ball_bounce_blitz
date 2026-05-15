@@ -152,6 +152,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         _buildStatRow('🏆 High Score', '${_settings.highScore}'),
                         _buildStatRow('🎮 Games Played', '${_settings.gamesPlayed}'),
                         _buildStatRow('📈 Total Score', '${_settings.totalScore}'),
+                        _buildStatRow('🔥 Daily Streak', '${_settings.dailyStreak} days'),
                         const SizedBox(height: 12),
                         Center(
                           child: TextButton(

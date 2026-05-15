@@ -9,6 +9,8 @@ class SettingsService {
   static const String _keyHighScore = 'highScore';
   static const String _keyGamesPlayed = 'gamesPlayed';
   static const String _keyTotalScore = 'totalScore';
+  static const String _keyStreak = 'dailyStreak';
+  static const String _keyLastPlay = 'lastPlayDate';
 
   late Box _box;
 
@@ -44,6 +46,7 @@ class SettingsService {
 
   void incrementGamesPlayed() {
     gamesPlayed = gamesPlayed + 1;
+    _updateStreak();
   }
 
   void addToTotalScore(int score) {
@@ -54,6 +57,8 @@ class SettingsService {
     highScore = 0;
     gamesPlayed = 0;
     totalScore = 0;
+    dailyStreak = 0;
+    _box.delete(_keyLastPlay);
   }
 
   String get difficultyName {
@@ -65,5 +70,48 @@ class SettingsService {
       default:
         return 'Normal';
     }
+  }
+
+  String get difficultyLabel {
+    switch (difficulty) {
+      case 1:
+        return 'Easy 😊';
+      case 3:
+        return 'Hard 😈';
+      default:
+        return 'Normal 😐';
+    }
+  }
+
+  int get dailyStreak => _box.get(_keyStreak, defaultValue: 0);
+  set dailyStreak(int value) => _box.put(_keyStreak, value);
+
+  DateTime? get lastPlayDate {
+    final ms = _box.get(_keyLastPlay) as int?;
+    return ms != null ? DateTime.fromMillisecondsSinceEpoch(ms) : null;
+  }
+  set lastPlayDate(DateTime? value) {
+    if (value != null) {
+      _box.put(_keyLastPlay, value.millisecondsSinceEpoch);
+    }
+  }
+
+  void _updateStreak() {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final lastPlay = lastPlayDate;
+
+    if (lastPlay == null) {
+      dailyStreak = 1;
+    } else {
+      final lastDay = DateTime(lastPlay.year, lastPlay.month, lastPlay.day);
+      final diff = today.difference(lastDay).inDays;
+      if (diff == 1) {
+        dailyStreak += 1;
+      } else if (diff > 1) {
+        dailyStreak = 1;
+      }
+    }
+    lastPlayDate = today;
   }
 }
