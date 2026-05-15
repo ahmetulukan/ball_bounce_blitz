@@ -21,12 +21,13 @@ import 'components/barrier.dart';
 import 'components/achievement_popup.dart';
 import 'components/charge_shot.dart';
 import 'components/daily_challenge.dart';
+import 'components/magnet_attractor.dart';
 import 'systems/spawn_system.dart';
 import 'systems/combo_system.dart';
 import 'systems/enemy_manager.dart';
 import 'systems/tournament_system.dart';
 import 'services/game_state_service.dart';
-import 'services/game_stats_service.dart';
+import '../../services/game_stats_service.dart';
 import '../../services/achievement_service.dart';
 // achievements overlay
 

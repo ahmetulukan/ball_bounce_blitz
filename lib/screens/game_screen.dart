@@ -6,6 +6,7 @@ import 'pause_screen.dart';
 import 'game_over_screen.dart';
 import 'settings_screen.dart';
 import 'achievements_screen.dart';
+import 'stats_screen.dart';
 import '../game/ui/hud_overlay.dart';
 import '../game/ui/wave_announcement.dart';
 import '../game/ui/main_menu_screen.dart';
