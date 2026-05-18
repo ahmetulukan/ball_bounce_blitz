@@ -153,6 +153,9 @@ class SpawnSystem extends Component {
         PowerUpType.slowmo,
         PowerUpType.shrink,
         PowerUpType.laser,
+        PowerUpType.energyShield,
+        PowerUpType.freezeTime,
+        PowerUpType.gravityWell,
       ];
     } else {
       availableTypes = allTypes;

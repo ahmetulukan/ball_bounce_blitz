@@ -13,6 +13,7 @@ import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBe
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
 import 'extended_power_ups.dart' hide PowerUpType, EnergyShieldEffect, FreezeTimeEffect;
+import 'gravity_well.dart';
 import 'magnet_attractor.dart';
 import '../ball_bounce_game.dart';
 
@@ -413,6 +414,9 @@ class Ball extends CircleComponent with CollisionCallbacks {
       case PowerUpType.freezeTime:
         _activateFreezeTime();
         break;
+      case PowerUpType.gravityWell:
+        _activateGravityWell();
+        break;
     }
   }
   
@@ -436,6 +440,17 @@ class Ball extends CircleComponent with CollisionCallbacks {
       isFreezeTimeActive = false;
       gameRef.clearFreezeEffect();
     });
+  }
+
+  void _activateGravityWell() {
+    // Spawn a powerful gravity well at ball position
+    final well = GravityWell(
+      center: position.clone(),
+      radius: 120,
+      pullStrength: 200,
+      duration: 3.0,
+    );
+    gameRef.add(well);
   }
 
   void _spawnChainLightningEffect(Vector2 hitPos) {

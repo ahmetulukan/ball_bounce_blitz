@@ -5,7 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart' show Colors;
 import '../ball_bounce_game.dart';
 
-enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet, multiball, slowmo, shrink, laser, energyShield, freezeTime }
+enum PowerUpType { fireball, explosive, shield, speedUp, extraLife, magnet, multiball, slowmo, shrink, laser, energyShield, freezeTime, gravityWell }
 
 // Extended power-up effect component
 class EnergyShieldEffect extends PositionComponent {
