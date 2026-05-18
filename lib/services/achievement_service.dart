@@ -73,23 +73,9 @@ class AchievementService {
   int get totalCount => Achievement.values.length;
   int get unlockedCount => _unlocked.length;
 
-  // ---------- Quick check helpers ----------
-  bool _waveReached = false;
-  bool _bossDefeated = false;
-  int _currentWave = 1;
-  int _livesAtWaveStart = 3;
-  int _enemiesAtWaveStart = 0;
-
   void onWaveChanged(int wave) {
-    _currentWave = wave;
     if (wave >= 5) tryUnlock(Achievement.wave5Survivor);
     if (wave >= 10) tryUnlock(Achievement.wave10Master);
-  }
-
-  void onWaveStarted(int wave, int lives, int enemiesDestroyed) {
-    _waveReached = false;
-    _livesAtWaveStart = lives;
-    _enemiesAtWaveStart = enemiesDestroyed;
   }
 
   void onEnemyDestroyed(int totalEnemiesDestroyed, int totalPowerUpsCollected) {
@@ -98,7 +84,6 @@ class AchievementService {
   }
 
   void onBossDefeated() {
-    _bossDefeated = true;
     tryUnlock(Achievement.bossSlayer);
   }
 
@@ -119,9 +104,8 @@ class AchievementService {
     if (count >= 10) tryUnlock(Achievement.powerUpCollector);
   }
 
-  void onWaveCleared(int wave, int lives, int enemiesDestroyed) {
-    // No damage = still had all starting lives at end of wave
-    if (lives == _livesAtWaveStart) {
+  void onWaveCleared(int wave, int lives) {
+    if (lives >= 3) {
       tryUnlock(Achievement.noDamage);
     }
   }

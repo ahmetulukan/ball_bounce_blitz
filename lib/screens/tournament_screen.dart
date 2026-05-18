@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
 import '../game/ball_bounce_game.dart';
 import '../game/systems/tournament_system.dart';
 
@@ -16,7 +15,6 @@ class _TournamentScreenState extends State<TournamentScreen> {
   late TournamentManager _tournament;
   bool _matchStarted = false;
   int _playerScore = 0;
-  int _opponentScore = 0;
 
   @override
   void initState() {
@@ -43,13 +41,6 @@ class _TournamentScreenState extends State<TournamentScreen> {
     setState(() {
       _matchStarted = true;
     });
-  }
-
-  void _simulateMatchEnd() {
-    // Auto-complete match after some time or when player dies
-    if (widget.game.isGameOver) {
-      _onMatchComplete();
-    }
   }
 
   void _onMatchComplete() {
