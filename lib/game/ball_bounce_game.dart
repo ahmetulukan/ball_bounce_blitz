@@ -8,9 +8,9 @@ import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/enemy_projectile.dart';
-import 'components/particles/rainbow_particle.dart' hide MagnetField, ScreenFlashOverlay, WaveBonusText;
+import 'components/particles/rainbow_particle.dart';
 import 'components/power_up.dart';
-import 'components/particles/enhanced_particles.dart' hide MagnetField;
+import 'components/particles/enhanced_particles.dart';
 import 'components/particles/explosion_particle.dart';
 // enhanced particles imported when needed
 import 'components/background_stars.dart';
