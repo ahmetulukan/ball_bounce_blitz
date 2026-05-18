@@ -105,24 +105,6 @@ class TipSystem extends Component {
     );
     gameRef.add(_currentTip!);
   }
-
-  void showTip(String title, String text) {
-    // Immediate tip display for specific moments
-    _currentTip?.removeFromParent();
-    _currentTip = TipDisplay(
-      title: title,
-      text: text,
-      onComplete: () {},
-    );
-    _tipTimer = 0;
-    gameRef.add(_currentTip!);
-  }
-  void reset() {
-    _currentTip = null;
-    _tipTimer = 0;
-    _intervalTimer = 0;
-    _tipIndex = 0;
-  }
 }
 
 class _TipEntry {

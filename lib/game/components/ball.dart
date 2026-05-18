@@ -12,7 +12,7 @@ import 'particles/trail_particle.dart';
 import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
-import 'extended_power_ups.dart' hide PowerUpType;
+import 'extended_power_ups.dart' hide PowerUpType, EnergyShieldEffect, FreezeTimeEffect;
 import 'magnet_attractor.dart';
 import '../ball_bounce_game.dart';
 
@@ -420,7 +420,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
     hasEnergyShield = true;
     // Add visual effect component to game
     final shieldEffect = EnergyShieldEffect();
-    shieldEffect.gameRef = gameRef;
     shieldEffect.position = position.clone();
     gameRef.add(shieldEffect);
     Future.delayed(const Duration(seconds: 4), () {
@@ -432,7 +431,6 @@ class Ball extends CircleComponent with CollisionCallbacks {
     isFreezeTimeActive = true;
     // Add visual freeze effect
     final freezeEffect = FreezeTimeEffect();
-    freezeEffect.gameRef = gameRef;
     gameRef.add(freezeEffect);
     Future.delayed(const Duration(seconds: 3), () {
       isFreezeTimeActive = false;

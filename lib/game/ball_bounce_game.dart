@@ -8,7 +8,7 @@ import 'components/paddle.dart';
 import 'components/ball.dart';
 import 'components/enemy.dart';
 import 'components/enemy_projectile.dart';
-import 'components/particles/rainbow_particle.dart' hide MagnetField;
+import 'components/particles/rainbow_particle.dart' hide MagnetField, ScreenFlashOverlay, WaveBonusText;
 import 'components/power_up.dart';
 import 'components/particles/enhanced_particles.dart' hide MagnetField;
 import 'components/particles/explosion_particle.dart';

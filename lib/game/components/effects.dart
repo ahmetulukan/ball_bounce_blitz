@@ -3,6 +3,7 @@ import 'dart:ui';
 import 'package:flutter/widgets.dart';
 import 'package:flame/components.dart';
 import '../ball_bounce_game.dart';
+import 'ball.dart';
 
 /// Floating score popup that appears when enemies are destroyed
 class FloatingScorePopup extends PositionComponent {
@@ -743,7 +744,6 @@ class WaveBonusText extends PositionComponent {
     textPainter.paint(canvas, Offset(-textPainter.width / 2, -textPainter.height / 2));
   }
 }
-
 /// Screen flash overlay for events
 class ScreenFlashOverlay extends PositionComponent {
   final Color color;
@@ -764,36 +764,5 @@ class ScreenFlashOverlay extends PositionComponent {
     final alpha = ((1 - _age / maxAge) * 0.25).round().clamp(0, 255);
     final paint = Paint()..color = color.withAlpha(alpha);
     canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
-  }
-}
-
-/// Slow motion visual overlay (replicated from effects for game use)
-class SlowMoOverlay extends PositionComponent {
-  double _life = 5.0;
-  double _pulse = 0;
-
-  SlowMoOverlay();
-
-  @override
-  void update(double dt) {
-    super.update(dt);
-    _life -= dt;
-    _pulse += dt * 3;
-    if (_life <= 0) removeFromParent();
-  }
-
-  @override
-  void render(Canvas canvas) {
-    final alpha = (_life / 5.0 * 30).round().clamp(0, 30);
-    final paint = Paint()
-      ..color = const Color(0xFF673AB7).withAlpha(alpha);
-    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
-    
-    final borderAlpha = (sin(_pulse) * 15 + 20).round().clamp(0, 35);
-    final borderPaint = Paint()
-      ..color = const Color(0xFF673AB7).withAlpha(borderAlpha)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 4;
-    canvas.drawRect(Rect.fromLTWH(2, 2, 396, 396), borderPaint);
   }
 }
