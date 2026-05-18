@@ -745,7 +745,7 @@ class WaveBonusText extends PositionComponent {
   }
 }
 /// Screen flash overlay for events
-class ScreenFlashOverlay extends PositionComponent {
+class ScreenFlashOverlay extends PositionComponent with HasGameRef<BallBounceGame> {
   final Color color;
   final double maxAge;
   double _age = 0;
@@ -763,6 +763,167 @@ class ScreenFlashOverlay extends PositionComponent {
   void render(Canvas canvas) {
     final alpha = ((1 - _age / maxAge) * 0.25).round().clamp(0, 255);
     final paint = Paint()..color = color.withAlpha(alpha);
-    canvas.drawRect(Rect.fromLTWH(0, 0, 400, 400), paint);
+    canvas.drawRect(Rect.fromLTWH(0, 0, gameRef.size.x, gameRef.size.y), paint);
+  }
+}
+
+/// Enhanced screen border effects for game states
+class BorderGlowEffect extends PositionComponent with HasGameRef<BallBounceGame> {
+  final Color color;
+  final double maxAge;
+  final double thickness;
+  double _age = 0;
+
+  BorderGlowEffect({
+    required this.color,
+    this.maxAge = 0.5,
+    this.thickness = 12,
+  });
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final lifeRatio = (1 - _age / maxAge).clamp(0.0, 1.0);
+    final alpha = (lifeRatio * 180).round().clamp(0, 255);
+    
+    final w = gameRef.size.x;
+    final h = gameRef.size.y;
+
+    // Outer glow
+    final glowPaint = Paint()
+      ..color = color.withAlpha((alpha * 0.5).round())
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = thickness * lifeRatio
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 8);
+    canvas.drawRect(
+      Rect.fromLTWH(thickness / 2, thickness / 2, w - thickness, h - thickness),
+      glowPaint,
+    );
+
+    // Inner border
+    final borderPaint = Paint()
+      ..color = color.withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 2 * lifeRatio;
+    canvas.drawRect(
+      Rect.fromLTWH(thickness / 2, thickness / 2, w - thickness, h - thickness),
+      borderPaint,
+    );
+  }
+}
+
+/// Chain reaction explosion visual
+class ChainExplosionRing extends PositionComponent {
+  final Color color;
+  final double maxAge;
+  double _age = 0;
+  double _radius = 0;
+
+  ChainExplosionRing({
+    required Vector2 position,
+    required this.color,
+    this.maxAge = 0.6,
+  }) : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    _radius += 200 * dt;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final t = (_age / maxAge).clamp(0.0, 1.0);
+    final alpha = ((1 - t) * 200).round().clamp(0, 255);
+    final width = (4 * (1 - t)).clamp(0.5, 4.0);
+
+    final paint = Paint()
+      ..color = color.withAlpha(alpha)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = width;
+    canvas.drawCircle(Offset.zero, _radius, paint);
+
+    // Lightning arc effect
+    if (t < 0.3) {
+      final arcAlpha = ((1 - t / 0.3) * 255).round().clamp(0, 255);
+      final arcPaint = Paint()
+        ..color = const Color(0xFF00FFFF).withAlpha(arcAlpha)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2;
+      
+      // Draw zigzag lightning
+      final path = Path();
+      final segments = 4;
+      for (int i = 0; i <= segments; i++) {
+        final px = cos(i * 2 * pi / segments) * _radius * 0.8;
+        final py = sin(i * 2 * pi / segments) * _radius * 0.8;
+        if (i == 0) {
+          path.moveTo(px, py);
+        } else {
+          // Add slight randomness for lightning feel
+          final jitterX = (i % 2 == 0) ? 5.0 : -5.0;
+          path.lineTo(px + jitterX, py);
+        }
+      }
+      canvas.drawPath(path, arcPaint);
+    }
+  }
+}
+
+/// Score floating text with animation
+class AnimatedScoreText extends PositionComponent {
+  final int score;
+  final double maxAge;
+  double _age = 0;
+  double _vy = -40;
+
+  AnimatedScoreText({
+    required Vector2 position,
+    required this.score,
+    this.maxAge = 1.0,
+  }) : super(position: position, anchor: Anchor.center);
+
+  @override
+  void update(double dt) {
+    super.update(dt);
+    _age += dt;
+    position.y += _vy * dt;
+    _vy *= 0.96;
+    if (_age >= maxAge) removeFromParent();
+  }
+
+  @override
+  void render(Canvas canvas) {
+    final t = (_age / maxAge).clamp(0.0, 1.0);
+    final alpha = ((1 - t) * 255).round().clamp(0, 255);
+    final scale = 0.6 + (1 - t) * 0.5;
+
+    final textPainter = TextPainter(
+      text: TextSpan(
+        text: '+$score',
+        style: TextStyle(
+          color: const Color(0xFFFFD700).withAlpha(alpha),
+          fontSize: 16 * scale,
+          fontWeight: FontWeight.bold,
+          shadows: const [
+            Shadow(color: Color(0x88000000), blurRadius: 4),
+          ],
+        ),
+      ),
+      textDirection: TextDirection.ltr,
+    );
+    textPainter.layout();
+    textPainter.paint(
+      canvas,
+      Offset(-textPainter.width / 2, -textPainter.height / 2),
+    );
   }
 }

@@ -9,11 +9,12 @@ import 'power_up.dart';
 import 'barrier.dart';
 import 'particles/explosion_particle.dart';
 import 'particles/trail_particle.dart';
-import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam;
+import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam, GravityWell;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
 import 'extended_power_ups.dart' hide PowerUpType, EnergyShieldEffect, FreezeTimeEffect;
 import 'gravity_well.dart';
+import 'new_effects.dart';
 import 'magnet_attractor.dart';
 import '../ball_bounce_game.dart';
 
@@ -242,11 +243,28 @@ class Ball extends CircleComponent with CollisionCallbacks {
     }
 
     if (other is PowerUp) {
-      // Collection burst effect
+      // Enhanced collection burst effect with screen feedback
       gameRef.add(PowerUpBurst(
         pos: other.position.clone(),
         color: PowerUp.getColor(other.type),
       ));
+      
+      // Enhanced sparkle collection effect
+      gameRef.add(PowerUpCollectSparkle(
+        position: other.position.clone(),
+        primaryColor: PowerUp.getColor(other.type),
+        secondaryColor: const Color(0xFFFFFFFF),
+      ));
+      
+      // Screen border glow based on power-up type
+      _triggerPowerUpScreenEffect(other.type);
+      
+      // Small screen shake for powerful power-ups
+      if (other.type == PowerUpType.explosive || 
+          other.type == PowerUpType.gravityWell || 
+          other.type == PowerUpType.multiball) {
+        gameRef.screenShake.shake(intensity: 5, duration: 0.2);
+      }
       
       gameRef.collectPowerUp(other.type);
       gameRef.playSound('powerup');
@@ -360,6 +378,38 @@ class Ball extends CircleComponent with CollisionCallbacks {
   void _updateFreezeTime(double dt) {
     // Freeze time affects enemy speed in enemy_manager or through gameRef
     gameRef.applyFreezeEffect(dt);
+  }
+
+  void _triggerPowerUpScreenEffect(PowerUpType type) {
+    switch (type) {
+      case PowerUpType.fireball:
+        gameRef.triggerScreenFlash(const Color(0xFFFF5722), 0.2);
+        gameRef.add(BorderGlowEffect(color: const Color(0xFFFF5722), maxAge: 0.3, thickness: 8));
+        break;
+      case PowerUpType.explosive:
+        gameRef.triggerScreenFlash(const Color(0xFFFFEB3B), 0.3);
+        gameRef.add(BorderGlowEffect(color: const Color(0xFFFFEB3B), maxAge: 0.4, thickness: 15));
+        break;
+      case PowerUpType.shield:
+        gameRef.add(BorderGlowEffect(color: const Color(0xFF03A9F4), maxAge: 0.5, thickness: 10));
+        break;
+      case PowerUpType.multiball:
+        gameRef.triggerScreenFlash(const Color(0xFF00BCD4), 0.2);
+        gameRef.add(BorderGlowEffect(color: const Color(0xFF00BCD4), maxAge: 0.4, thickness: 12));
+        break;
+      case PowerUpType.gravityWell:
+        gameRef.triggerScreenFlash(const Color(0xFF9C27B0), 0.25);
+        gameRef.add(BorderGlowEffect(color: const Color(0xFF9C27B0), maxAge: 0.6, thickness: 15));
+        break;
+      case PowerUpType.energyShield:
+        gameRef.add(BorderGlowEffect(color: const Color(0xFF00E5FF), maxAge: 0.5, thickness: 12));
+        break;
+      case PowerUpType.freezeTime:
+        gameRef.add(BorderGlowEffect(color: const Color(0xFF81D4FA), maxAge: 0.5, thickness: 10));
+        break;
+      default:
+        gameRef.add(BorderGlowEffect(color: PowerUp.getColor(type), maxAge: 0.25, thickness: 6));
+    }
   }
 
   void applyPowerUp(PowerUpType type) {

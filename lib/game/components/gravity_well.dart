@@ -38,7 +38,7 @@ class GravityWell extends PositionComponent with HasGameReference<BallBounceGame
   Future<void> onLoad() async {
     await super.onLoad();
     // Spawn the gravity well particle system
-    gameRef.add(GravityWellParticles(
+    game.add(GravityWellParticles(
       position: position.clone(),
       radius: radius,
       life: duration,
@@ -58,7 +58,7 @@ class GravityWell extends PositionComponent with HasGameReference<BallBounceGame
     }
 
     // Pull nearby enemies toward center
-    final enemies = gameRef.enemyManager.activeEnemies.toList();
+    final enemies = game.enemyManager.activeEnemies.toList();
     _hasDealtDamage = false;
     
     for (final enemy in enemies) {
@@ -86,27 +86,27 @@ class GravityWell extends PositionComponent with HasGameReference<BallBounceGame
 
   void _destroyEnemyAt(Enemy enemy) {
     // Extra visual effect for gravity destruction
-    gameRef.add(ExplosionEffect(
+    game.add(ExplosionEffect(
       position: enemy.position.clone(),
       color: const Color(0xFF9C27B0),
       count: 12,
       speed: 150,
     ));
     
-    gameRef.add(ShockwaveRing(
+    game.add(ShockwaveRing(
       position: enemy.position.clone(),
       color: const Color(0xFF9C27B0),
     ));
     
     // Award bonus points for gravity kills
-    gameRef.score += enemy.points * 2;
-    gameRef.comboSystem.onEnemyDestroyed(enemy);
+    game.score += enemy.points * 2;
+    game.comboSystem.onEnemyDestroyed(enemy);
     
-    gameRef.enemyManager.unregisterEnemy(enemy);
+    game.enemyManager.unregisterEnemy(enemy);
     enemy.removeFromParent();
     
     // Floating bonus text
-    gameRef.add(GravityKillBonus(
+    game.add(GravityKillBonus(
       position: enemy.position.clone(),
       points: enemy.points * 2,
     ));
@@ -114,7 +114,7 @@ class GravityWell extends PositionComponent with HasGameReference<BallBounceGame
 
   void _collapseWell() {
     // Collapse effect - final implosion
-    gameRef.add(GravityCollapseEffect(
+    game.add(GravityCollapseEffect(
       position: position.clone(),
     ));
   }
@@ -237,9 +237,9 @@ class GravityWellParticles extends PositionComponent with HasGameReference<BallB
       targetPos: position.clone(),
       color: _random.nextBool() ? const Color(0xFFE91E63) : const Color(0xFF9C27B0),
       speed: 80 + _random.nextDouble() * 120,
-      life: 0.8 + _random.nextDouble() * 0.4,
+      totalLife: 0.8 + _random.nextDouble() * 0.4,
     );
-    gameRef.add(particle);
+    game.add(particle);
   }
 
   @override
@@ -259,6 +259,7 @@ class GravityParticle extends PositionComponent with HasGameReference<BallBounce
   double _angle = 0;
   double _dist = 0;
   double _rotationSpeed = 0;
+  final Random _random = Random();
 
   GravityParticle({
     required this.startPos,
