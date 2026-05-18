@@ -1,7 +1,7 @@
 name: ball_bounce_blitz
 description: "Ball Bounce Blitz - Arcade action game built with Flutter and Flame engine."
 publish_to: 'none'
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.11.4
