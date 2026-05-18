@@ -23,6 +23,7 @@ import 'components/charge_shot.dart';
 import 'components/daily_challenge.dart';
 import 'components/magnet_attractor.dart';
 import 'systems/spawn_system.dart';
+import 'systems/tip_system.dart';
 import 'systems/combo_system.dart';
 import 'systems/enemy_manager.dart';
 import 'systems/tournament_system.dart';
@@ -42,6 +43,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   late BarrierSpawner barrierSpawner;
   late EnemyManager enemyManager;
   late DailyChallengeManager dailyChallengeManager;
+  late TipSystem tipSystem;
   late TournamentManager tournamentManager;
   late GameStateService _gameState;
   late AchievementService _achievements;
@@ -115,6 +117,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
 
     dailyChallengeManager = DailyChallengeManager();
     add(dailyChallengeManager);
+    tipSystem = TipSystem();
+    tipSystem.setGame(this);
+    add(tipSystem);
     tournamentManager = TournamentManager();
     tournamentManager.setGame(this);
     add(tournamentManager);
@@ -240,6 +245,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     comboSystem.reset();
     ball.reset();
     dailyChallengeManager.reset();
+    tipSystem.reset();
   }
 
   void _checkBossWave() {
