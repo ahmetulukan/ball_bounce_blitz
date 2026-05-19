@@ -12,7 +12,6 @@ import 'particles/trail_particle.dart';
 import 'particles/enhanced_particles.dart' hide GhostTrail, MagnetField, LaserBeam, GravityWell;
 import 'chain_lightning.dart' hide CriticalHitText;
 import 'effects.dart';
-import 'extended_power_ups.dart' hide PowerUpType, EnergyShieldEffect, FreezeTimeEffect;
 import 'gravity_well.dart';
 import 'new_effects.dart';
 import 'magnet_attractor.dart';
