@@ -203,9 +203,65 @@ class _HudWidgetState extends State<HudWidget> {
                 ],
               ),
             ),
+            // Charge shot indicator
+            if (widget.game.chargeShotSystem.isCharging)
+              Container(
+                margin: const EdgeInsets.only(top: 8),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                decoration: BoxDecoration(
+                  color: Colors.black54,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: _getChargeColor(widget.game.chargeShotSystem.chargeLevel),
+                    width: 2,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _getChargeColor(widget.game.chargeShotSystem.chargeLevel).withAlpha(100),
+                      blurRadius: 8,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Text('⚡', style: TextStyle(fontSize: 14)),
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      width: 60,
+                      height: 8,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: LinearProgressIndicator(
+                          value: widget.game.chargeShotSystem.chargeLevel,
+                          backgroundColor: Colors.white24,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            _getChargeColor(widget.game.chargeShotSystem.chargeLevel),
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text(
+                      '${(widget.game.chargeShotSystem.chargeLevel * 100).toInt()}%',
+                      style: const TextStyle(
+                        color: Colors.orange,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
           ],
         ),
       ),
     );
+  }
+
+  Color _getChargeColor(double level) {
+    if (level >= 0.8) return Colors.deepOrange;
+    if (level >= 0.5) return Colors.orange;
+    return Colors.amber;
   }
 }

@@ -480,11 +480,22 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   }
 
   @override
+  void onPanStart(DragStartInfo info) {
+    chargeShotSystem.startCharging();
+  }
+
+  @override
+  void onPanEnd(DragEndInfo info) {
+    chargeShotSystem.releaseChargedShot();
+  }
+
+  @override
   void onPanDown(DragDownInfo info) {
     if (isGameOver) {
       overlays.remove('GameOver');
       resetGame();
     }
+    chargeShotSystem.startCharging();
   }
 
   @override
