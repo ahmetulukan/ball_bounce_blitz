@@ -160,8 +160,9 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   }
 
   void playSound(String name) {
+    if (!_gameState.settings.isSoundEnabled) return;
     try {
-      FlameAudio.play('$name.mp3', volume: 0.5);
+      FlameAudio.play('$name.wav', volume: 0.5);
     } catch (_) {}
   }
 
