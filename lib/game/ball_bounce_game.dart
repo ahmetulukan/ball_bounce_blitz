@@ -22,6 +22,7 @@ import 'components/achievement_popup.dart';
 import 'components/charge_shot.dart';
 import 'components/daily_challenge.dart';
 import 'components/magnet_attractor.dart';
+import 'components/visual_effects_v2.dart';
 import 'systems/spawn_system.dart';
 import 'systems/tip_system.dart';
 import 'systems/combo_system.dart';
@@ -109,6 +110,8 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
     add(comboSystem);
     add(chargeShotSystem);
     add(screenShake);
+    add(ChargeReadyIndicator());
+    add(DangerVignette());
     barrierSpawner = BarrierSpawner();
     barrierSpawner.setGame(this);
     add(barrierSpawner);
@@ -341,6 +344,7 @@ class BallBounceGame extends FlameGame with PanDetector, KeyboardEvents, HasColl
   void _showWaveClear() {
     add(WaveClearText(position: Vector2(200, 200)));
     add(ShockwaveEffect(position: Vector2(200, 200), color: const Color(0xFF4CAF50)));
+    add(WaveCompleteCelebration(wave: wave));
 
     // Wave bonus
     final bonus = 50 * wave;

@@ -152,6 +152,7 @@ class _HomeScreenState extends State<HomeScreen> {
               _tutRow('💥', 'Chain reactions destroy nearby enemies'),
               _tutRow('🌊', 'Waves increase difficulty over time'),
               _tutRow('👑', 'Boss appears every 5 waves'),
+              _tutRow('🔋', 'Hold touch to charge power shot!'),
               const SizedBox(height: 16),
               const Text('Power-Ups:', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
               const SizedBox(height: 8),
