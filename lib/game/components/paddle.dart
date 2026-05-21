@@ -1,10 +1,12 @@
 import 'dart:math';
 import 'dart:ui';
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
+import 'enemy_projectile.dart';
 
-class Paddle extends PositionComponent {
+class Paddle extends PositionComponent with CollisionCallbacks {
   static const double paddleWidth = 100;
   static const double paddleHeight = 15;
   static const double speed = 500;
@@ -28,6 +30,7 @@ class Paddle extends PositionComponent {
   @override
   Future<void> onLoad() async {
     await super.onLoad();
+    add(RectangleHitbox()..collisionType = CollisionType.active);
     _baseWidth = paddleWidth;
   }
 
@@ -183,6 +186,26 @@ class Paddle extends PositionComponent {
     consecutiveHits = 0;
     _hitFlash = 0;
     _glowIntensity = 0;
+  }
+
+  @override
+  void onCollision(Set<Vector2> intersectionPoints, PositionComponent other) {
+    super.onCollision(intersectionPoints, other);
+    
+    if (other is EnemyProjectile) {
+      // Projectile hits paddle - destroy projectile with effect
+      other.removeFromParent();
+      
+      // Small visual effect
+      gameRef.add(PaddleHitParticle(
+        position: other.position.clone(),
+        color: const Color(0xFFFF5722),
+      ));
+      
+      // Flash effect
+      _hitFlash = 0.5;
+      _glowIntensity = 0.3;
+    }
   }
 }
 
