@@ -67,6 +67,44 @@ class EnemyManager extends Component with HasGameReference<BallBounceGame> {
     }).toList();
   }
 
+  /// Get enemies in a rectangular region.
+  List<Enemy> getEnemiesInRegion(double x, double y, double width, double height) {
+    return _activeEnemies.where((e) {
+      return e.position.x >= x && e.position.x <= x + width &&
+             e.position.y >= y && e.position.y <= y + height;
+    }).toList();
+  }
+
+  /// Get all enemies grouped by color type.
+  Map<EnemyColorType, List<Enemy>> getEnemiesByColor() {
+    final grouped = <EnemyColorType, List<Enemy>>{};
+    for (final enemy in _activeEnemies) {
+      grouped.putIfAbsent(enemy.color, () => []).add(enemy);
+    }
+    return grouped;
+  }
+
+  /// Get all enemies grouped by behavior type.
+  Map<EnemyBehavior, List<Enemy>> getEnemiesByBehavior() {
+    final grouped = <EnemyBehavior, List<Enemy>>{};
+    for (final enemy in _activeEnemies) {
+      grouped.putIfAbsent(enemy.behavior, () => []).add(enemy);
+    }
+    return grouped;
+  }
+
+  /// Apply a force to all enemies (for explosion knockback etc).
+  void applyForceToAll(Vector2 force) {
+    for (final enemy in _activeEnemies) {
+      enemy.position += force;
+    }
+  }
+
+  /// Get count of enemies with specific behavior.
+  int countByBehavior(EnemyBehavior behavior) {
+    return _activeEnemies.where((e) => e.behavior == behavior).length;
+  }
+
   /// Get the nearest enemy to a position.
   Enemy? getNearestEnemy(Vector2 position) {
     if (_activeEnemies.isEmpty) return null;

@@ -5,6 +5,7 @@ import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
 import '../ball_bounce_game.dart';
 import 'enemy_projectile.dart';
+import 'enhanced_destruction.dart' hide CriticalHitText;
 
 enum EnemyType { square, circle, triangle, diamond, hexagon }
 enum EnemyColorType { red, green, purple, gold }
@@ -136,14 +137,42 @@ class Enemy extends PositionComponent with CollisionCallbacks {
     if (_isDestroyed) return;
     _isDestroyed = true;
 
+    // Spawn destruction effects based on enemy type
+    _spawnDestructionEffects();
+
     // Splitting enemies spawn 2 mini enemies on death
     if (behavior == EnemyBehavior.splitting) {
       _spawnSplitEnemies();
+      // Chain reaction effect for splitting enemies
+      gameRef.add(ChainReactionEffect(
+        position: position.clone(),
+        baseColor: getColor(color),
+      ));
     }
 
     gameRef.enemyManager.unregisterEnemy(this);
     gameRef.onEnemyDestroyed(this);
     removeFromParent();
+  }
+
+  void _spawnDestructionEffects() {
+    final pos = position.clone();
+    final col = getColor(color);
+
+    // Debris burst based on enemy behavior
+    final debrisCount = behavior == EnemyBehavior.heavy ? 20
+        : behavior == EnemyBehavior.splitting ? 15
+        : 8;
+    spawnDebrisBurst(pos, col, debrisCount, 200, gameRef);
+
+    // Smoke for heavy enemies
+    if (behavior == EnemyBehavior.heavy) {
+      gameRef.add(SmokePuff(position: pos));
+      gameRef.add(SmokePuff(position: pos + Vector2(10, 5)));
+    }
+
+    // Shockwave ring
+    gameRef.add(ShockwaveRing(position: pos, color: col));
   }
 
   void _spawnSplitEnemies() {
